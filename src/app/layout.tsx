@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "KoreaHarlem — 종합 예술 플랫폼",
   description:
-    "음악, 시각 예술, 공연, 문학을 아우르는 한국-하렘 문화 교류 허브",
+    "음악, 시각 예술, 공연, 문학을 아우르는 한국-할렘 문화 교류 허브",
 };
 
 export default function RootLayout({

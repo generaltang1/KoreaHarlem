@@ -17,6 +17,7 @@ export interface DbAlbumTrack {
   description?: string | null;
   audio_url: string;
   duration?: number | null;
+  is_title_track?: boolean;
 }
 
 export interface AlbumWithTracks extends DbAlbum {

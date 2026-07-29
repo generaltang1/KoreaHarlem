@@ -34,7 +34,7 @@ export default async function AlbumDetailPage({ params }: PageProps) {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-3xl px-4 py-16 pb-28 md:px-6">
+      <main className="mx-auto max-w-5xl px-4 py-16 pb-28 md:px-6">
         <AlbumDetailClient album={albumData} />
       </main>
       <Footer />

@@ -36,7 +36,7 @@ export function Footer() {
                 KoreaHarlem
               </p>
               <p className="mt-3 text-xs leading-relaxed text-muted">
-                한국과 하렘을 잇는
+                한국과 할렘을 잇는
                 <br />
                 종합 예술 플랫폼
               </p>

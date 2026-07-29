@@ -116,9 +116,16 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
               >
                 <span className="w-6 text-xs text-muted">{index + 1}</span>
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
-                    {track.title}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className={`truncate text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
+                      {track.title}
+                    </p>
+                    {track.is_title_track && (
+                      <span className="shrink-0 border border-border px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted">
+                        Title
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span className="text-[10px] text-muted">{formatDuration(track.duration)}</span>
                 <span className="text-[10px] uppercase tracking-widest text-muted">
@@ -131,10 +138,10 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
       </div>
 
       {selectedTrack && (
-        <div className="mt-8 border border-border p-6">
+        <div className="mt-8 border border-border p-8 md:p-10">
           <p className="text-[10px] uppercase tracking-widest text-muted">곡 설명</p>
-          <h2 className="mt-2 text-lg font-semibold">{selectedTrack.title}</h2>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+          <h2 className="mt-2 text-lg font-semibold md:text-xl">{selectedTrack.title}</h2>
+          <p className="mt-4 min-h-[120px] whitespace-pre-wrap text-base leading-relaxed text-foreground/90 md:text-[15px]">
             {selectedTrack.description || "이 곡에 대한 설명이 없습니다."}
           </p>
         </div>

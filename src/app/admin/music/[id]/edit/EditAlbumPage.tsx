@@ -18,6 +18,7 @@ interface TrackEditRow {
   audio_url?: string;
   audioFile: File | null;
   removed: boolean;
+  isTitleTrack: boolean;
 }
 
 function newTrackRow(): TrackEditRow {
@@ -27,6 +28,7 @@ function newTrackRow(): TrackEditRow {
     description: "",
     audioFile: null,
     removed: false,
+    isTitleTrack: false,
   };
 }
 
@@ -83,6 +85,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
           audio_url: track.audio_url,
           audioFile: null,
           removed: false,
+          isTitleTrack: track.is_title_track ?? false,
         })),
       );
       setLoading(false);
@@ -103,6 +106,15 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
 
   const updateTrack = (key: string, patch: Partial<TrackEditRow>) => {
     setTracks((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+  };
+
+  const toggleTitleTrack = (key: string) => {
+    setTracks((prev) =>
+      prev.map((row) => ({
+        ...row,
+        isTitleTrack: row.key === key ? !row.isTitleTrack : false,
+      })),
+    );
   };
 
   const addTrackRow = () => setTracks((prev) => [...prev, newTrackRow()]);
@@ -188,6 +200,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
               title: row.title.trim(),
               description: row.description.trim() || null,
               audio_url: audio_url!,
+              is_title_track: row.isTitleTrack,
             })
             .eq("id", row.id);
           if (updateErr) throw updateErr;
@@ -198,6 +211,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
             title: row.title.trim(),
             description: row.description.trim() || null,
             audio_url: audio_url!,
+            is_title_track: row.isTitleTrack,
           });
           if (insertErr) throw insertErr;
         }
@@ -327,17 +341,30 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
 
           {activeTracks.map((row, index) => (
             <div key={row.key} className="space-y-3 border border-border p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <p className="text-xs font-medium">수록곡 {index + 1}</p>
-                {activeTracks.length > 1 && (
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => removeTrackRow(row.key)}
-                    className="text-[10px] uppercase tracking-widest text-rose-500"
+                    onClick={() => toggleTitleTrack(row.key)}
+                    className={`border px-3 py-1.5 text-[10px] uppercase tracking-widest transition-colors ${
+                      row.isTitleTrack
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border text-muted hover:border-foreground hover:text-foreground"
+                    }`}
                   >
-                    삭제
+                    Title
                   </button>
-                )}
+                  {activeTracks.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeTrackRow(row.key)}
+                      className="text-[10px] uppercase tracking-widest text-rose-500"
+                    >
+                      삭제
+                    </button>
+                  )}
+                </div>
               </div>
               <input
                 type="text"
@@ -359,8 +386,8 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
                 placeholder="곡 설명 (선택)"
                 value={row.description}
                 onChange={(e) => updateTrack(row.key, { description: e.target.value })}
-                rows={3}
-                className="w-full resize-none border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+                rows={8}
+                className="min-h-[200px] w-full resize-y border border-border bg-transparent px-4 py-3 text-sm leading-relaxed outline-none focus:border-foreground"
               />
             </div>
           ))}

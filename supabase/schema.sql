@@ -37,6 +37,7 @@ create table if not exists album_tracks (
   description text,
   audio_url text not null,
   duration integer,
+  is_title_track boolean not null default false,
   created_at timestamptz default now()
 );
 
