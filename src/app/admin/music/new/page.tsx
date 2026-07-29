@@ -55,10 +55,9 @@ export default function NewAlbumPage() {
 
   const toggleTitleTrack = (key: string) => {
     setTracks((prev) =>
-      prev.map((row) => ({
-        ...row,
-        isTitleTrack: row.key === key ? !row.isTitleTrack : false,
-      })),
+      prev.map((row) =>
+        row.key === key ? { ...row, isTitleTrack: !row.isTitleTrack } : row,
+      ),
     );
   };
 
