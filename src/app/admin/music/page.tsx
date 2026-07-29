@@ -1,21 +1,41 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AdminMusicList } from "@/components/admin/AdminMusicList";
-import { getArtistName } from "@/lib/tracks";
+import { Pagination } from "@/components/ui/Pagination";
+import { getAlbumArtistName } from "@/lib/albums";
+import {
+  ADMIN_PAGE_SIZE,
+  getRange,
+  getTotalPages,
+  parsePage,
+} from "@/lib/pagination";
 
-export default async function AdminMusicPage() {
+interface AdminMusicPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function AdminMusicPage({ searchParams }: AdminMusicPageProps) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+  const { from, to } = getRange(page, ADMIN_PAGE_SIZE);
+
   const supabase = await createClient();
-  const { data: tracks } = await supabase
-    .from("tracks")
-    .select("id, title, created_at, artists(name)")
-    .order("created_at", { ascending: false });
+  const { data: albums, count } = await supabase
+    .from("albums")
+    .select("id, title, artist_name, created_at, album_tracks(count)", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-  const trackList = (tracks ?? []).map((track) => ({
-    id: track.id,
-    title: track.title,
-    artist: getArtistName(track.artists),
-    created_at: track.created_at,
+  const albumList = (albums ?? []).map((album) => ({
+    id: album.id,
+    title: album.title,
+    artist: getAlbumArtistName(album),
+    track_count:
+      (album.album_tracks as { count: number }[] | null)?.[0]?.count ?? 0,
+    created_at: album.created_at,
   }));
+
+  const totalPages = getTotalPages(count ?? 0, ADMIN_PAGE_SIZE);
 
   return (
     <div>
@@ -28,11 +48,16 @@ export default async function AdminMusicPage() {
           href="/admin/music/new"
           className="border border-border px-4 py-2 text-[10px] uppercase tracking-widest transition-colors hover:border-foreground"
         >
-          + 새 곡 등록
+          + 새 앨범 등록
         </Link>
       </div>
 
-      <AdminMusicList tracks={trackList} />
+      <AdminMusicList albums={albumList} />
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        basePath="/admin/music"
+      />
     </div>
   );
 }

@@ -1,8 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { MusicTrackList } from "@/components/music/MusicTrackList";
-import { mapDbTracksToPlayerTracks } from "@/lib/tracks";
+import { AlbumGrid } from "@/components/music/AlbumGrid";
+import { Pagination } from "@/components/ui/Pagination";
+import type { DbAlbum } from "@/lib/albums";
+import {
+  PAGE_SIZE,
+  getRange,
+  getTotalPages,
+  parsePage,
+} from "@/lib/pagination";
 import Image from "next/image";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -13,20 +20,32 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 interface WorksPageProps {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; page?: string }>;
 }
 
 export default async function WorksPage({ searchParams }: WorksPageProps) {
-  const { category } = await searchParams;
+  const { category, page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+  const { from, to } = getRange(page, PAGE_SIZE);
   const supabase = await createClient();
 
   if (category === "music") {
-    const { data: tracks } = await supabase
-      .from("tracks")
-      .select("*, artists(name)")
-      .order("created_at", { ascending: false });
+    const { data: albums, count } = await supabase
+      .from("albums")
+      .select("*, album_tracks(count)", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
-    const trackList = mapDbTracksToPlayerTracks(tracks ?? []);
+    const albumList: (DbAlbum & { track_count?: number })[] = (albums ?? []).map((album) => ({
+      id: album.id,
+      title: album.title,
+      artist_name: album.artist_name,
+      description: album.description,
+      cover_url: album.cover_url,
+      created_at: album.created_at,
+      track_count: (album.album_tracks as { count: number }[] | null)?.[0]?.count ?? 0,
+    }));
+    const totalPages = getTotalPages(count ?? 0, PAGE_SIZE);
 
     return (
       <>
@@ -36,7 +55,13 @@ export default async function WorksPage({ searchParams }: WorksPageProps) {
             <p className="text-[10px] uppercase tracking-widest text-muted">Music</p>
             <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">음악</h1>
           </div>
-          <MusicTrackList tracks={trackList} />
+          <AlbumGrid albums={albumList} />
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            basePath="/works"
+            params={{ category: "music" }}
+          />
         </main>
         <Footer />
       </>
@@ -45,14 +70,15 @@ export default async function WorksPage({ searchParams }: WorksPageProps) {
 
   let query = supabase
     .from("works")
-    .select("*, artists(name)")
+    .select("*, artists(name)", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (category && category !== "music") {
     query = query.eq("category", category);
   }
 
-  const { data: works } = await query;
+  const { data: works, count } = await query.range(from, to);
+  const totalPages = getTotalPages(count ?? 0, PAGE_SIZE);
   const pageTitle =
     category && CATEGORY_LABELS[category]
       ? CATEGORY_LABELS[category]
@@ -109,6 +135,13 @@ export default async function WorksPage({ searchParams }: WorksPageProps) {
             ))}
           </div>
         )}
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          basePath="/works"
+          params={category ? { category } : undefined}
+        />
       </main>
       <Footer />
     </>

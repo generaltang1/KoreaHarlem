@@ -2,21 +2,24 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import type { Track } from "@/context/PlayerContext";
+import type { DbAlbum } from "@/lib/albums";
+import { getAlbumArtistName } from "@/lib/albums";
 
-interface MusicCardProps {
-  track: Track;
+interface AlbumCardProps {
+  album: DbAlbum & { track_count?: number };
 }
 
-export function MusicCard({ track }: MusicCardProps) {
+export function AlbumCard({ album }: AlbumCardProps) {
+  const artist = getAlbumArtistName(album);
+
   return (
-    <Link href={`/music/${track.id}`} className="group block">
+    <Link href={`/music/album/${album.id}`} className="group block">
       <div className="overflow-hidden border border-border bg-background transition-colors hover:border-foreground">
         <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
-          {track.cover_url ? (
+          {album.cover_url ? (
             <Image
-              src={track.cover_url}
-              alt={track.title}
+              src={album.cover_url}
+              alt={album.title}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -28,17 +31,21 @@ export function MusicCard({ track }: MusicCardProps) {
             </div>
           )}
         </div>
-
         <div className="space-y-1.5 p-4">
           <p className="truncate text-sm font-semibold">
-            {track.artist} - {track.title}
+            {artist} - {album.title}
           </p>
-          {track.description ? (
+          {album.description ? (
             <p className="line-clamp-2 text-xs leading-relaxed text-muted">
-              {track.description}
+              {album.description}
             </p>
           ) : (
             <p className="text-xs text-muted">설명 없음</p>
+          )}
+          {album.track_count !== undefined && (
+            <p className="text-[10px] uppercase tracking-widest text-muted">
+              {album.track_count} tracks
+            </p>
           )}
         </div>
       </div>

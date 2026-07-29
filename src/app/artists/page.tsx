@@ -1,14 +1,32 @@
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { Pagination } from "@/components/ui/Pagination";
+import {
+  PAGE_SIZE,
+  getRange,
+  getTotalPages,
+  parsePage,
+} from "@/lib/pagination";
 import Image from "next/image";
 
-export default async function ArtistsPage() {
+interface ArtistsPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+  const { from, to } = getRange(page, PAGE_SIZE);
+
   const supabase = await createClient();
-  const { data: artists } = await supabase
+  const { data: artists, count } = await supabase
     .from("artists")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const totalPages = getTotalPages(count ?? 0, PAGE_SIZE);
 
   return (
     <>
@@ -52,6 +70,12 @@ export default async function ArtistsPage() {
             ))}
           </div>
         )}
+
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          basePath="/artists"
+        />
       </main>
       <Footer />
     </>

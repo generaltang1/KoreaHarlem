@@ -19,11 +19,36 @@ create table if not exists artists (
   created_at timestamptz default now()
 );
 
--- 3. tracks 테이블 (음악)
+-- 3. albums + album_tracks 테이블 (음악)
+create table if not exists albums (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  artist_name text,
+  description text,
+  cover_url text,
+  created_at timestamptz default now()
+);
+
+create table if not exists album_tracks (
+  id uuid primary key default gen_random_uuid(),
+  album_id uuid references albums(id) on delete cascade not null,
+  track_order integer not null,
+  title text not null,
+  description text,
+  audio_url text not null,
+  duration integer,
+  created_at timestamptz default now()
+);
+
+create unique index if not exists album_tracks_album_order_idx
+  on album_tracks(album_id, track_order);
+
+-- (레거시) tracks 테이블 — 신규 설치 시 생략 가능
 create table if not exists tracks (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   artist_id uuid references artists(id) on delete set null,
+  artist_name text,
   description text,
   audio_url text not null,
   cover_url text,
@@ -79,6 +104,8 @@ create trigger on_auth_user_created
 -- =============================================
 alter table profiles enable row level security;
 alter table artists enable row level security;
+alter table albums enable row level security;
+alter table album_tracks enable row level security;
 alter table tracks enable row level security;
 alter table works enable row level security;
 alter table events enable row level security;
@@ -118,7 +145,34 @@ create policy "artists: 관리자 delete" on artists
   for delete using (public.is_admin());
 
 -- =============================================
--- RLS 정책: tracks
+-- RLS 정책: albums / album_tracks
+-- =============================================
+create policy "albums: 전체 읽기" on albums
+  for select using (true);
+
+create policy "albums: 관리자 insert" on albums
+  for insert with check (public.is_admin());
+
+create policy "albums: 관리자 update" on albums
+  for update using (public.is_admin());
+
+create policy "albums: 관리자 delete" on albums
+  for delete using (public.is_admin());
+
+create policy "album_tracks: 전체 읽기" on album_tracks
+  for select using (true);
+
+create policy "album_tracks: 관리자 insert" on album_tracks
+  for insert with check (public.is_admin());
+
+create policy "album_tracks: 관리자 update" on album_tracks
+  for update using (public.is_admin());
+
+create policy "album_tracks: 관리자 delete" on album_tracks
+  for delete using (public.is_admin());
+
+-- =============================================
+-- RLS 정책: tracks (레거시)
 -- =============================================
 create policy "tracks: 전체 읽기" on tracks
   for select using (true);

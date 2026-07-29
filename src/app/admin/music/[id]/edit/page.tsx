@@ -1,4 +1,4 @@
-import EditMusicPage from "./EditMusicPage";
+import EditAlbumPage from "./EditAlbumPage";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -6,5 +6,5 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  return <EditMusicPage trackId={id} />;
+  return <EditAlbumPage albumId={id} />;
 }
