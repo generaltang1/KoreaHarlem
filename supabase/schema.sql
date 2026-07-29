@@ -24,6 +24,7 @@ create table if not exists tracks (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   artist_id uuid references artists(id) on delete set null,
+  description text,
   audio_url text not null,
   cover_url text,
   duration integer,

@@ -78,6 +78,7 @@ export default function NewMusicPage() {
 
   const [title, setTitle] = useState("");
   const [artistName, setArtistName] = useState("");
+  const [description, setDescription] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -155,6 +156,7 @@ export default function NewMusicPage() {
       const { error: insertError } = await supabase.from("tracks").insert({
         title,
         artist_id: artistId,
+        description: description.trim() || null,
         audio_url: audioUrlData.publicUrl,
         cover_url,
       });
@@ -200,6 +202,19 @@ export default function NewMusicPage() {
             onChange={(e) => setArtistName(e.target.value)}
             className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground"
             placeholder="아티스트명 입력 (신규면 자동 생성)"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+            설명
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            className="w-full resize-none border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground"
+            placeholder="트랙 설명을 입력하세요 (선택사항)"
           />
         </div>
 
