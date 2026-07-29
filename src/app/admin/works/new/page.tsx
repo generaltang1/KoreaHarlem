@@ -157,9 +157,8 @@ export default function NewWorkPage() {
             onChange={handleImage}
             className="w-full border border-border px-4 py-3 text-sm file:mr-4 file:border-0 file:bg-transparent file:text-xs file:uppercase file:tracking-widest"
           />
-          {preview && (
-            <img src={preview} alt="미리보기" className="mt-3 h-40 w-40 object-cover" />
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {preview && <img src={preview} alt="미리보기" className="mt-3 h-40 w-40 object-cover" />}
         </div>
 
         {error && <p className="text-xs text-rose-500">{error}</p>}

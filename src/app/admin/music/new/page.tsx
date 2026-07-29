@@ -137,9 +137,8 @@ export default function NewMusicPage() {
             onChange={handleCover}
             className="w-full border border-border px-4 py-3 text-sm file:mr-4 file:border-0 file:bg-transparent file:text-xs file:uppercase file:tracking-widest"
           />
-          {coverPreview && (
-            <img src={coverPreview} alt="커버 미리보기" className="mt-3 h-32 w-32 object-cover" />
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {coverPreview && <img src={coverPreview} alt="커버 미리보기" className="mt-3 h-32 w-32 object-cover" />}
         </div>
 
         {error && <p className="text-xs text-rose-500">{error}</p>}

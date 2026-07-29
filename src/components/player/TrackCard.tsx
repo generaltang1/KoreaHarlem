@@ -13,7 +13,11 @@ export function TrackCard({ track }: TrackCardProps) {
 
   const handleClick = () => {
     if (isActive) {
-      isPlaying ? pause() : play();
+      if (isPlaying) {
+        pause();
+      } else {
+        play();
+      }
     } else {
       setTrack(track);
     }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/supabase/admin";
 
 export default async function AdminLayout({
@@ -15,26 +16,26 @@ export default async function AdminLayout({
             Admin
           </span>
           <nav className="flex items-center gap-4">
-            <a href="/admin" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+            <Link href="/admin" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               대시보드
-            </a>
-            <a href="/admin/music/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+            </Link>
+            <Link href="/admin/music/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               음악 등록
-            </a>
-            <a href="/admin/works/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+            </Link>
+            <Link href="/admin/works/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               상품 등록
-            </a>
-            <a href="/admin/artists/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+            </Link>
+            <Link href="/admin/artists/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               아티스트 등록
-            </a>
-            <a href="/admin/events/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+            </Link>
+            <Link href="/admin/events/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               이벤트 등록
-            </a>
+            </Link>
           </nav>
           <div className="ml-auto">
-            <a href="/" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+            <Link href="/" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               ← 사이트로
-            </a>
+            </Link>
           </div>
         </div>
       </div>
