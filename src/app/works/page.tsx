@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MusicTrackList } from "@/components/music/MusicTrackList";
+import { mapDbTracksToPlayerTracks } from "@/lib/tracks";
 import Image from "next/image";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -10,12 +12,51 @@ const CATEGORY_LABELS: Record<string, string> = {
   literature: "문학",
 };
 
-export default async function WorksPage() {
+interface WorksPageProps {
+  searchParams: Promise<{ category?: string }>;
+}
+
+export default async function WorksPage({ searchParams }: WorksPageProps) {
+  const { category } = await searchParams;
   const supabase = await createClient();
-  const { data: works } = await supabase
+
+  if (category === "music") {
+    const { data: tracks } = await supabase
+      .from("tracks")
+      .select("*, artists(name)")
+      .order("created_at", { ascending: false });
+
+    const trackList = mapDbTracksToPlayerTracks(tracks ?? []);
+
+    return (
+      <>
+        <Header />
+        <main className="mx-auto max-w-3xl px-4 py-16 pb-28 md:px-6">
+          <div className="mb-10">
+            <p className="text-[10px] uppercase tracking-widest text-muted">Music</p>
+            <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">음악</h1>
+          </div>
+          <MusicTrackList tracks={trackList} />
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  let query = supabase
     .from("works")
     .select("*, artists(name)")
     .order("created_at", { ascending: false });
+
+  if (category && category !== "music") {
+    query = query.eq("category", category);
+  }
+
+  const { data: works } = await query;
+  const pageTitle =
+    category && CATEGORY_LABELS[category]
+      ? CATEGORY_LABELS[category]
+      : "전체 작품";
 
   return (
     <>
@@ -23,7 +64,7 @@ export default async function WorksPage() {
       <main className="mx-auto max-w-7xl px-4 py-16 pb-24 md:px-6">
         <div className="mb-10">
           <p className="text-[10px] uppercase tracking-widest text-muted">Works</p>
-          <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">전체 작품</h1>
+          <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">{pageTitle}</h1>
         </div>
 
         {!works || works.length === 0 ? (
@@ -44,7 +85,9 @@ export default async function WorksPage() {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center bg-neutral-200">
-                      <span className="text-xs text-muted">{CATEGORY_LABELS[work.category] ?? work.category}</span>
+                      <span className="text-xs text-muted">
+                        {CATEGORY_LABELS[work.category] ?? work.category}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -54,7 +97,9 @@ export default async function WorksPage() {
                   </p>
                   <h3 className="mt-0.5 text-sm font-medium">{work.title}</h3>
                   {work.artists && (
-                    <p className="text-xs text-muted">{(work.artists as { name: string }).name}</p>
+                    <p className="text-xs text-muted">
+                      {(work.artists as { name: string }).name}
+                    </p>
                   )}
                   {work.price && (
                     <p className="mt-1 text-sm">₩{work.price.toLocaleString()}</p>

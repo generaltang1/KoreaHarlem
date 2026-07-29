@@ -113,7 +113,7 @@ export function Header() {
               </button>
               <div className="invisible absolute left-0 top-full z-50 min-w-[160px] border border-border bg-background py-2 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
                 <Link href="/admin" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">대시보드</Link>
-                <Link href="/admin/music/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">음악 등록</Link>
+                <Link href="/admin/music" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">음악 관리</Link>
                 <Link href="/admin/works/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">상품 등록</Link>
                 <Link href="/admin/artists/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">아티스트 등록</Link>
                 <Link href="/admin/events/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">이벤트 등록</Link>
