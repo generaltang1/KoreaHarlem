@@ -9,6 +9,7 @@ export interface Track {
   audio_url: string;
   cover_url?: string | null;
   duration?: number | null;
+  description?: string | null;
 }
 
 interface PlayerContextValue {
@@ -21,6 +22,7 @@ interface PlayerContextValue {
   pause: () => void;
   toggle: () => void;
   seek: (time: number) => void;
+  close: () => void;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
@@ -69,9 +71,20 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const close = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+    setCurrentTrack(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, []);
+
   return (
     <PlayerContext.Provider
-      value={{ currentTrack, isPlaying, currentTime, duration, setTrack, play, pause, toggle, seek, audioRef }}
+      value={{ currentTrack, isPlaying, currentTime, duration, setTrack, play, pause, toggle, seek, close, audioRef }}
     >
       {children}
       <audio

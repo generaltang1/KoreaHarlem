@@ -1,6 +1,6 @@
 "use client";
 
-import { TrackCard } from "@/components/player/TrackCard";
+import { MusicCard } from "@/components/music/MusicCard";
 import type { Track } from "@/context/PlayerContext";
 
 interface MusicTrackListProps {
@@ -17,9 +17,9 @@ export function MusicTrackList({ tracks }: MusicTrackListProps) {
   }
 
   return (
-    <div>
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
       {tracks.map((track) => (
-        <TrackCard key={track.id} track={track} />
+        <MusicCard key={track.id} track={track} />
       ))}
     </div>
   );

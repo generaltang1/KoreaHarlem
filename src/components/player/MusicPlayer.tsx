@@ -12,11 +12,15 @@ function formatTime(sec: number) {
 }
 
 export function MusicPlayer() {
-  const { currentTrack, isPlaying, currentTime, duration, play, pause, seek, audioRef } = usePlayer();
+  const { currentTrack, isPlaying, currentTime, duration, play, pause, seek, close, audioRef } = usePlayer();
   const prevTrackId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!currentTrack || !audioRef.current) return;
+    if (!currentTrack) {
+      prevTrackId.current = null;
+      return;
+    }
+    if (!audioRef.current) return;
     if (prevTrackId.current !== currentTrack.id) {
       prevTrackId.current = currentTrack.id;
       audioRef.current.src = currentTrack.audio_url;
@@ -107,6 +111,17 @@ export function MusicPlayer() {
         <div className="hidden flex-shrink-0 text-[10px] text-muted sm:block">
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
+
+        {/* 닫기 */}
+        <button
+          onClick={close}
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center transition-opacity hover:opacity-60"
+          aria-label="재생 종료"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        </button>
       </div>
     </div>
   );

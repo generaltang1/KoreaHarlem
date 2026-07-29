@@ -31,7 +31,7 @@ export default async function WorksPage({ searchParams }: WorksPageProps) {
     return (
       <>
         <Header />
-        <main className="mx-auto max-w-3xl px-4 py-16 pb-28 md:px-6">
+        <main className="mx-auto max-w-7xl px-4 py-16 pb-28 md:px-6">
           <div className="mb-10">
             <p className="text-[10px] uppercase tracking-widest text-muted">Music</p>
             <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">음악</h1>
