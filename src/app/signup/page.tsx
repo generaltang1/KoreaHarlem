@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -21,6 +21,13 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) router.replace("/");
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleConsentConfirm = () => {
     setShowConsent(false);
@@ -81,7 +88,7 @@ export default function SignupPage() {
   return (
     <>
       <Header />
-      <main className="flex min-h-[80vh] items-center justify-center px-4 py-16">
+      <main className="flex min-h-[80vh] items-center justify-center px-4 py-10 md:py-16">
         {showConsent && !consentDone && (
           <ConsentModal
             onConfirm={handleConsentConfirm}
@@ -119,7 +126,7 @@ export default function SignupPage() {
                 <div className="space-y-3">
                   <button
                     onClick={handleGoogle}
-                    className="flex w-full items-center justify-center gap-3 border border-border py-3 text-xs transition-colors hover:bg-neutral-50"
+                    className="flex w-full items-center justify-center gap-3 border border-border py-4 text-sm transition-colors hover:bg-neutral-50 md:py-3 md:text-xs"
                   >
                     <svg width="18" height="18" viewBox="0 0 18 18">
                       <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
@@ -131,7 +138,7 @@ export default function SignupPage() {
                   </button>
                   <button
                     onClick={handleKakao}
-                    className="flex w-full items-center justify-center gap-3 border border-[#FEE500] bg-[#FEE500] py-3 text-xs transition-opacity hover:opacity-90"
+                    className="flex w-full items-center justify-center gap-3 border border-[#FEE500] bg-[#FEE500] py-4 text-sm transition-opacity hover:opacity-90 md:py-3 md:text-xs"
                   >
                     <svg width="18" height="18" viewBox="0 0 18 18">
                       <path fill="#3C1E1E" d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.38c0 2.07 1.299 3.888 3.267 4.953l-.833 3.104 3.618-2.382A9.3 9.3 0 009 13.26c4.142 0 7.5-2.634 7.5-5.88S13.142 1.5 9 1.5z"/>
@@ -154,7 +161,7 @@ export default function SignupPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground"
+                    className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
                   />
                   <input
                     type="password"
@@ -162,7 +169,7 @@ export default function SignupPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground"
+                    className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
                   />
                   <input
                     type="password"
@@ -170,7 +177,7 @@ export default function SignupPage() {
                     value={passwordConfirm}
                     onChange={(e) => setPasswordConfirm(e.target.value)}
                     required
-                    className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground"
+                    className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
                   />
 
                   {error && (
@@ -180,7 +187,7 @@ export default function SignupPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-foreground py-3 text-xs uppercase tracking-widest text-background transition-opacity disabled:opacity-50"
+                    className="w-full bg-foreground py-4 text-sm uppercase tracking-widest text-background transition-opacity disabled:opacity-50 md:py-3 md:text-xs"
                   >
                     {loading ? "처리 중..." : "가입하기"}
                   </button>

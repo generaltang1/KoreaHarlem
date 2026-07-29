@@ -11,18 +11,45 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     const auth = supabase.auth;
-    auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: { subscription } } = auth.onAuthStateChange((_event, session) => {
+
+    const loadUser = async () => {
+      const { data } = await auth.getUser();
+      setUser(data.user);
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
+        setIsAdmin(profile?.role === "admin");
+      }
+    };
+
+    loadUser();
+
+    const { data: { subscription } } = auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        setIsAdmin(profile?.role === "admin");
+      } else {
+        setIsAdmin(false);
+      }
     });
+
     return () => subscription.unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -78,6 +105,20 @@ export function Header() {
                 {link.label}
               </Link>
             )
+          )}
+          {isAdmin && (
+            <div className="group relative">
+              <button className="text-xs uppercase tracking-widest text-rose-500 transition-opacity hover:opacity-60">
+                Admin
+              </button>
+              <div className="invisible absolute left-0 top-full z-50 min-w-[160px] border border-border bg-background py-2 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
+                <Link href="/admin" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">대시보드</Link>
+                <Link href="/admin/music/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">음악 등록</Link>
+                <Link href="/admin/works/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">상품 등록</Link>
+                <Link href="/admin/artists/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">아티스트 등록</Link>
+                <Link href="/admin/events/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">이벤트 등록</Link>
+              </div>
+            </div>
           )}
         </nav>
 
@@ -159,7 +200,7 @@ export function Header() {
                     key={child.href}
                     href={child.href}
                     onClick={() => setMenuOpen(false)}
-                    className="block py-2 text-sm"
+                    className="block py-3 text-sm"
                   >
                     {child.label}
                   </Link>
@@ -170,12 +211,39 @@ export function Header() {
                 key={link.href}
                 href={link.href!}
                 onClick={() => setMenuOpen(false)}
-                className="block py-2 text-sm uppercase tracking-widest"
+                className="block py-3 text-sm uppercase tracking-widest"
               >
                 {link.label}
               </Link>
             )
           )}
+          <div className="mt-4 border-t border-border pt-4">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setMenuOpen(false)}
+                className="block py-3 text-sm uppercase tracking-widest text-rose-500"
+              >
+                Admin
+              </Link>
+            )}
+            {user ? (
+              <button
+                onClick={() => { handleLogout(); setMenuOpen(false); }}
+                className="block w-full py-3 text-left text-sm uppercase tracking-widest text-muted"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="block py-3 text-sm uppercase tracking-widest"
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
         </nav>
       )}
     </header>

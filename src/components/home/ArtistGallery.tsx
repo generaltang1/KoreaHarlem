@@ -21,7 +21,7 @@ export function ArtistGallery() {
         </Link>
       </div>
 
-      <div className="columns-2 gap-3 md:columns-4 md:gap-4">
+      <div className="columns-2 gap-2 sm:gap-3 md:columns-4 md:gap-4">
         {galleryWorks.map((work, i) => (
           <Link
             key={work.id}

@@ -32,7 +32,6 @@ export const navLinks = [
   },
   { label: "아티스트", href: "/artists" },
   { label: "이벤트", href: "/events" },
-  { label: "회원가입", href: "/signup" },
   { label: "Sale", href: "/sale" },
 ];
 

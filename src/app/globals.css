@@ -32,3 +32,8 @@ html {
   background: #0a0a0a;
   color: #fafaf8;
 }
+
+/* 음악 플레이어 하단 바 여백 */
+.has-player {
+  padding-bottom: 80px;
+}

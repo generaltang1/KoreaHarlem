@@ -30,8 +30,8 @@ export function Footer() {
     <>
       <footer className="border-t border-border bg-background">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-          <div className="grid gap-12 md:grid-cols-4">
-            <div className="md:col-span-1">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12">
+            <div className="col-span-2 md:col-span-1">
               <p className="text-sm font-semibold uppercase tracking-[0.25em]">
                 KoreaHarlem
               </p>
@@ -91,15 +91,15 @@ export function Footer() {
             <p className="mt-2 text-xs text-muted">
               새로운 작품과 이벤트 소식을 받아보세요.
             </p>
-            <form className="mt-4 flex max-w-md gap-2">
+            <form className="mt-4 flex max-w-md flex-col gap-2 sm:flex-row">
               <input
                 type="email"
                 placeholder="이메일 주소"
-                className="flex-1 border border-border bg-transparent px-4 py-2.5 text-xs outline-none placeholder:text-muted focus:border-foreground"
+                className="flex-1 border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground sm:py-2.5 sm:text-xs"
               />
               <button
                 type="submit"
-                className="bg-foreground px-6 py-2.5 text-xs uppercase tracking-widest text-background transition-opacity hover:opacity-80"
+                className="bg-foreground px-6 py-3 text-sm uppercase tracking-widest text-background transition-opacity hover:opacity-80 sm:py-2.5 sm:text-xs"
               >
                 Submit
               </button>

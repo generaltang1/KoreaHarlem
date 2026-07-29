@@ -6,7 +6,7 @@ export function PopularSection() {
   return (
     <section className="bg-foreground text-background">
       <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24">
-        <div className="grid items-center gap-12 md:grid-cols-2">
+        <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-background/50">
               Popular
