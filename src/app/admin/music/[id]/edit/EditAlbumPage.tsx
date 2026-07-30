@@ -10,6 +10,11 @@ interface EditAlbumPageProps {
   albumId: string;
 }
 
+interface ArtistOption {
+  id: string;
+  name: string;
+}
+
 interface TrackEditRow {
   key: string;
   id?: string;
@@ -36,8 +41,9 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
   const router = useRouter();
   const supabase = createClient();
 
+  const [artists, setArtists] = useState<ArtistOption[]>([]);
   const [title, setTitle] = useState("");
-  const [artistName, setArtistName] = useState("");
+  const [artistId, setArtistId] = useState("");
   const [description, setDescription] = useState("");
   const [currentCoverUrl, setCurrentCoverUrl] = useState<string | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -51,15 +57,21 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadAlbum = async () => {
+    const load = async () => {
       setLoading(true);
       setError("");
 
-      const { data, error: fetchError } = await supabase
-        .from("albums")
-        .select("title, artist_name, description, cover_url, album_tracks(*)")
-        .eq("id", albumId)
-        .single();
+      const [{ data: artistRows }, { data, error: fetchError }] = await Promise.all([
+        supabase.from("artists").select("id, name").order("name"),
+        supabase
+          .from("albums")
+          .select("title, artist_id, artist_name, description, cover_url, album_tracks(*)")
+          .eq("id", albumId)
+          .single(),
+      ]);
+
+      const artistList = artistRows ?? [];
+      setArtists(artistList);
 
       if (fetchError || !data) {
         setError("앨범 정보를 불러오지 못했습니다.");
@@ -68,10 +80,15 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       }
 
       setTitle(data.title);
-      setArtistName(data.artist_name ?? "");
       setDescription(data.description ?? "");
       setCurrentCoverUrl(data.cover_url);
       setCoverPreview(data.cover_url);
+
+      const linkedId =
+        data.artist_id ||
+        artistList.find((a) => a.name === data.artist_name)?.id ||
+        "";
+      setArtistId(linkedId);
 
       const sorted = [...(data.album_tracks ?? [])].sort(
         (a, b) => a.track_order - b.track_order,
@@ -91,7 +108,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       setLoading(false);
     };
 
-    loadAlbum();
+    load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [albumId]);
 
@@ -130,6 +147,12 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
     e.preventDefault();
     setError("");
 
+    const selectedArtist = artists.find((a) => a.id === artistId);
+    if (!selectedArtist) {
+      setError("아티스트를 선택해주세요.");
+      return;
+    }
+
     const validTracks = activeTracks.filter(
       (row) => row.title.trim() && (row.audioFile || row.audio_url),
     );
@@ -143,12 +166,14 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
     try {
       const albumUpdate: {
         title: string;
-        artist_name: string | null;
+        artist_id: string;
+        artist_name: string;
         description: string | null;
         cover_url?: string | null;
       } = {
         title,
-        artist_name: artistName.trim() || null,
+        artist_id: selectedArtist.id,
+        artist_name: selectedArtist.name,
         description: description.trim() || null,
       };
 
@@ -219,7 +244,14 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       router.push("/admin/music");
       router.refresh();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "수정 중 오류가 발생했습니다.");
+      const message = err instanceof Error ? err.message : "수정 중 오류가 발생했습니다.";
+      if (/artist_id|column/i.test(message)) {
+        setError(
+          "DB에 artist_id 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_albums_artist_id.sql 을 실행해주세요.",
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setSaving(false);
     }
@@ -259,7 +291,37 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
         </Link>
       </div>
 
+      {artists.length === 0 && (
+        <div className="mb-6 border border-border p-5">
+          <p className="text-sm">등록된 아티스트가 없습니다.</p>
+          <Link
+            href="/admin/artists"
+            className="mt-4 inline-block text-xs uppercase tracking-widest underline"
+          >
+            아티스트 관리하러 가기 →
+          </Link>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">아티스트 *</label>
+          <select
+            value={artistId}
+            onChange={(e) => setArtistId(e.target.value)}
+            required
+            disabled={artists.length === 0}
+            className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground disabled:opacity-50"
+          >
+            <option value="">아티스트 선택</option>
+            {artists.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 제목 *</label>
           <input
@@ -267,16 +329,6 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">아티스트명</label>
-          <input
-            type="text"
-            value={artistName}
-            onChange={(e) => setArtistName(e.target.value)}
             className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
           />
         </div>
@@ -396,7 +448,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || artists.length === 0}
           className="w-full bg-foreground py-3 text-xs uppercase tracking-widest text-background disabled:opacity-50"
         >
           {saving ? "저장 중..." : "변경사항 저장"}

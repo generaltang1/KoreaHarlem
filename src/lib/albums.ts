@@ -3,6 +3,7 @@ import type { Track } from "@/context/PlayerContext";
 export interface DbAlbum {
   id: string;
   title: string;
+  artist_id?: string | null;
   artist_name?: string | null;
   description?: string | null;
   cover_url?: string | null;

@@ -23,11 +23,14 @@ create table if not exists artists (
 create table if not exists albums (
   id uuid primary key default gen_random_uuid(),
   title text not null,
+  artist_id uuid references artists(id) on delete restrict,
   artist_name text,
   description text,
   cover_url text,
   created_at timestamptz default now()
 );
+
+create index if not exists albums_artist_id_idx on albums(artist_id);
 
 create table if not exists album_tracks (
   id uuid primary key default gen_random_uuid(),

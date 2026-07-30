@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePlayer } from "@/context/PlayerContext";
@@ -28,6 +28,13 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
   const sortedTracks = [...album.album_tracks].sort((a, b) => a.track_order - b.track_order);
   const selectedTrack = sortedTracks.find((t) => t.id === selectedTrackId) ?? sortedTracks[0];
   const artist = getAlbumArtistName(album);
+
+  // Keep lyrics/description in sync when the player auto-advances or skips tracks.
+  useEffect(() => {
+    if (currentTrack?.albumId === album.id) {
+      setSelectedTrackId(currentTrack.id);
+    }
+  }, [currentTrack?.id, currentTrack?.albumId, album.id]);
 
   const handlePlayTrack = (trackId: string) => {
     const index = playerTracks.findIndex((t) => t.id === trackId);

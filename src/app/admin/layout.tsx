@@ -19,14 +19,14 @@ export default async function AdminLayout({
             <Link href="/admin" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               대시보드
             </Link>
+            <Link href="/admin/artists" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+              아티스트 관리
+            </Link>
             <Link href="/admin/music" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               음악 관리
             </Link>
             <Link href="/admin/works/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               상품 등록
-            </Link>
-            <Link href="/admin/artists/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              아티스트 등록
             </Link>
             <Link href="/admin/events/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               이벤트 등록

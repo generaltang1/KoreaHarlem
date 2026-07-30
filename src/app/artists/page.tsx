@@ -1,23 +1,28 @@
+import { Suspense } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Pagination } from "@/components/ui/Pagination";
+import { PageSizeSelect } from "@/components/ui/PageSizeSelect";
 import {
-  PAGE_SIZE,
   getRange,
   getTotalPages,
+  pageSizeParams,
   parsePage,
+  parsePageSize,
 } from "@/lib/pagination";
 import Image from "next/image";
 
 interface ArtistsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; size?: string }>;
 }
 
 export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, size: sizeParam } = await searchParams;
   const page = parsePage(pageParam);
-  const { from, to } = getRange(page, PAGE_SIZE);
+  const pageSize = parsePageSize(sizeParam);
+  const { from, to } = getRange(page, pageSize);
 
   const supabase = await createClient();
   const { data: artists, count } = await supabase
@@ -26,12 +31,15 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  const totalPages = getTotalPages(count ?? 0, PAGE_SIZE);
+  const totalPages = getTotalPages(count ?? 0, pageSize);
 
   return (
     <>
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-16 pb-24 md:px-6">
+        <Suspense fallback={null}>
+          <PageSizeSelect />
+        </Suspense>
         <div className="mb-10">
           <p className="text-[10px] uppercase tracking-widest text-muted">Artists</p>
           <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">아티스트</h1>
@@ -44,7 +52,11 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
         ) : (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
             {artists.map((artist) => (
-              <div key={artist.id} className="group text-center">
+              <Link
+                key={artist.id}
+                href={`/artists/${artist.id}`}
+                className="group text-center transition-opacity hover:opacity-90"
+              >
                 <div className="relative mx-auto aspect-square w-full max-w-[200px] overflow-hidden rounded-full bg-neutral-100">
                   {artist.image_url ? (
                     <Image
@@ -62,11 +74,11 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
                     </div>
                   )}
                 </div>
-                <h3 className="mt-3 text-sm font-medium">{artist.name}</h3>
+                <h3 className="mt-3 text-sm font-medium group-hover:underline">{artist.name}</h3>
                 {artist.bio && (
                   <p className="mt-1 line-clamp-2 text-xs text-muted">{artist.bio}</p>
                 )}
-              </div>
+              </Link>
             ))}
           </div>
         )}
@@ -75,6 +87,7 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
           currentPage={page}
           totalPages={totalPages}
           basePath="/artists"
+          params={pageSizeParams(pageSize)}
         />
       </main>
       <Footer />

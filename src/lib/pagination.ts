@@ -1,9 +1,21 @@
-export const PAGE_SIZE = 12;
-export const ADMIN_PAGE_SIZE = 10;
+export const DEFAULT_PAGE_SIZE = 10;
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
+
+/** @deprecated Use DEFAULT_PAGE_SIZE / parsePageSize */
+export const PAGE_SIZE = DEFAULT_PAGE_SIZE;
+/** @deprecated Use DEFAULT_PAGE_SIZE / parsePageSize */
+export const ADMIN_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 export function parsePage(value?: string): number {
   const page = Number.parseInt(value ?? "1", 10);
   return Number.isFinite(page) && page > 0 ? page : 1;
+}
+
+export function parsePageSize(value?: string): number {
+  const size = Number.parseInt(value ?? String(DEFAULT_PAGE_SIZE), 10);
+  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(size)
+    ? size
+    : DEFAULT_PAGE_SIZE;
 }
 
 export function getRange(page: number, pageSize: number) {
@@ -34,4 +46,14 @@ export function buildPageUrl(
 
   const query = searchParams.toString();
   return query ? `${basePath}?${query}` : basePath;
+}
+
+export function pageSizeParams(
+  pageSize: number,
+  extra?: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  return {
+    ...extra,
+    size: pageSize === DEFAULT_PAGE_SIZE ? undefined : String(pageSize),
+  };
 }

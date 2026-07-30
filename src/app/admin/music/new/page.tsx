@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { buildCroppedCover } from "@/lib/image/cropCover";
+
+interface ArtistOption {
+  id: string;
+  name: string;
+}
 
 interface TrackFormRow {
   key: string;
@@ -28,8 +33,10 @@ export default function NewAlbumPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  const [artists, setArtists] = useState<ArtistOption[]>([]);
+  const [artistsLoading, setArtistsLoading] = useState(true);
   const [title, setTitle] = useState("");
-  const [artistName, setArtistName] = useState("");
+  const [artistId, setArtistId] = useState("");
   const [description, setDescription] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -39,6 +46,18 @@ export default function NewAlbumPage() {
   const [tracks, setTracks] = useState<TrackFormRow[]>([newTrackRow()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    supabase
+      .from("artists")
+      .select("id, name")
+      .order("name")
+      .then(({ data }) => {
+        setArtists(data ?? []);
+        setArtistsLoading(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCover = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -71,6 +90,12 @@ export default function NewAlbumPage() {
     e.preventDefault();
     setError("");
 
+    const selectedArtist = artists.find((a) => a.id === artistId);
+    if (!selectedArtist) {
+      setError("아티스트를 선택해주세요. 아티스트 등록이 먼저 필요합니다.");
+      return;
+    }
+
     const validTracks = tracks.filter((row) => row.title.trim() && row.audioFile);
     if (validTracks.length === 0) {
       setError("수록곡 1개 이상(제목 + 음원 파일)을 등록해주세요.");
@@ -94,7 +119,8 @@ export default function NewAlbumPage() {
         .from("albums")
         .insert({
           title,
-          artist_name: artistName.trim() || null,
+          artist_id: selectedArtist.id,
+          artist_name: selectedArtist.name,
           description: description.trim() || null,
           cover_url,
         })
@@ -125,7 +151,14 @@ export default function NewAlbumPage() {
       router.push("/admin/music");
       router.refresh();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "등록 중 오류가 발생했습니다.");
+      const message = err instanceof Error ? err.message : "등록 중 오류가 발생했습니다.";
+      if (/artist_id|column/i.test(message)) {
+        setError(
+          "DB에 artist_id 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_albums_artist_id.sql 을 실행해주세요.",
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -137,13 +170,45 @@ export default function NewAlbumPage() {
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted">Admin</p>
           <h1 className="mt-1 text-xl font-medium uppercase tracking-wider">앨범 등록</h1>
+          <p className="mt-2 text-xs text-muted">아티스트 등록 → 아티스트 선택 → 앨범/수록곡 등록</p>
         </div>
         <Link href="/admin/music" className="text-[10px] uppercase tracking-widest text-muted underline">
           목록으로
         </Link>
       </div>
 
+      {!artistsLoading && artists.length === 0 && (
+        <div className="mb-6 border border-border p-5">
+          <p className="text-sm">등록된 아티스트가 없습니다.</p>
+          <p className="mt-1 text-xs text-muted">음악을 올리려면 아티스트를 먼저 등록해야 합니다.</p>
+          <Link
+            href="/admin/artists"
+            className="mt-4 inline-block text-xs uppercase tracking-widest underline"
+          >
+            아티스트 관리하러 가기 →
+          </Link>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">아티스트 *</label>
+          <select
+            value={artistId}
+            onChange={(e) => setArtistId(e.target.value)}
+            required
+            disabled={artists.length === 0}
+            className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground disabled:opacity-50"
+          >
+            <option value="">{artistsLoading ? "불러오는 중..." : "아티스트 선택"}</option>
+            {artists.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 제목 *</label>
           <input
@@ -152,17 +217,6 @@ export default function NewAlbumPage() {
             onChange={(e) => setTitle(e.target.value)}
             required
             className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">아티스트명</label>
-          <input
-            type="text"
-            value={artistName}
-            onChange={(e) => setArtistName(e.target.value)}
-            className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
-            placeholder="표시용 아티스트명"
           />
         </div>
 
@@ -267,7 +321,7 @@ export default function NewAlbumPage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || artists.length === 0}
           className="w-full bg-foreground py-3 text-xs uppercase tracking-widest text-background disabled:opacity-50"
         >
           {loading ? "등록 중..." : "앨범 등록"}

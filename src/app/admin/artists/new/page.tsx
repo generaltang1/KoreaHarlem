@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -46,7 +47,8 @@ export default function NewArtistPage() {
       });
       if (insertError) throw insertError;
 
-      router.push("/admin");
+      router.push("/admin/artists");
+      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "등록 중 오류가 발생했습니다.");
     } finally {
@@ -56,9 +58,14 @@ export default function NewArtistPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <p className="text-[10px] uppercase tracking-widest text-muted">Admin</p>
-        <h1 className="mt-1 text-xl font-medium uppercase tracking-wider">아티스트 등록</h1>
+      <div className="mb-8 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted">Admin</p>
+          <h1 className="mt-1 text-xl font-medium uppercase tracking-wider">아티스트 등록</h1>
+        </div>
+        <Link href="/admin/artists" className="text-[10px] uppercase tracking-widest text-muted underline">
+          목록으로
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
