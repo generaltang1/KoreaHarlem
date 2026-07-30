@@ -141,9 +141,6 @@ export function Footer() {
               <p>
                 대표자 이메일 : koreaharlem@gmail.com
               </p>
-              <p>
-                포스닝 제공사 : (주)아임웹
-              </p>
             </div>
 
             <p className="mt-4 text-[10px] text-muted">
