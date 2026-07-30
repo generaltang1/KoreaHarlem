@@ -49,7 +49,7 @@ export function CheckoutClient() {
 
   const buyId = searchParams.get("buy");
   const buySize = searchParams.get("size");
-  const buyQty = Math.min(10, Math.max(1, Number.parseInt(searchParams.get("qty") ?? "1", 10) || 1));
+  const buyQty = Math.max(1, Number.parseInt(searchParams.get("qty") ?? "1", 10) || 1);
   const addonsParam = searchParams.get("addons");
   const autopay = searchParams.get("autopay") === "1";
   const [shippingKrw, setShippingKrw] = useState(0);

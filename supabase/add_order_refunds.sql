@@ -4,7 +4,7 @@
 alter table orders add column if not exists cancel_reason text;
 alter table orders add column if not exists cancelled_at timestamptz;
 alter table orders add column if not exists refunded_at timestamptz;
-alter table orders add column if not exists refunded_amount integer;
+alter table orders add column if not exists refunded_amount bigint;
 
 -- 결제 완료(또는 배송) 주문 환불 시 재고 복구
 create or replace function public.restore_stock_for_paid_order(p_order_id uuid)

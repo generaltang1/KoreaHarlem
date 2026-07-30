@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { PrivacyModal } from "@/components/ui/PrivacyModal";
 import { TermsModal } from "@/components/ui/TermsModal";
@@ -32,9 +33,15 @@ export function Footer() {
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12">
             <div className="col-span-2 md:col-span-1">
-              <p className="text-sm font-semibold uppercase tracking-[0.25em]">
-                KoreaHarlem
-              </p>
+              <Link href="/" className="inline-block">
+                <Image
+                  src="/logo-wordmark.png"
+                  alt="koreaharlem"
+                  width={296}
+                  height={45}
+                  className="h-5 w-auto object-contain invert md:h-6"
+                />
+              </Link>
               <p className="mt-3 text-xs leading-relaxed text-muted">
                 한국과 할렘을 잇는
                 <br />

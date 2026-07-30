@@ -139,9 +139,15 @@ export function Header() {
 
         <Link
           href="/"
-          className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold uppercase tracking-[0.25em] md:text-base"
+          className="absolute left-1/2 flex -translate-x-1/2 items-center"
+          aria-label="koreaharlem 홈"
         >
-          KoreaHarlem
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-wordmark.png"
+            alt="koreaharlem"
+            className="h-4 w-auto object-contain invert md:h-5"
+          />
         </Link>
 
         <div className="flex items-center gap-1">

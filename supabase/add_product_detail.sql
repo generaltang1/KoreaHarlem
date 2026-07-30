@@ -1,8 +1,8 @@
 -- 상품 상세 확장: 배송비, 사이즈 가이드, 추가구성상품, 위시리스트
 -- Supabase SQL Editor에서 실행하세요
 
-alter table products add column if not exists shipping_fee_krw integer not null default 4000 check (shipping_fee_krw >= 0);
-alter table products add column if not exists free_shipping_threshold_krw integer check (free_shipping_threshold_krw is null or free_shipping_threshold_krw >= 0);
+alter table products add column if not exists shipping_fee_krw bigint not null default 4000 check (shipping_fee_krw >= 0);
+alter table products add column if not exists free_shipping_threshold_krw bigint check (free_shipping_threshold_krw is null or free_shipping_threshold_krw >= 0);
 alter table products add column if not exists overseas_shipping boolean not null default false;
 alter table products add column if not exists size_guide jsonb;
 
@@ -52,4 +52,4 @@ create policy "wishlist: 본인 insert" on wishlist_items
 create policy "wishlist: 본인 delete" on wishlist_items
   for delete using (auth.uid() = user_id);
 
-alter table orders add column if not exists shipping_fee integer not null default 0;
+alter table orders add column if not exists shipping_fee bigint not null default 0;

@@ -15,8 +15,6 @@ import { createClient } from "@/lib/supabase/client";
 import { ProductImageZoom } from "@/components/commerce/ProductImageZoom";
 import { SizeGuideModal } from "@/components/commerce/SizeGuideModal";
 
-const MAX_QTY = 10;
-
 interface AddonPick {
   productId: string;
   size: string;
@@ -53,7 +51,7 @@ export function ProductDetailClient({
   const mainImage = images[imageIndex] ?? images[0];
 
   const availableForSize = getStockForSize(product.sizeStocks, needsSize ? size : "");
-  const maxQty = Math.min(MAX_QTY, Math.max(availableForSize, 0));
+  const maxQty = Math.max(availableForSize, 0);
 
   const selectedAddons = useMemo(() => {
     return product.addons
@@ -290,9 +288,9 @@ export function ProductDetailClient({
                 value={size}
                 onChange={(e) => {
                   setSize(e.target.value);
-                  const nextMax = Math.min(
-                    MAX_QTY,
-                    Math.max(getStockForSize(product.sizeStocks, e.target.value), 0),
+                  const nextMax = Math.max(
+                    getStockForSize(product.sizeStocks, e.target.value),
+                    0,
                   );
                   if (quantity > nextMax) setQuantity(Math.max(1, nextMax));
                 }}
