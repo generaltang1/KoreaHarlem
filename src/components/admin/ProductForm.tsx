@@ -1,0 +1,508 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { MAX_PRODUCT_IMAGES, uploadProductImage } from "@/lib/productImages";
+import { fetchSizeStockMap, saveProductSizeStocks } from "@/lib/productSizeStock";
+import { parseSizeGuide, type SizeGuideData } from "@/lib/sizeGuide";
+import { SizeGuideEditor } from "@/components/admin/SizeGuideEditor";
+import { ProductAddonSelect } from "@/components/admin/ProductAddonSelect";
+
+interface ExistingImage {
+  id: string;
+  url: string;
+  sort_order: number;
+}
+
+interface AddonOption {
+  id: string;
+  title: string;
+  price_krw: number;
+  image_url: string | null;
+  sizes: string[];
+}
+
+interface ProductFormProps {
+  mode: "create" | "edit";
+  productId?: string;
+}
+
+async function saveProductAddons(
+  supabase: ReturnType<typeof createClient>,
+  productId: string,
+  addonIds: string[],
+) {
+  await supabase.from("product_addons").delete().eq("product_id", productId);
+  if (addonIds.length === 0) return;
+  const { error } = await supabase.from("product_addons").insert(
+    addonIds.map((addonId, i) => ({
+      product_id: productId,
+      addon_product_id: addonId,
+      sort_order: i,
+    })),
+  );
+  if (error) throw error;
+}
+
+export function ProductForm({ mode, productId }: ProductFormProps) {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priceKrw, setPriceKrw] = useState("");
+  const [compareAt, setCompareAt] = useState("");
+  const [sizeStocks, setSizeStocks] = useState<Record<string, string>>({ "": "10" });
+  const [sizes, setSizes] = useState("S,M,L");
+  const [shippingFee, setShippingFee] = useState("4000");
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState("50000");
+  const [overseasShipping, setOverseasShipping] = useState(false);
+  const [sizeGuideEnabled, setSizeGuideEnabled] = useState(false);
+  const [sizeGuide, setSizeGuide] = useState<SizeGuideData | null>(null);
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
+  const [allProducts, setAllProducts] = useState<AddonOption[]>([]);
+  const [isPublished, setIsPublished] = useState(true);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newPreviews, setNewPreviews] = useState<string[]>([]);
+
+  const [loading, setLoading] = useState(mode === "edit");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const sizeList = useMemo(
+    () =>
+      sizes
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    [sizes],
+  );
+
+  const stockSizeKeys = useMemo(() => (sizeList.length > 0 ? sizeList : [""]), [sizeList]);
+
+  useEffect(() => {
+    setSizeStocks((prev) => {
+      const next: Record<string, string> = {};
+      for (const key of stockSizeKeys) {
+        next[key] = prev[key] ?? "0";
+      }
+      return next;
+    });
+  }, [stockSizeKeys]);
+
+  const keptExisting = useMemo(
+    () => existingImages.filter((img) => !removedImageIds.includes(img.id)),
+    [existingImages, removedImageIds],
+  );
+  const totalImages = keptExisting.length + newFiles.length;
+  const canAddMore = totalImages < MAX_PRODUCT_IMAGES;
+
+  useEffect(() => {
+    const loadCatalog = async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, title, price_krw, sizes, product_images(url, sort_order)")
+        .order("title");
+      setAllProducts(
+        (data ?? []).map((p) => {
+          const imgs = [...(p.product_images ?? [])].sort(
+            (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order,
+          );
+          return {
+            id: p.id,
+            title: p.title,
+            price_krw: p.price_krw,
+            sizes: p.sizes ?? [],
+            image_url: imgs[0]?.url ?? null,
+          };
+        }),
+      );
+    };
+    loadCatalog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (mode !== "edit" || !productId) return;
+
+    const load = async () => {
+      setLoading(true);
+      setError("");
+
+      const [{ data, error: fetchError }, { data: addonRows }] = await Promise.all([
+        supabase.from("products").select("*, product_images(*)").eq("id", productId).single(),
+        supabase.from("product_addons").select("addon_product_id").eq("product_id", productId),
+      ]);
+
+      if (fetchError || !data) {
+        setError("상품 정보를 불러오지 못했습니다.");
+        setLoading(false);
+        return;
+      }
+
+      setTitle(data.title);
+      setDescription(data.description ?? "");
+      setPriceKrw(String(data.price_krw));
+      setCompareAt(data.compare_at_price_krw != null ? String(data.compare_at_price_krw) : "");
+      const loadedStocks = await fetchSizeStockMap(supabase, productId);
+      const keys = (data.sizes ?? []).length > 0 ? (data.sizes as string[]) : [""];
+      const stockMap: Record<string, string> = {};
+      for (const key of keys) {
+        stockMap[key] = String(loadedStocks[key] ?? 0);
+      }
+      setSizeStocks(stockMap);
+      setSizes((data.sizes ?? []).join(","));
+      setShippingFee(String(data.shipping_fee_krw ?? 4000));
+      setFreeShippingThreshold(
+        data.free_shipping_threshold_krw != null ? String(data.free_shipping_threshold_krw) : "",
+      );
+      setOverseasShipping(data.overseas_shipping ?? false);
+      const sg = parseSizeGuide(data.size_guide);
+      setSizeGuideEnabled(!!sg);
+      setSizeGuide(sg);
+      setSelectedAddonIds((addonRows ?? []).map((r) => r.addon_product_id));
+      setIsPublished(data.is_published);
+      setExistingImages(
+        [...(data.product_images ?? [])].sort(
+          (a: ExistingImage, b: ExistingImage) => a.sort_order - b.sort_order,
+        ),
+      );
+      setLoading(false);
+    };
+
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, productId]);
+
+  useEffect(() => {
+    return () => {
+      newPreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [newPreviews]);
+
+  const handleAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (picked.length === 0) return;
+
+    const slots = MAX_PRODUCT_IMAGES - totalImages;
+    const toAdd = picked.slice(0, slots);
+    if (toAdd.length < picked.length) {
+      setError(`이미지는 최대 ${MAX_PRODUCT_IMAGES}개까지 등록할 수 있습니다.`);
+    } else {
+      setError("");
+    }
+
+    setNewFiles((prev) => [...prev, ...toAdd]);
+    setNewPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const removeExisting = (id: string) => {
+    setRemovedImageIds((prev) => [...prev, id]);
+  };
+
+  const removeNew = (index: number) => {
+    setNewFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewPreviews((prev) => {
+      const url = prev[index];
+      if (url) URL.revokeObjectURL(url);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (totalImages === 0) {
+      setError("이미지를 1개 이상 등록해주세요.");
+      return;
+    }
+
+    const price = Number.parseInt(priceKrw, 10);
+    if (!Number.isFinite(price) || price < 0) {
+      setError("가격(KRW)을 확인해주세요.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const stockValues: Record<string, number> = {};
+      for (const key of stockSizeKeys) {
+        stockValues[key] = Math.max(0, Number.parseInt(sizeStocks[key] ?? "0", 10) || 0);
+      }
+      const totalStockValue = Object.values(stockValues).reduce((sum, n) => sum + n, 0);
+
+      const payload = {
+        title: title.trim(),
+        description: description.trim() || null,
+        price_krw: price,
+        compare_at_price_krw: compareAt ? Number.parseInt(compareAt, 10) : null,
+        stock: totalStockValue,
+        sizes: sizeList,
+        shipping_fee_krw: Number.parseInt(shippingFee, 10) || 0,
+        free_shipping_threshold_krw: freeShippingThreshold
+          ? Number.parseInt(freeShippingThreshold, 10)
+          : null,
+        overseas_shipping: overseasShipping,
+        size_guide: sizeGuideEnabled && sizeGuide ? sizeGuide : null,
+        is_sale: true,
+        is_published: isPublished,
+      };
+
+      let id = productId;
+
+      if (mode === "create") {
+        const { data: product, error: insertError } = await supabase
+          .from("products")
+          .insert(payload)
+          .select("id")
+          .single();
+        if (insertError || !product) throw insertError ?? new Error("상품 생성 실패");
+        id = product.id;
+
+        for (let i = 0; i < newFiles.length; i++) {
+          await uploadProductImage(supabase, product.id, newFiles[i], i);
+        }
+      } else if (id) {
+        const { error: updateError } = await supabase.from("products").update(payload).eq("id", id);
+        if (updateError) throw updateError;
+
+        if (removedImageIds.length > 0) {
+          const { error: delError } = await supabase
+            .from("product_images")
+            .delete()
+            .in("id", removedImageIds);
+          if (delError) throw delError;
+        }
+
+        let nextOrder = keptExisting.length;
+        for (const file of newFiles) {
+          await uploadProductImage(supabase, id, file, nextOrder);
+          nextOrder += 1;
+        }
+      }
+
+      if (id) {
+        try {
+          await saveProductSizeStocks(supabase, id, sizeList, stockValues);
+        } catch {
+          /* product_size_stock table may not exist yet */
+        }
+        try {
+          await saveProductAddons(supabase, id, selectedAddonIds);
+        } catch {
+          /* product_addons table may not exist yet */
+        }
+      }
+
+      router.push("/admin/products");
+      router.refresh();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "저장 실패");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <p className="text-sm text-muted">불러오는 중...</p>;
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">상품명 *</label>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+        />
+      </div>
+      <div>
+        <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">설명</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          className="w-full resize-none border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">판매가 (KRW) *</label>
+          <input
+            value={priceKrw}
+            onChange={(e) => setPriceKrw(e.target.value)}
+            required
+            className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">정가 (KRW, 할인 표시용)</label>
+          <input
+            value={compareAt}
+            onChange={(e) => setCompareAt(e.target.value)}
+            className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+          사이즈 (콤마 구분)
+        </label>
+        <input
+          value={sizes}
+          onChange={(e) => setSizes(e.target.value)}
+          className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+          placeholder="S (95),M (105),L (110)"
+        />
+        <p className="mt-1 text-[10px] text-muted">사이즈를 비우면 단일 재고로 관리됩니다.</p>
+      </div>
+
+      <div className="border border-border p-4">
+        <p className="text-[10px] uppercase tracking-widest text-muted">사이즈별 재고</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {stockSizeKeys.map((key) => (
+            <div key={key || "__default"}>
+              <label className="mb-1.5 block text-xs text-muted">
+                {key || "단일 (사이즈 없음)"}
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={sizeStocks[key] ?? "0"}
+                onChange={(e) =>
+                  setSizeStocks((prev) => ({ ...prev, [key]: e.target.value }))
+                }
+                className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4 border border-border p-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">배송비 (KRW)</label>
+          <input
+            value={shippingFee}
+            onChange={(e) => setShippingFee(e.target.value)}
+            className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">무료배송 기준 (KRW)</label>
+          <input
+            value={freeShippingThreshold}
+            onChange={(e) => setFreeShippingThreshold(e.target.value)}
+            placeholder="비우면 항상 배송비 부과"
+            className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={overseasShipping}
+            onChange={(e) => setOverseasShipping(e.target.checked)}
+          />
+          <span>해외배송 가능 상품</span>
+        </label>
+      </div>
+
+      <SizeGuideEditor
+        enabled={sizeGuideEnabled}
+        onEnabledChange={setSizeGuideEnabled}
+        sizes={sizeList}
+        guide={sizeGuide}
+        onChange={setSizeGuide}
+      />
+
+      <ProductAddonSelect
+        allProducts={allProducts}
+        selectedIds={selectedAddonIds}
+        onChange={setSelectedAddonIds}
+        excludeId={productId}
+      />
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={isPublished}
+          onChange={(e) => setIsPublished(e.target.checked)}
+        />
+        <span>공개 (Sale에 노출)</span>
+      </label>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <label className="text-[10px] uppercase tracking-widest text-muted">
+            이미지 * (최대 {MAX_PRODUCT_IMAGES}개, 첫 번째가 대표)
+          </label>
+          <span className="text-[10px] text-muted">
+            {totalImages}/{MAX_PRODUCT_IMAGES}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+          {keptExisting.map((img) => (
+            <div key={img.id} className="relative aspect-square border border-border bg-neutral-50">
+              <Image src={img.url} alt="" fill className="object-cover" />
+              <button
+                type="button"
+                onClick={() => removeExisting(img.id)}
+                className="absolute right-1 top-1 bg-black/60 px-1.5 py-0.5 text-[10px] text-white"
+              >
+                삭제
+              </button>
+            </div>
+          ))}
+          {newPreviews.map((preview, index) => (
+            <div key={preview} className="relative aspect-square border border-border bg-neutral-50">
+              <Image src={preview} alt="" fill className="object-cover" />
+              <button
+                type="button"
+                onClick={() => removeNew(index)}
+                className="absolute right-1 top-1 bg-black/60 px-1.5 py-0.5 text-[10px] text-white"
+              >
+                삭제
+              </button>
+            </div>
+          ))}
+        </div>
+        {canAddMore && (
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleAddFiles}
+            className="mt-3 w-full border border-border px-4 py-3 text-sm"
+          />
+        )}
+      </div>
+
+      {error && <p className="text-xs text-rose-500">{error}</p>}
+
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex-1 bg-foreground py-3 text-xs uppercase tracking-widest text-background disabled:opacity-50"
+        >
+          {saving ? "저장 중..." : mode === "create" ? "상품 등록" : "변경 저장"}
+        </button>
+        <Link
+          href="/admin/products"
+          className="flex items-center justify-center border border-border px-6 py-3 text-xs uppercase tracking-widest text-muted"
+        >
+          취소
+        </Link>
+      </div>
+    </form>
+  );
+}

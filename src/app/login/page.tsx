@@ -19,11 +19,15 @@ export default function LoginPage() {
   const supabase = createClient();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("next");
+
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) router.replace("/");
+      if (data.user) {
+        router.replace(next && next.startsWith("/") ? next : "/");
+      }
     });
 
-    const params = new URLSearchParams(window.location.search);
     if (params.get("error") === "auth") {
       setError(getAuthErrorMessage(params.get("message")));
     }
@@ -41,7 +45,9 @@ export default function LoginPage() {
     if (error) {
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");
     } else {
-      router.push("/");
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+      router.push(next && next.startsWith("/") ? next : "/");
       router.refresh();
     }
   };

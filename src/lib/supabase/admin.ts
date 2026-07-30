@@ -1,11 +1,23 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
+/** Server-only Supabase client (bypasses RLS). Requires SUPABASE_SERVICE_ROLE_KEY. */
+export function createServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
+/** Admin layout guard — redirects non-admins to home. */
 export async function requireAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/admin");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -14,20 +26,4 @@ export async function requireAdmin() {
     .single();
 
   if (profile?.role !== "admin") redirect("/");
-
-  return user;
-}
-
-export async function getRole(): Promise<"admin" | "user" | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  return (profile?.role as "admin" | "user") ?? "user";
 }
