@@ -57,3 +57,15 @@ export function pageSizeParams(
     size: pageSize === DEFAULT_PAGE_SIZE ? undefined : String(pageSize),
   };
 }
+
+export function listParams(options: {
+  pageSize: number;
+  q?: string;
+  category?: string;
+}): Record<string, string | undefined> {
+  const q = options.q?.trim();
+  return pageSizeParams(options.pageSize, {
+    q: q || undefined,
+    category: options.category,
+  });
+}

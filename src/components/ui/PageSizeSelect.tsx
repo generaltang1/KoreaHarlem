@@ -29,6 +29,12 @@ export function PageSizeSelect({ preserveParams = [] }: PageSizeSelectProps) {
       if (existing) params.set(key, existing);
     }
 
+    // Always keep active search query unless explicitly omitted.
+    if (!preserveParams.includes("q")) {
+      const q = searchParams.get("q");
+      if (q) params.set("q", q);
+    }
+
     const sizeNum = Number.parseInt(nextSize, 10);
     if (sizeNum !== DEFAULT_PAGE_SIZE) {
       params.set("size", String(sizeNum));
@@ -40,7 +46,7 @@ export function PageSizeSelect({ preserveParams = [] }: PageSizeSelectProps) {
   };
 
   return (
-    <div className="mb-6">
+    <div>
       <label className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted">
         <span className="sr-only">페이지당 개수</span>
         <select

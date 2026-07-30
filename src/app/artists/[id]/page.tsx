@@ -85,7 +85,9 @@ export default async function ArtistDetailPage({
 
         <section className="mt-14">
           <Suspense fallback={null}>
-            <PageSizeSelect />
+            <div className="mb-6">
+              <PageSizeSelect />
+            </div>
           </Suspense>
           <div className="mb-6">
             <p className="text-[10px] uppercase tracking-widest text-muted">Albums</p>

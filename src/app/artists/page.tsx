@@ -1,53 +1,60 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Pagination } from "@/components/ui/Pagination";
-import { PageSizeSelect } from "@/components/ui/PageSizeSelect";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { searchArtistsPaged } from "@/lib/albumSearch";
 import {
   getRange,
   getTotalPages,
-  pageSizeParams,
+  listParams,
   parsePage,
   parsePageSize,
 } from "@/lib/pagination";
+import { parseSearchQuery } from "@/lib/search";
 import Image from "next/image";
 
 interface ArtistsPageProps {
-  searchParams: Promise<{ page?: string; size?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; q?: string }>;
 }
 
 export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
-  const { page: pageParam, size: sizeParam } = await searchParams;
+  const { page: pageParam, size: sizeParam, q: qParam } = await searchParams;
   const page = parsePage(pageParam);
   const pageSize = parsePageSize(sizeParam);
+  const q = parseSearchQuery(qParam);
   const { from, to } = getRange(page, pageSize);
 
   const supabase = await createClient();
-  const { data: artists, count } = await supabase
-    .from("artists")
-    .select("*", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+  const { data: artists, count } = await searchArtistsPaged(supabase, {
+    q,
+    from,
+    to,
+  });
 
-  const totalPages = getTotalPages(count ?? 0, pageSize);
+  const totalPages = getTotalPages(count, pageSize);
 
   return (
     <>
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-16 pb-24 md:px-6">
-        <Suspense fallback={null}>
-          <PageSizeSelect />
-        </Suspense>
+        <ListToolbar searchPlaceholder="아티스트명 검색" />
         <div className="mb-10">
           <p className="text-[10px] uppercase tracking-widest text-muted">Artists</p>
           <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">아티스트</h1>
+          {q && (
+            <p className="mt-2 text-xs text-muted">
+              “{q}” 검색 결과 {count}건
+            </p>
+          )}
         </div>
 
         {!artists || artists.length === 0 ? (
           <div className="flex min-h-[40vh] items-center justify-center">
-            <p className="text-sm text-muted">등록된 아티스트가 없습니다.</p>
+            <p className="text-sm text-muted">
+              {q ? "검색 결과가 없습니다." : "등록된 아티스트가 없습니다."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
@@ -87,7 +94,7 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
           currentPage={page}
           totalPages={totalPages}
           basePath="/artists"
-          params={pageSizeParams(pageSize)}
+          params={listParams({ pageSize, q })}
         />
       </main>
       <Footer />
