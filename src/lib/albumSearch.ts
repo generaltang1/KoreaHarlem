@@ -1,13 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { toIlikePattern } from "@/lib/search";
-
-type QueryClient = {
-  from: (table: string) => {
-    select: (
-      columns: string,
-      options?: { count?: "exact" },
-    ) => any;
-  };
-};
 
 export type AlbumSearchRow = {
   id: string;
@@ -32,7 +24,7 @@ export type ArtistSearchRow = {
  * Search albums by artist_name OR album title OR track title (returns albums).
  */
 export async function searchAlbumsPaged(
-  supabase: QueryClient,
+  supabase: SupabaseClient,
   options: {
     q?: string;
     from: number;
@@ -50,7 +42,7 @@ export async function searchAlbumsPaged(
       .order("created_at", { ascending: false })
       .range(options.from, options.to);
     if (error) throw error;
-    return { data: (data ?? []) as AlbumSearchRow[], count: count ?? 0 };
+    return { data: (data ?? []) as unknown as AlbumSearchRow[], count: count ?? 0 };
   }
 
   const pattern = toIlikePattern(q);
@@ -65,8 +57,8 @@ export async function searchAlbumsPaged(
 
   const albumIdsFromTracks = [
     ...new Set(
-      ((trackHits ?? []) as { album_id: string }[])
-        .map((row) => row.album_id)
+      (trackHits ?? [])
+        .map((row) => row.album_id as string)
         .filter(Boolean),
     ),
   ];
@@ -84,11 +76,11 @@ export async function searchAlbumsPaged(
     .range(options.from, options.to);
 
   if (error) throw error;
-  return { data: (data ?? []) as AlbumSearchRow[], count: count ?? 0 };
+  return { data: (data ?? []) as unknown as AlbumSearchRow[], count: count ?? 0 };
 }
 
 export async function searchArtistsPaged(
-  supabase: QueryClient,
+  supabase: SupabaseClient,
   options: {
     q?: string;
     from: number;
@@ -111,5 +103,5 @@ export async function searchArtistsPaged(
 
   const { data, count, error } = await query.range(options.from, options.to);
   if (error) throw error;
-  return { data: (data ?? []) as ArtistSearchRow[], count: count ?? 0 };
+  return { data: (data ?? []) as unknown as ArtistSearchRow[], count: count ?? 0 };
 }
