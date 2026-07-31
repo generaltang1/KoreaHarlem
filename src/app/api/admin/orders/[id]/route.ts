@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const { data: order, error } = await admin
     .from("orders")
     .select(
-      "id, order_number, status, currency, total, shipping_fee, subtotal, customer_name, customer_email, customer_phone, shipping_message, shipping_address, payment_method, toss_order_id, toss_payment_key, cancel_reason, cancelled_at, refunded_at, refunded_amount, created_at",
+      "id, order_number, status, currency, total, shipping_fee, subtotal, customer_name, customer_email, customer_phone, shipping_message, shipping_address, payment_method, toss_order_id, toss_payment_key, cancel_reason, cancelled_at, refunded_at, refunded_amount, tracking_courier, tracking_number, prepared_at, shipped_at, delivered_at, created_at",
     )
     .eq("id", id)
     .maybeSingle();

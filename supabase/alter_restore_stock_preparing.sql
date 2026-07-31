@@ -1,12 +1,6 @@
--- 주문 취소/환불 메타 + 결제완료 주문 재고 복구
+-- restore_stock_for_paid_order: 배송준비중(preparing) 취소 시에도 재고 복구 허용
 -- Supabase SQL Editor에서 실행하세요
 
-alter table orders add column if not exists cancel_reason text;
-alter table orders add column if not exists cancelled_at timestamptz;
-alter table orders add column if not exists refunded_at timestamptz;
-alter table orders add column if not exists refunded_amount bigint;
-
--- 결제 완료(또는 배송) 주문 환불 시 재고 복구
 create or replace function public.restore_stock_for_paid_order(p_order_id uuid)
 returns void
 language plpgsql
@@ -40,5 +34,3 @@ begin
   delete from order_stock_reservations where order_id = p_order_id;
 end;
 $$;
-
-grant execute on function public.restore_stock_for_paid_order(uuid) to authenticated;

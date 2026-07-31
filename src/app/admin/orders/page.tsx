@@ -9,6 +9,7 @@ import {
   listParams,
   parsePage,
   parsePageSize,
+  buildPageUrl,
 } from "@/lib/pagination";
 
 interface AdminOrdersPageProps {
@@ -64,12 +65,19 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
           { label: "전체", value: "" },
           { label: "결제대기", value: "pending" },
           { label: "결제완료", value: "paid" },
+          { label: "배송준비중", value: "preparing" },
+          { label: "배송중", value: "shipped" },
+          { label: "배송완료", value: "delivered" },
           { label: "환불", value: "refunded" },
           { label: "취소", value: "cancelled" },
         ].map((f) => (
           <Link
             key={f.value || "all"}
-            href={`/admin/orders?${listParams({ pageSize, q, status: f.value || undefined })}`}
+            href={buildPageUrl(
+              "/admin/orders",
+              1,
+              listParams({ pageSize, q, status: f.value || undefined }),
+            )}
             className={`border px-3 py-1.5 uppercase tracking-widest ${
               status === f.value ? "border-foreground" : "border-border text-muted"
             }`}

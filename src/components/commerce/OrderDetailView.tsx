@@ -28,6 +28,8 @@ export interface OrderDetailData {
   subtotal?: number;
   shippingFee?: number;
   total?: number;
+  trackingCourier?: string | null;
+  trackingNumber?: string | null;
   items: OrderDetailItem[];
 }
 
@@ -101,6 +103,18 @@ export function OrderDetailView({ order, showActions = true }: { order: OrderDet
               <dt className="w-24 shrink-0 text-muted">배송메시지</dt>
               <dd>{shipping?.message || order.shippingMessage}</dd>
             </div>
+          )}
+          {(order.trackingCourier || order.trackingNumber) && (
+            <>
+              <div className="flex gap-4">
+                <dt className="w-24 shrink-0 text-muted">택배사</dt>
+                <dd>{order.trackingCourier || "-"}</dd>
+              </div>
+              <div className="flex gap-4">
+                <dt className="w-24 shrink-0 text-muted">송장번호</dt>
+                <dd className="font-medium">{order.trackingNumber || "-"}</dd>
+              </div>
+            </>
           )}
         </dl>
       </section>
