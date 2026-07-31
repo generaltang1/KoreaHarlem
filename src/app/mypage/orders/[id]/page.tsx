@@ -4,9 +4,15 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { OrderDetailView } from "@/components/commerce/OrderDetailView";
 import { OrderCancelButton } from "@/components/commerce/OrderCancelButton";
+import { OrderCsRequestForm } from "@/components/commerce/OrderCsRequestForm";
 import { createClient } from "@/lib/supabase/server";
 import { orderStatusLabel, paymentMethodLabel } from "@/lib/orders";
 import { parseShippingAddress } from "@/lib/shippingAddress";
+import {
+  csRequestStatusLabel,
+  csRequestTypeLabel,
+  OPEN_CS_STATUSES,
+} from "@/lib/csRequests";
 
 interface MyOrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -34,12 +40,22 @@ export default async function MyOrderDetailPage({ params }: MyOrderDetailPagePro
 
   if (!order) notFound();
 
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("title, size, quantity, unit_price, currency, image_url")
-    .eq("order_id", order.id);
+  const [{ data: items }, { data: csRequests }] = await Promise.all([
+    supabase
+      .from("order_items")
+      .select("title, size, quantity, unit_price, currency, image_url")
+      .eq("order_id", order.id),
+    supabase
+      .from("order_cs_requests")
+      .select("id, request_type, status, reason, admin_note, exchange_size, created_at, resolved_at")
+      .eq("order_id", order.id)
+      .order("created_at", { ascending: false }),
+  ]);
 
   const shipping = parseShippingAddress(order.shipping_address);
+  const hasOpenRequest = (csRequests ?? []).some((r) =>
+    (OPEN_CS_STATUSES as readonly string[]).includes(r.status),
+  );
 
   return (
     <>
@@ -100,11 +116,37 @@ export default async function MyOrderDetailPage({ params }: MyOrderDetailPagePro
           </section>
         )}
 
-        <OrderCancelButton orderId={order.id} status={order.status} />
+        {(csRequests ?? []).length > 0 && (
+          <section className="mt-8 border border-border p-5 text-sm">
+            <h2 className="font-medium">CS 요청 현황</h2>
+            <ul className="mt-4 space-y-3">
+              {(csRequests ?? []).map((req) => (
+                <li key={req.id} className="border-t border-border pt-3 first:border-0 first:pt-0">
+                  <p className="font-medium">
+                    {csRequestTypeLabel(req.request_type)} · {csRequestStatusLabel(req.status)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">
+                    {new Date(req.created_at).toLocaleString("ko-KR")}
+                  </p>
+                  <p className="mt-2">사유: {req.reason}</p>
+                  {req.exchange_size && (
+                    <p className="mt-1 text-muted">희망 사이즈: {req.exchange_size}</p>
+                  )}
+                  {req.admin_note && (
+                    <p className="mt-1 text-muted">관리자: {req.admin_note}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-        <p className="mt-8 text-center text-xs text-muted">
-          배송 중·배송 완료 주문은 반품/교환 요청(다음 단계)으로 처리됩니다.
-        </p>
+        <OrderCancelButton orderId={order.id} status={order.status} />
+        <OrderCsRequestForm
+          orderId={order.id}
+          status={order.status}
+          hasOpenRequest={hasOpenRequest}
+        />
       </main>
       <Footer />
     </>

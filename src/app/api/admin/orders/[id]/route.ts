@@ -33,6 +33,15 @@ export async function GET(_request: Request, context: RouteContext) {
     .select("title, size, quantity, unit_price, currency, image_url")
     .eq("order_id", id);
 
+  const { data: csRequests } = await admin
+    .from("order_cs_requests")
+    .select(
+      "id, request_type, status, reason, admin_note, exchange_size, created_at, resolved_at",
+    )
+    .eq("order_id", id)
+    .order("created_at", { ascending: false });
+  // table may not exist until add_order_cs_requests.sql is run
+
   const shipping = parseShippingAddress(order.shipping_address);
 
   return NextResponse.json({
@@ -42,6 +51,7 @@ export async function GET(_request: Request, context: RouteContext) {
       paymentMethodLabel: paymentMethodLabel(order.payment_method),
       shipping,
       items: items ?? [],
+      csRequests: csRequests ?? [],
     },
   });
 }

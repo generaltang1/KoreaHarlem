@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OrderDetailView, type OrderDetailData } from "@/components/commerce/OrderDetailView";
+import { AdminCsPanel, type CsRequestItem } from "@/components/admin/AdminCsPanel";
 import {
   REFUNDABLE_STATUSES,
   CANCELLABLE_PENDING_STATUSES,
@@ -39,6 +40,7 @@ interface AdminOrderRecord {
   delivered_at: string | null;
   created_at: string;
   items: OrderDetailData["items"];
+  csRequests: CsRequestItem[];
 }
 
 interface AdminOrderDetailProps {
@@ -70,6 +72,9 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
         setOrder(json.order);
         setCourier(json.order.tracking_courier ?? "");
         setTrackingNumber(json.order.tracking_number ?? "");
+        if (!json.order.csRequests) {
+          json.order.csRequests = [];
+        }
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "오류");
@@ -217,6 +222,8 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
         }}
         showActions={false}
       />
+
+      <AdminCsPanel orderId={orderId} requests={order.csRequests ?? []} />
 
       {showShippingPanel && (
         <section className="border border-border p-5">

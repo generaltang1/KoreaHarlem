@@ -47,6 +47,8 @@ export function orderStatusLabel(status: string): string {
       return "교환요청";
     case "exchange_completed":
       return "교환완료";
+    case "refund_requested":
+      return "환불요청";
     default:
       return status;
   }
@@ -97,6 +99,7 @@ export const MEMBER_ORDER_STATUS_FILTERS: { label: string; value: string }[] = [
   { label: "취소", value: "cancelled" },
   { label: "환불", value: "refunded" },
   { label: "반품", value: "return" },
+  { label: "교환", value: "exchange" },
 ];
 
 /** 필터 탭 value → DB status 값들 */
@@ -104,6 +107,9 @@ export function statusesForFilter(filter: string): string[] | null {
   if (!filter) return null;
   if (filter === "return") {
     return ["return_requested", "return_received", "return_completed", "returned"];
+  }
+  if (filter === "exchange") {
+    return ["exchange_requested", "exchange_completed"];
   }
   return [filter];
 }

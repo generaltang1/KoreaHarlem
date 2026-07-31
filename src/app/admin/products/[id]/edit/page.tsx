@@ -1,4 +1,4 @@
-import EditProductPage from "./EditProductPage";
+import { EditProductPage } from "@/components/admin/EditProductPage";
 
 interface PageProps {
   params: Promise<{ id: string }>;

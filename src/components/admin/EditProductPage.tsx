@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { StockAdjustPanel } from "@/components/admin/StockAdjustPanel";
 
 interface EditProductPageProps {
   productId: string;
 }
 
-export default function EditProductPage({ productId }: EditProductPageProps) {
+export function EditProductPage({ productId }: EditProductPageProps) {
   return (
     <div>
       <div className="mb-8 flex items-end justify-between">
@@ -20,6 +21,7 @@ export default function EditProductPage({ productId }: EditProductPageProps) {
         </Link>
       </div>
       <ProductForm mode="edit" productId={productId} />
+      <StockAdjustPanel productId={productId} />
     </div>
   );
 }
