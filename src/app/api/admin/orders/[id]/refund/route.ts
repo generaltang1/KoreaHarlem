@@ -55,13 +55,23 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const fullCancelAmount = orderTotalToTossCancelAmount(order.total, order.currency);
-  const cancelAmount =
-    body.cancelAmount != null && body.cancelAmount > 0
-      ? body.cancelAmount
-      : fullCancelAmount;
+  const alreadyRefunded = order.refunded_amount ?? 0;
+  const remaining = Math.max(0, fullCancelAmount - alreadyRefunded);
 
-  if (cancelAmount > fullCancelAmount) {
-    return NextResponse.json({ message: "환불 금액이 결제 금액을 초과합니다." }, { status: 400 });
+  if (remaining <= 0) {
+    return NextResponse.json({ message: "이미 전액 환불된 주문입니다." }, { status: 400 });
+  }
+
+  const cancelAmount =
+    body.cancelAmount != null && body.cancelAmount > 0 ? body.cancelAmount : remaining;
+
+  if (cancelAmount > remaining) {
+    return NextResponse.json(
+      {
+        message: `환불 가능 잔액(${remaining} ${order.currency})을 초과합니다. 이미 환불: ${alreadyRefunded}`,
+      },
+      { status: 400 },
+    );
   }
 
   const tossResult = await cancelTossPayment({
@@ -69,7 +79,7 @@ export async function POST(request: Request, context: RouteContext) {
     settlementCurrency: order.currency,
     cancelReason: reason,
     cancelAmount,
-    idempotencyKey: `refund-${order.id}-${cancelAmount}`,
+    idempotencyKey: `refund-${order.id}-${alreadyRefunded}-${cancelAmount}`,
   });
 
   if (!tossResult.ok) {
@@ -79,7 +89,10 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  if (restoreStock && cancelAmount >= fullCancelAmount) {
+  const newRefundedAmount = alreadyRefunded + cancelAmount;
+  const isFullRefund = newRefundedAmount >= fullCancelAmount;
+
+  if (restoreStock && isFullRefund) {
     const { error: stockError } = await admin.rpc("restore_stock_for_paid_order", {
       p_order_id: id,
     });
@@ -94,25 +107,35 @@ export async function POST(request: Request, context: RouteContext) {
     }
   }
 
-  const isFullRefund = cancelAmount >= fullCancelAmount;
-  const newRefundedAmount = (order.refunded_amount ?? 0) + cancelAmount;
-
+  const now = new Date().toISOString();
   await admin
     .from("orders")
     .update({
       status: isFullRefund ? "refunded" : order.status,
       cancel_reason: reason,
-      refunded_at: new Date().toISOString(),
+      refunded_at: now,
       refunded_amount: newRefundedAmount,
-      ...(isFullRefund ? { cancelled_at: new Date().toISOString() } : {}),
+      ...(isFullRefund ? { cancelled_at: now } : {}),
     })
     .eq("id", id);
+
+  await admin.from("order_status_histories").insert({
+    order_id: id,
+    from_status: order.status,
+    to_status: isFullRefund ? "refunded" : order.status,
+    changed_by: auth.user.id,
+    reason: isFullRefund
+      ? `전액 환불 ${cancelAmount} ${order.currency}`
+      : `부분 환불 ${cancelAmount} ${order.currency} (누적 ${newRefundedAmount}/${fullCancelAmount})`,
+  });
 
   return NextResponse.json({
     ok: true,
     orderNumber: order.order_number,
     status: isFullRefund ? "refunded" : order.status,
     cancelAmount,
+    refundedAmount: newRefundedAmount,
+    remainingAmount: Math.max(0, fullCancelAmount - newRefundedAmount),
     stockRestored: restoreStock && isFullRefund,
     payment: tossResult.payment,
   });

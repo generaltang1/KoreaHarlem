@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { MAX_PRODUCT_IMAGES, uploadProductImage } from "@/lib/productImages";
-import { fetchSizeStockMap, saveProductSizeStocks } from "@/lib/productSizeStock";
+import { fetchSizeStockMap, saveProductSizeStocks, syncSizeStockKeys } from "@/lib/productSizeStock";
 import { parseSizeGuide, type SizeGuideData } from "@/lib/sizeGuide";
 import { SizeGuideEditor } from "@/components/admin/SizeGuideEditor";
 import { ProductAddonSelect } from "@/components/admin/ProductAddonSelect";
@@ -238,12 +238,13 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       }
       const totalStockValue = Object.values(stockValues).reduce((sum, n) => sum + n, 0);
 
-      const payload = {
+      // Cafe24형: 신규 등록만 절대값 초기 재고를 저장. 수정 시에는 재고 컬럼을 건드리지 않고
+      // 아래 StockAdjustPanel의 수기 조정(±·이력)만으로 재고를 변경한다.
+      const payload: Record<string, unknown> = {
         title: title.trim(),
         description: description.trim() || null,
         price_krw: price,
         compare_at_price_krw: compareAt ? Number.parseInt(compareAt, 10) : null,
-        stock: totalStockValue,
         sizes: sizeList,
         shipping_fee_krw: Number.parseInt(shippingFee, 10) || 0,
         free_shipping_threshold_krw: freeShippingThreshold
@@ -254,6 +255,9 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         is_sale: true,
         is_published: isPublished,
       };
+      if (mode === "create") {
+        payload.stock = totalStockValue;
+      }
 
       let id = productId;
 
@@ -290,9 +294,17 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
 
       if (id) {
         try {
-          await saveProductSizeStocks(supabase, id, sizeList, stockValues);
-        } catch {
-          /* product_size_stock table may not exist yet */
+          if (mode === "create") {
+            await saveProductSizeStocks(supabase, id, sizeList, stockValues);
+          } else {
+            // 수정 시에는 재고 절대값을 덮어쓰지 않고 사이즈 키만 동기화(신규 사이즈는 0, 재고 있는 사이즈는 삭제 불가)
+            await syncSizeStockKeys(supabase, id, sizeList);
+          }
+        } catch (stockKeyError) {
+          if (mode === "edit") {
+            throw stockKeyError;
+          }
+          /* product_size_stock table may not exist yet (create mode) */
         }
         try {
           await saveProductAddons(supabase, id, selectedAddonIds);
@@ -367,25 +379,53 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       </div>
 
       <div className="border border-border p-4">
-        <p className="text-[10px] uppercase tracking-widest text-muted">사이즈별 재고</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {stockSizeKeys.map((key) => (
-            <div key={key || "__default"}>
-              <label className="mb-1.5 block text-xs text-muted">
-                {key || "단일 (사이즈 없음)"}
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={sizeStocks[key] ?? "0"}
-                onChange={(e) =>
-                  setSizeStocks((prev) => ({ ...prev, [key]: e.target.value }))
-                }
-                className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
-              />
+        <p className="text-[10px] uppercase tracking-widest text-muted">
+          사이즈별 재고 {mode === "edit" && "(읽기 전용)"}
+        </p>
+        {mode === "create" ? (
+          <>
+            <p className="mt-1 text-[10px] text-muted">
+              최초 등록 시에만 절대값으로 초기 재고를 입력합니다. 등록 후 재고 변경은 상품 수정 화면
+              하단의 수기 조정을 사용하세요 (Cafe24 방식).
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {stockSizeKeys.map((key) => (
+                <div key={key || "__default"}>
+                  <label className="mb-1.5 block text-xs text-muted">
+                    {key || "단일 (사이즈 없음)"}
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={sizeStocks[key] ?? "0"}
+                    onChange={(e) =>
+                      setSizeStocks((prev) => ({ ...prev, [key]: e.target.value }))
+                    }
+                    className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        ) : (
+          <>
+            <p className="mt-1 text-[10px] text-muted">
+              현재 재고는 참고용으로만 표시됩니다. 이 화면 저장으로는 재고가 바뀌지 않으며, 변경은
+              하단의 「재고 수기 조정」(±수량·사유·이력)에서만 처리됩니다.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {stockSizeKeys.map((key) => (
+                <div
+                  key={key || "__default"}
+                  className="border border-border bg-neutral-50 px-4 py-3 text-sm"
+                >
+                  <span className="text-xs text-muted">{key || "단일 (사이즈 없음)"}</span>
+                  <span className="ml-2 font-medium">{sizeStocks[key] ?? "0"}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="grid gap-4 border border-border p-4 sm:grid-cols-2">

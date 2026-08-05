@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { OrderDetailView, type OrderDetailData } from "@/components/commerce/OrderDetailView";
 import { AdminCsPanel, type CsRequestItem } from "@/components/admin/AdminCsPanel";
 import {
+  OrderStatusTimeline,
+  type OrderStatusHistoryItem,
+} from "@/components/admin/OrderStatusTimeline";
+import {
   REFUNDABLE_STATUSES,
   CANCELLABLE_PENDING_STATUSES,
   SHIPPING_COURIERS,
@@ -41,6 +45,7 @@ interface AdminOrderRecord {
   created_at: string;
   items: OrderDetailData["items"];
   csRequests: CsRequestItem[];
+  statusHistories?: OrderStatusHistoryItem[];
 }
 
 interface AdminOrderDetailProps {
@@ -103,28 +108,45 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
   };
 
   const handleRefund = async () => {
+    if (!order) return;
     if (!reason.trim()) {
       setError("환불 사유를 입력해주세요.");
       return;
     }
-    if (!confirm("토스 환불 API를 호출합니다. 계속할까요?")) return;
+    const full = orderTotalToTossCancelAmount(order.total, order.currency);
+    const remaining = Math.max(0, full - (order.refunded_amount ?? 0));
+    const partial = Number.parseFloat(partialAmount);
+    const amount =
+      partialAmount.trim() && Number.isFinite(partial) && partial > 0 ? partial : remaining;
+    if (amount <= 0) {
+      setError("환불할 잔액이 없습니다.");
+      return;
+    }
+    if (amount > remaining) {
+      setError(`환불 가능 잔액(${remaining})을 초과합니다.`);
+      return;
+    }
+    if (
+      !confirm(
+        amount >= remaining
+          ? `잔액 전액 ${remaining} ${order.currency}을 환불할까요?`
+          : `부분 환불 ${amount} ${order.currency}을 실행할까요? (잔액 ${remaining})`,
+      )
+    ) {
+      return;
+    }
 
     setActionLoading(true);
     setError("");
     try {
-      const body: Record<string, unknown> = {
-        reason: reason.trim(),
-        restoreStock,
-      };
-      const partial = Number.parseFloat(partialAmount);
-      if (partialAmount.trim() && Number.isFinite(partial) && partial > 0) {
-        body.cancelAmount = partial;
-      }
-
       const res = await fetch(`/api/admin/orders/${orderId}/refund`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          reason: reason.trim(),
+          restoreStock,
+          cancelAmount: amount,
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "환불 실패");
@@ -186,6 +208,9 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
   const showShippingPanel = canPrepare || canShip || canDeliver || ["preparing", "shipped", "delivered"].includes(order.status);
   const tossAmount = orderTotalToTossCancelAmount(order.total, order.currency);
   const currencyMeta = getCurrency(order.currency);
+  const alreadyRefunded = order.refunded_amount ?? 0;
+  const remainingRefund = Math.max(0, tossAmount - alreadyRefunded);
+  const canPartialRefund = canRefund && remainingRefund > 0;
 
   return (
     <div className="space-y-8">
@@ -222,6 +247,8 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
         }}
         showActions={false}
       />
+
+      <OrderStatusTimeline histories={order.statusHistories ?? []} />
 
       <AdminCsPanel orderId={orderId} requests={order.csRequests ?? []} />
 
@@ -327,7 +354,7 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
         </section>
       )}
 
-      {(canCancelPending || canRefund) && (
+      {(canCancelPending || canPartialRefund) && (
         <section className="border border-border p-5">
           <h2 className="text-sm font-medium uppercase tracking-wider">취소 / 환불</h2>
 
@@ -339,26 +366,43 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
               <input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder={canRefund ? "고객 요청 환불" : "결제 미완료 주문 취소"}
+                placeholder={canPartialRefund ? "고객 요청 환불" : "결제 미완료 주문 취소"}
                 className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
               />
             </div>
 
-            {canRefund && (
+            {canPartialRefund && (
               <>
+                <div className="border border-border bg-neutral-50 px-4 py-3 text-sm">
+                  <p>
+                    결제액:{" "}
+                    <span className="font-medium">
+                      {tossAmount.toLocaleString()} {order.currency}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-muted">
+                    이미 환불: {alreadyRefunded.toLocaleString()} {order.currency}
+                  </p>
+                  <p className="mt-1">
+                    환불 가능 잔액:{" "}
+                    <span className="font-medium">
+                      {remainingRefund.toLocaleString()} {order.currency}
+                    </span>
+                  </p>
+                </div>
                 <div>
                   <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
-                    부분 환불 금액 (비우면 전액)
+                    부분 환불 금액 (비우면 잔액 전액)
                   </label>
                   <input
                     value={partialAmount}
                     onChange={(e) => setPartialAmount(e.target.value)}
-                    placeholder={`전액: ${tossAmount}`}
+                    placeholder={`잔액 전액: ${remainingRefund}`}
                     className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
                   />
                   <p className="mt-1 text-[10px] text-muted">
-                    토스 환불 단위: {tossAmount} {order.currency}
-                    {currencyMeta.decimals > 0 ? " (소수 포함)" : ""}
+                    토스 환불 단위 · 최대 {remainingRefund} {order.currency}
+                    {currencyMeta.decimals > 0 ? " (소수 가능)" : ""}
                   </p>
                 </div>
                 <label className="flex items-center gap-2 text-sm">
@@ -367,30 +411,32 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
                     checked={restoreStock}
                     onChange={(e) => setRestoreStock(e.target.checked)}
                   />
-                  전액 환불 시 재고 복구
+                  잔액 전액 환불 시 재고 복구
                 </label>
               </>
             )}
 
-            <div className="flex flex-wrap gap-3">
+            {error && <p className="text-sm text-rose-500">{error}</p>}
+
+            <div className="flex flex-wrap gap-2">
               {canCancelPending && (
                 <button
                   type="button"
                   disabled={actionLoading}
-                  onClick={handlePendingCancel}
+                  onClick={() => void handlePendingCancel()}
                   className="border border-border px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
                 >
-                  결제 대기 취소
+                  결제대기 취소
                 </button>
               )}
-              {canRefund && (
+              {canPartialRefund && (
                 <button
                   type="button"
-                  disabled={actionLoading || !order.toss_payment_key}
-                  onClick={handleRefund}
+                  disabled={actionLoading}
+                  onClick={() => void handleRefund()}
                   className="bg-foreground px-4 py-2 text-xs uppercase tracking-widest text-background disabled:opacity-50"
                 >
-                  {actionLoading ? "처리 중..." : "토스 환불 처리"}
+                  {actionLoading ? "처리 중..." : "토스 환불 실행"}
                 </button>
               )}
             </div>

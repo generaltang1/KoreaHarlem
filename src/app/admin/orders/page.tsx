@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { orderStatusLabel } from "@/lib/orders";
 import { Pagination } from "@/components/ui/Pagination";
 import { ListToolbar } from "@/components/ui/ListToolbar";
+import { AdminOrdersBulkList } from "@/components/admin/AdminOrdersBulkList";
 import {
   getRange,
   getTotalPages,
@@ -57,7 +57,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
       <div className="mb-8">
         <p className="text-[10px] uppercase tracking-widest text-muted">Admin</p>
         <h1 className="mt-1 text-xl font-medium uppercase tracking-wider">주문 관리</h1>
-        <p className="mt-2 text-xs text-muted">총 {count ?? 0}건</p>
+        <p className="mt-2 text-xs text-muted">
+          총 {count ?? 0}건 · 체크 후 일괄 배송 상태 변경 가능
+        </p>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2 text-xs">
@@ -87,32 +89,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
         ))}
       </div>
 
-      <div className="space-y-2">
-        {(orders ?? []).length === 0 ? (
-          <p className="border border-border p-8 text-center text-sm text-muted">주문이 없습니다.</p>
-        ) : (
-          (orders ?? []).map((order) => (
-            <Link
-              key={order.id}
-              href={`/admin/orders/${order.id}`}
-              className="flex flex-col gap-2 border border-border p-4 transition-colors hover:border-foreground sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <p className="text-sm font-medium">{order.order_number ?? order.id.slice(0, 8)}</p>
-                <p className="text-xs text-muted">
-                  {order.customer_name} · {order.customer_email}
-                </p>
-              </div>
-              <div className="text-right text-sm">
-                <p>{orderStatusLabel(order.status)}</p>
-                <p className="text-xs text-muted">
-                  {order.total?.toLocaleString()} {order.currency}
-                </p>
-              </div>
-            </Link>
-          ))
-        )}
-      </div>
+      <AdminOrdersBulkList orders={orders ?? []} />
 
       <Pagination
         currentPage={page}

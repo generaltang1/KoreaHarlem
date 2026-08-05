@@ -7,6 +7,23 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 type ShippingAction = "preparing" | "shipped" | "delivered" | "update_tracking";
 
+async function recordHistory(
+  admin: NonNullable<ReturnType<typeof createServiceClient>>,
+  orderId: string,
+  fromStatus: string,
+  toStatus: string,
+  changedBy: string,
+  reason: string,
+) {
+  await admin.from("order_status_histories").insert({
+    order_id: orderId,
+    from_status: fromStatus,
+    to_status: toStatus,
+    changed_by: changedBy,
+    reason,
+  });
+}
+
 /** 관리자 배송 상태 / 송장 처리 */
 export async function POST(request: Request, context: RouteContext) {
   const auth = await assertAdminApi();
@@ -42,6 +59,7 @@ export async function POST(request: Request, context: RouteContext) {
   const now = new Date().toISOString();
   const courier = body.trackingCourier?.trim() || order.tracking_courier || null;
   const trackingNumber = body.trackingNumber?.trim() || order.tracking_number || null;
+  const actorId = auth.user.id;
 
   if (action === "update_tracking") {
     if (!["preparing", "shipped", "delivered", "paid"].includes(order.status)) {
@@ -56,7 +74,11 @@ export async function POST(request: Request, context: RouteContext) {
       .eq("id", id);
     if (error) {
       return NextResponse.json(
-        { message: error.message.includes("tracking_") ? "add_order_shipping.sql을 실행해주세요." : error.message },
+        {
+          message: error.message.includes("tracking_")
+            ? "add_order_shipping.sql을 실행해주세요."
+            : error.message,
+        },
         { status: 500 },
       );
     }
@@ -81,13 +103,21 @@ export async function POST(request: Request, context: RouteContext) {
       .eq("id", id);
     if (error) {
       return NextResponse.json(
-        { message: error.message.includes("prepared_at") || error.message.includes("tracking_")
-          ? "supabase/add_order_shipping.sql을 실행해주세요."
-          : error.message },
+        {
+          message:
+            error.message.includes("prepared_at") || error.message.includes("tracking_")
+              ? "supabase/add_order_shipping.sql을 실행해주세요."
+              : error.message,
+        },
         { status: 500 },
       );
     }
-    return NextResponse.json({ ok: true, status: "preparing", statusLabel: orderStatusLabel("preparing") });
+    await recordHistory(admin, id, order.status, "preparing", actorId, "배송준비중");
+    return NextResponse.json({
+      ok: true,
+      status: "preparing",
+      statusLabel: orderStatusLabel("preparing"),
+    });
   }
 
   if (action === "shipped") {
@@ -117,13 +147,28 @@ export async function POST(request: Request, context: RouteContext) {
       .eq("id", id);
     if (error) {
       return NextResponse.json(
-        { message: error.message.includes("shipped_at") || error.message.includes("tracking_")
-          ? "supabase/add_order_shipping.sql을 실행해주세요."
-          : error.message },
+        {
+          message:
+            error.message.includes("shipped_at") || error.message.includes("tracking_")
+              ? "supabase/add_order_shipping.sql을 실행해주세요."
+              : error.message,
+        },
         { status: 500 },
       );
     }
-    return NextResponse.json({ ok: true, status: "shipped", statusLabel: orderStatusLabel("shipped") });
+    await recordHistory(
+      admin,
+      id,
+      order.status,
+      "shipped",
+      actorId,
+      `배송중 (${shipCourier} ${number})`,
+    );
+    return NextResponse.json({
+      ok: true,
+      status: "shipped",
+      statusLabel: orderStatusLabel("shipped"),
+    });
   }
 
   if (action === "delivered") {
@@ -142,13 +187,20 @@ export async function POST(request: Request, context: RouteContext) {
       .eq("id", id);
     if (error) {
       return NextResponse.json(
-        { message: error.message.includes("delivered_at")
-          ? "supabase/add_order_shipping.sql을 실행해주세요."
-          : error.message },
+        {
+          message: error.message.includes("delivered_at")
+            ? "supabase/add_order_shipping.sql을 실행해주세요."
+            : error.message,
+        },
         { status: 500 },
       );
     }
-    return NextResponse.json({ ok: true, status: "delivered", statusLabel: orderStatusLabel("delivered") });
+    await recordHistory(admin, id, order.status, "delivered", actorId, "배송완료");
+    return NextResponse.json({
+      ok: true,
+      status: "delivered",
+      statusLabel: orderStatusLabel("delivered"),
+    });
   }
 
   return NextResponse.json({ message: "알 수 없는 action입니다." }, { status: 400 });

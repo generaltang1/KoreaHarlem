@@ -16,6 +16,14 @@
   --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* 상세/폼 라벨·소제목 가독성: 기본 대비 약 +30% */
+  --text-xs: 0.975rem; /* 12px → ~15.6px */
+  --text-xs--line-height: 1.4;
+  --text-sm: 1.1375rem; /* 14px → ~18.2px */
+  --text-sm--line-height: 1.45;
+  --text-xl: 1.625rem; /* 20px → 26px (상세 페이지 제목) */
+  --text-xl--line-height: 1.35;
 }
 
 body {
@@ -31,6 +39,12 @@ html {
 ::selection {
   background: #0a0a0a;
   color: #fafaf8;
+}
+
+/* 폼·상세 마이크로 라벨 (text-[10px]) → +30% ≈ 13px */
+.text-\[10px\] {
+  font-size: 13px !important;
+  line-height: 1.4;
 }
 
 /* 음악 플레이어 하단 바 여백 */

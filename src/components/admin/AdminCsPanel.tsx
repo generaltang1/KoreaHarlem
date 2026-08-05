@@ -15,6 +15,14 @@ export interface CsRequestItem {
   reason: string;
   admin_note: string | null;
   exchange_size: string | null;
+  order_item_id?: string | null;
+  hold_size?: string | null;
+  hold_quantity?: number | null;
+  stock_held_at?: string | null;
+  stock_released_at?: string | null;
+  stock_completed_at?: string | null;
+  item_title?: string | null;
+  item_size?: string | null;
   created_at: string;
   resolved_at: string | null;
 }
@@ -33,6 +41,12 @@ export function AdminCsPanel({ orderId, requests }: AdminCsPanelProps) {
   const [restoreStock, setRestoreStock] = useState(true);
 
   if (requests.length === 0) return null;
+
+  const hasOpenReturnRefund = requests.some(
+    (r) =>
+      ["requested", "approved", "received"].includes(r.status) &&
+      (r.request_type === "return" || r.request_type === "refund"),
+  );
 
   const runAction = async (
     requestId: string,
@@ -77,6 +91,7 @@ export function AdminCsPanel({ orderId, requests }: AdminCsPanelProps) {
       <div className="mt-4 space-y-4">
         {requests.map((req) => {
           const open = ["requested", "approved", "received"].includes(req.status);
+          const isExchange = req.request_type === "exchange";
           return (
             <div key={req.id} className="border border-border p-4 text-sm">
               <div className="flex flex-wrap items-start justify-between gap-2">
@@ -90,8 +105,33 @@ export function AdminCsPanel({ orderId, requests }: AdminCsPanelProps) {
                 </div>
               </div>
               <p className="mt-3">사유: {req.reason}</p>
+              {(req.item_title || req.item_size) && (
+                <p className="mt-1 text-muted">
+                  대상 상품: {req.item_title ?? "상품"}
+                  {req.item_size ? ` / ${req.item_size}` : ""}
+                </p>
+              )}
               {req.exchange_size && (
                 <p className="mt-1 text-muted">희망 사이즈: {req.exchange_size}</p>
+              )}
+              {isExchange && (req.stock_held_at || req.stock_completed_at) && (
+                <div className="mt-2 border border-dashed border-border p-2 text-xs text-muted">
+                  {req.stock_held_at && (
+                    <p>
+                      희망 사이즈 재고 hold: {req.hold_size || "-"}
+                      {req.hold_quantity != null ? ` × ${req.hold_quantity}` : ""} (
+                      {new Date(req.stock_held_at).toLocaleString("ko-KR")})
+                    </p>
+                  )}
+                  {req.stock_released_at && (
+                    <p>hold 해제: {new Date(req.stock_released_at).toLocaleString("ko-KR")}</p>
+                  )}
+                  {req.stock_completed_at && (
+                    <p>
+                      교환 재고 처리 완료: {new Date(req.stock_completed_at).toLocaleString("ko-KR")}
+                    </p>
+                  )}
+                </div>
               )}
               {req.admin_note && <p className="mt-1 text-muted">관리자 메모: {req.admin_note}</p>}
 
@@ -155,22 +195,26 @@ export function AdminCsPanel({ orderId, requests }: AdminCsPanelProps) {
             placeholder="반려 사유, 검수 메모 등"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={runTossRefund}
-            onChange={(e) => setRunTossRefund(e.target.checked)}
-          />
-          처리 완료 시 토스 환불 실행 (반품/환불)
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={restoreStock}
-            onChange={(e) => setRestoreStock(e.target.checked)}
-          />
-          처리 완료 시 재고 복구 (반품/환불)
-        </label>
+        {hasOpenReturnRefund && (
+          <>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={runTossRefund}
+                onChange={(e) => setRunTossRefund(e.target.checked)}
+              />
+              처리 완료 시 토스 환불 실행 (반품/환불)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={restoreStock}
+                onChange={(e) => setRestoreStock(e.target.checked)}
+              />
+              처리 완료 시 재고 복구 (반품/환불)
+            </label>
+          </>
+        )}
         {error && <p className="text-sm text-rose-500">{error}</p>}
       </div>
     </section>

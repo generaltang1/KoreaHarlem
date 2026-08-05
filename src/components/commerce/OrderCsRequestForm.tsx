@@ -1,23 +1,39 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { canRequestCs, type CsRequestType } from "@/lib/csRequests";
+
+export interface OrderCsFormItem {
+  id: string;
+  product_id: string | null;
+  title: string;
+  size: string | null;
+}
 
 interface OrderCsRequestFormProps {
   orderId: string;
   status: string;
   hasOpenRequest: boolean;
+  items?: OrderCsFormItem[];
 }
 
-export function OrderCsRequestForm({ orderId, status, hasOpenRequest }: OrderCsRequestFormProps) {
+export function OrderCsRequestForm({
+  orderId,
+  status,
+  hasOpenRequest,
+  items = [],
+}: OrderCsRequestFormProps) {
   const router = useRouter();
   const [type, setType] = useState<CsRequestType>("return");
   const [reason, setReason] = useState("");
   const [exchangeSize, setExchangeSize] = useState("");
+  const [orderItemId, setOrderItemId] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const exchangeableItems = useMemo(() => items.filter((item) => !!item.product_id), [items]);
 
   if (!canRequestCs(status) || hasOpenRequest) return null;
 
@@ -26,9 +42,15 @@ export function OrderCsRequestForm({ orderId, status, hasOpenRequest }: OrderCsR
       setError("사유를 입력해주세요.");
       return;
     }
-    if (type === "exchange" && !exchangeSize.trim()) {
-      setError("교환 희망 사이즈를 입력해주세요.");
-      return;
+    if (type === "exchange") {
+      if (!orderItemId) {
+        setError("교환할 주문 상품을 선택해주세요.");
+        return;
+      }
+      if (!exchangeSize.trim()) {
+        setError("교환 희망 사이즈를 입력해주세요.");
+        return;
+      }
     }
     if (!confirm("요청을 접수할까요? 관리자 확인 후 처리됩니다.")) return;
 
@@ -42,6 +64,7 @@ export function OrderCsRequestForm({ orderId, status, hasOpenRequest }: OrderCsR
           type,
           reason: reason.trim(),
           exchangeSize: exchangeSize.trim() || undefined,
+          orderItemId: type === "exchange" ? orderItemId : undefined,
         }),
       });
       const json = await res.json();
@@ -94,17 +117,41 @@ export function OrderCsRequestForm({ orderId, status, hasOpenRequest }: OrderCsR
           </fieldset>
 
           {type === "exchange" && (
-            <div>
-              <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
-                교환 희망 사이즈 *
-              </label>
-              <input
-                value={exchangeSize}
-                onChange={(e) => setExchangeSize(e.target.value)}
-                placeholder="예: L"
-                className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
-              />
-            </div>
+            <>
+              <div>
+                <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+                  교환할 상품 *
+                </label>
+                {exchangeableItems.length > 0 ? (
+                  <select
+                    value={orderItemId}
+                    onChange={(e) => setOrderItemId(e.target.value)}
+                    className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+                  >
+                    <option value="">선택해주세요</option>
+                    {exchangeableItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.title}
+                        {item.size ? ` / ${item.size}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-xs text-rose-500">교환 가능한 주문 상품이 없습니다.</p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+                  교환 희망 사이즈 *
+                </label>
+                <input
+                  value={exchangeSize}
+                  onChange={(e) => setExchangeSize(e.target.value)}
+                  placeholder="예: L"
+                  className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+                />
+              </div>
+            </>
           )}
 
           <div>

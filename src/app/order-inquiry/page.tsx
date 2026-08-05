@@ -5,6 +5,19 @@ import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { OrderDetailView, type OrderDetailData } from "@/components/commerce/OrderDetailView";
+import { OrderCancelRefundSection } from "@/components/commerce/OrderCancelRefundSection";
+import {
+  OrderCsRequestsSection,
+  type OrderCsRequestItem,
+} from "@/components/commerce/OrderCsRequestsSection";
+
+interface GuestOrderData extends OrderDetailData {
+  cancelReason?: string | null;
+  cancelledAt?: string | null;
+  refundedAt?: string | null;
+  refundedAmount?: number | null;
+  csRequests?: OrderCsRequestItem[];
+}
 
 export default function OrderInquiryPage() {
   const [name, setName] = useState("");
@@ -12,7 +25,7 @@ export default function OrderInquiryPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [order, setOrder] = useState<OrderDetailData | null>(null);
+  const [order, setOrder] = useState<GuestOrderData | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -97,6 +110,14 @@ export default function OrderInquiryPage() {
         {order && (
           <div className="mt-10">
             <OrderDetailView order={order} showActions={false} />
+            <OrderCancelRefundSection
+              cancelReason={order.cancelReason}
+              cancelledAt={order.cancelledAt}
+              refundedAt={order.refundedAt}
+              refundedAmount={order.refundedAmount}
+              currency={order.currency}
+            />
+            <OrderCsRequestsSection requests={order.csRequests ?? []} />
             <div className="mt-8 text-center">
               <Link href="/sale" className="text-xs uppercase tracking-widest underline">
                 쇼핑 계속하기

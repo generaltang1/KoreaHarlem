@@ -63,6 +63,16 @@ export async function POST(request: Request, context: RouteContext) {
     if (csReq.status !== "requested") {
       return NextResponse.json({ message: "요청접수 상태만 승인할 수 있습니다." }, { status: 400 });
     }
+
+    if (csReq.request_type === "exchange") {
+      const { error: holdError } = await admin.rpc("hold_exchange_size_stock", {
+        p_cs_request_id: requestId,
+      });
+      if (holdError) {
+        return NextResponse.json({ message: stockErrorMessage(holdError) }, { status: 400 });
+      }
+    }
+
     await admin
       .from("order_cs_requests")
       .update({ status: "approved", admin_note: adminNote, updated_at: now })
@@ -74,6 +84,16 @@ export async function POST(request: Request, context: RouteContext) {
     if (!["requested", "approved"].includes(csReq.status)) {
       return NextResponse.json({ message: "현재 상태에서는 반려할 수 없습니다." }, { status: 400 });
     }
+
+    if (csReq.request_type === "exchange") {
+      const { error: releaseError } = await admin.rpc("release_exchange_size_stock", {
+        p_cs_request_id: requestId,
+      });
+      if (releaseError) {
+        return NextResponse.json({ message: stockErrorMessage(releaseError) }, { status: 400 });
+      }
+    }
+
     const restoreTo = csReq.previous_status || "delivered";
     await admin
       .from("order_cs_requests")
@@ -102,6 +122,16 @@ export async function POST(request: Request, context: RouteContext) {
     if (csReq.request_type !== "return" && csReq.request_type !== "exchange") {
       return NextResponse.json({ message: "반품/교환만 회수·검수 단계가 있습니다." }, { status: 400 });
     }
+
+    if (csReq.request_type === "exchange") {
+      const { error: holdError } = await admin.rpc("hold_exchange_size_stock", {
+        p_cs_request_id: requestId,
+      });
+      if (holdError) {
+        return NextResponse.json({ message: stockErrorMessage(holdError) }, { status: 400 });
+      }
+    }
+
     await admin
       .from("order_cs_requests")
       .update({ status: "received", admin_note: adminNote, updated_at: now })
@@ -195,6 +225,21 @@ export async function POST(request: Request, context: RouteContext) {
         reason: adminNote || `${csRequestTypeLabel(csReq.request_type)} 완료(환불)`,
       });
     } else if (csReq.request_type === "exchange") {
+      // 완료 시점까지 hold가 안 됐다면(예: 검수 단계를 건너뛴 경우) 멱등 hold 후 완료 처리
+      const { error: holdError } = await admin.rpc("hold_exchange_size_stock", {
+        p_cs_request_id: csReq.id,
+      });
+      if (holdError) {
+        return NextResponse.json({ message: stockErrorMessage(holdError) }, { status: 400 });
+      }
+
+      const { error: completeError } = await admin.rpc("complete_exchange_stock", {
+        p_cs_request_id: csReq.id,
+      });
+      if (completeError) {
+        return NextResponse.json({ message: stockErrorMessage(completeError) }, { status: 400 });
+      }
+
       await admin.from("orders").update({ status: "exchange_completed" }).eq("id", id);
       await admin.from("order_status_histories").insert({
         order_id: id,

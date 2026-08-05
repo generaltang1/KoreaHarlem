@@ -20,7 +20,8 @@ CS + 재고 수기 조정은 `main`에 푸시·Vercel 배포됨 (다른 PC는 `g
 | 파일 | 용도 | 상태 (이 PC 기준) |
 |------|------|-------------------|
 | `supabase/add_order_cs_requests.sql` | CS 요청·상태이력 · restore에 return_* 허용 | **실행함** |
-| `supabase/add_stock_adjustment_logs.sql` | 수기 조정 이력 · `adjust_product_size_stock` | **실행 여부 확인** (미실행이면 지금 실행) |
+| `supabase/add_stock_adjustment_logs.sql` | 수기 조정 이력 · `adjust_product_size_stock` | **실행함** |
+| `supabase/add_exchange_stock_hold.sql` | 교환 hold/release/complete RPC | **미실행 → 지금 실행** |
 | `supabase/add_order_shipping.sql` | 송장·배송 컬럼 | 이전에 실행 |
 | `supabase/alter_restore_stock_preparing.sql` | preparing 등 restore 허용 | 이전에 실행 |
 
@@ -72,20 +73,22 @@ SQL Editor에서 위 파일 순서대로 «아직 안 돌린 것만» 실행. �
 - [x] 관리자: 주문 상세 `AdminCsPanel` — 승인/반려/회수·검수/처리완료  
   (`POST /api/admin/orders/[id]/cs/[requestId]`, 완료 시 토스 환불·재고 복구 옵션)
 - [x] 헬퍼: `src/lib/csRequests.ts`, 주문 상태 확장: `src/lib/orders.ts`
-- [ ] 교환 «완료»는 **상태만** (사이즈 hold·차액 미구현)
-- [ ] 비회원 주문조회에 CS 이력 미표시
+- [x] 교환 사이즈 재고 hold (`add_exchange_stock_hold.sql`) — 승인 hold · 반려 해제 · 완료 시 원사이즈 복구/`order_items` 갱신
+- [ ] 교환 차액 정산 — 사이즈별 가격 도입 후 (현재 `price_krw` 공통)
+- [x] 비회원 주문조회에 CS·송장·취소 이력 표시
 
 ### 재고 수기 조정
 - [x] DB: `stock_adjustment_logs` + RPC `adjust_product_size_stock`
 - [x] API: `GET/POST /api/admin/products/[id]/stock-adjust`
 - [x] UI: `/admin/products/[id]/edit` — `StockAdjustPanel` (±수량·사유·이력)
 - [x] 페이지: `page.tsx` → `@/components/admin/EditProductPage` (로컬 `EditProductPage.tsx`는 제거됨)
-- [ ] ProductForm의 **절대값 재고 저장**은 이력 안 남음 — 수기 조정과 구분해서 사용
+- [x] Cafe24형 재고 UX: 신규=절대값 초기 재고 / 수정=읽기 전용 + 수기 조정(±·이력)만
 
 ### 주요 경로 빠른 찾기
 | 기능 | 경로 |
 |------|------|
 | CS SQL | `supabase/add_order_cs_requests.sql` |
+| 교환 hold SQL | `supabase/add_exchange_stock_hold.sql` |
 | 수기조정 SQL | `supabase/add_stock_adjustment_logs.sql` |
 | 회원 CS 요청 UI | `src/components/commerce/OrderCsRequestForm.tsx` |
 | 관리자 CS | `src/components/admin/AdminCsPanel.tsx` |
@@ -102,11 +105,11 @@ SQL Editor에서 위 파일 순서대로 «아직 안 돌린 것만» 실행. �
 2. [ ] QA  
    - 반품: 요청 → 승인 → 검수 → 처리완료(토스·재고)  
    - 수기 조정: ± · 음수 방지 · 이력  
-3. [ ] 비회원 `/order-inquiry`에 CS·송장·취소 이력 표시  
-4. [ ] 교환 시 사이즈별 재고 hold / 차액 정산  
-5. [ ] 상품 등록·재고 화면 Cafe24형 정리 (절대값 vs 수기 조정 UX 통일)  
-6. [ ] 주문 목록 일괄 상태 변경 · `order_status_histories` 타임라인 UI  
-7. [ ] 토스 Webhook · 부분환불 UI · 라이브 키 전환  
+3. [x] 비회원 `/order-inquiry`에 CS·송장·취소 이력 표시  
+4. [x] 교환 시 사이즈별 재고 hold (차액은 사이즈별 가격 도입 후)  
+5. [x] 상품 등록·재고 화면 Cafe24형 정리 (신규 절대값 / 수정 수기 조정)  
+6. [x] 주문 목록 일괄 상태 변경 · `order_status_histories` 타임라인 UI  
+7. [x] 토스 Webhook · 부분환불 UI 개선 (라이브 키 전환은 심사 후)  
 
 ---
 
@@ -121,6 +124,7 @@ SQL Editor에서 위 파일 순서대로 «아직 안 돌린 것만» 실행. �
 
 ## 5) 한 줄 요약 — 다른 PC에서 바로 할 일
 
-1. `git pull` 후 **`add_stock_adjustment_logs.sql` 실행 여부 확인**  
-2. 프로덕션 QA (CS · 수기 조정)  
-3. 이어서 → **비회원 주문조회 CS/송장** 또는 **교환 재고 hold**
+1. `git pull` 후 필요 SQL 실행 (`add_exchange_stock_hold.sql` 등)  
+2. Vercel 배포 후 토스 웹훅 URL이 동작하는지 확인 (GET으로 ok 응답)  
+3. 심사 통과 후 **라이브 키 전환** + 라이브 웹훅 등록  
+4. SHOP 기능 완료 후 한 사이클 QA (주문·결제·CS·재고)

@@ -110,8 +110,9 @@ export function StockAdjustPanel({ productId }: StockAdjustPanelProps) {
     <section className="mt-10 border border-border p-5">
       <h2 className="text-sm font-medium uppercase tracking-wider">재고 수기 조정</h2>
       <p className="mt-2 text-xs text-muted">
-        실재고 불일치·수동 환불 후 복구 등에 사용합니다. 위 폼의 절대값 저장과 달리 ±수량·사유·이력이
-        남습니다.
+        Cafe24형 재고 관리: 신규 등록 이후 재고는 이 패널의 ±수량·사유로만 변경합니다. 위 상품 수정
+        폼의 재고는 읽기 전용이며 저장 시 값이 바뀌지 않습니다. 실재고 불일치·수동 환불 후 복구 등에
+        사용하고, 변경 이력이 아래에 남습니다.
       </p>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

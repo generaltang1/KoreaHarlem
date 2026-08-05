@@ -77,6 +77,14 @@ export function canTransitionShipping(from: string, to: string): boolean {
   return (allowed[from] ?? []).includes(to);
 }
 
+/** 일괄 배송 상태 변경에 허용하는 목표 상태 */
+export const BULK_SHIPPING_STATUSES = ["preparing", "shipped", "delivered"] as const;
+export type BulkShippingStatus = (typeof BULK_SHIPPING_STATUSES)[number];
+
+export function isBulkShippingStatus(value: string): value is BulkShippingStatus {
+  return (BULK_SHIPPING_STATUSES as readonly string[]).includes(value);
+}
+
 export const SHIPPING_COURIERS = [
   "CJ대한통운",
   "한진택배",

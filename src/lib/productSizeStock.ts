@@ -89,3 +89,55 @@ export async function saveProductSizeStocks(
   });
   if (syncError) throw syncError;
 }
+
+/**
+ * Cafe24형 수정 화면용: 재고 절대값은 건드리지 않고 사이즈 키만 동기화.
+ * - 새로 추가된 사이즈는 재고 0으로 생성
+ * - 재고가 남아있는(0보다 큰) 사이즈는 목록에서 빠지더라도 삭제하지 않음(에러)
+ */
+export async function syncSizeStockKeys(
+  supabase: SupabaseClient,
+  productId: string,
+  sizes: string[],
+): Promise<void> {
+  const keys = sizes.length > 0 ? sizes : [""];
+
+  const { data: existingRows, error: fetchError } = await supabase
+    .from("product_size_stock")
+    .select("size, stock")
+    .eq("product_id", productId);
+  if (fetchError) throw fetchError;
+
+  const existingMap = new Map((existingRows ?? []).map((row) => [row.size, row.stock]));
+
+  const toRemove = [...existingMap.keys()].filter((size) => !keys.includes(size));
+  const blocked = toRemove.filter((size) => (existingMap.get(size) ?? 0) > 0);
+  if (blocked.length > 0) {
+    throw new Error(
+      `재고가 남아있는 사이즈는 삭제할 수 없습니다: ${blocked.join(", ")} (재고를 0으로 조정 후 다시 시도해주세요)`,
+    );
+  }
+
+  const removable = toRemove.filter((size) => !blocked.includes(size));
+  if (removable.length > 0) {
+    const { error: delError } = await supabase
+      .from("product_size_stock")
+      .delete()
+      .eq("product_id", productId)
+      .in("size", removable);
+    if (delError) throw delError;
+  }
+
+  const toAdd = keys.filter((size) => !existingMap.has(size));
+  if (toAdd.length > 0) {
+    const { error: insError } = await supabase
+      .from("product_size_stock")
+      .insert(toAdd.map((size) => ({ product_id: productId, size, stock: 0 })));
+    if (insError) throw insError;
+  }
+
+  const { error: syncError } = await supabase.rpc("sync_product_total_stock", {
+    p_product_id: productId,
+  });
+  if (syncError) throw syncError;
+}

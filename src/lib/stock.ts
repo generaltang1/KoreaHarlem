@@ -35,6 +35,38 @@ export function stockErrorMessage(error: unknown): string {
   if (msg.includes("INSUFFICIENT_STOCK")) {
     return "재고가 부족합니다. 수량 또는 사이즈를 확인해주세요.";
   }
+  if (msg.includes("SAME_SIZE")) {
+    return "교환 희망 사이즈가 기존 사이즈와 같습니다.";
+  }
+  if (msg.includes("ORDER_ITEM_REQUIRED") || msg.includes("ORDER_ITEM_NOT_FOUND")) {
+    return "교환 대상 주문 상품 정보를 확인해주세요.";
+  }
+  if (msg.includes("PRODUCT_REQUIRED")) {
+    return "상품 정보가 없는 주문 항목은 교환할 수 없습니다.";
+  }
+  if (msg.includes("ALREADY_COMPLETED")) {
+    return "이미 교환 처리가 완료되었습니다.";
+  }
+  if (msg.includes("ALREADY_RELEASED")) {
+    return "이미 재고 hold가 해제된 요청입니다.";
+  }
+  if (msg.includes("HOLD_REQUIRED")) {
+    return "먼저 승인(재고 hold) 처리가 필요합니다.";
+  }
+  if (msg.includes("NOT_EXCHANGE")) {
+    return "교환 요청이 아닙니다.";
+  }
+  if (msg.includes("CS_REQUEST_NOT_FOUND")) {
+    return "CS 요청을 찾을 수 없습니다.";
+  }
+  if (
+    msg.includes("hold_exchange_size_stock") ||
+    msg.includes("release_exchange_size_stock") ||
+    msg.includes("complete_exchange_stock") ||
+    msg.includes("order_item_id")
+  ) {
+    return "supabase/add_exchange_stock_hold.sql을 실행해주세요.";
+  }
   return msg || "재고 처리 중 오류가 발생했습니다.";
 }
 

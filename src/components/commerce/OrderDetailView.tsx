@@ -76,7 +76,7 @@ export function OrderDetailView({ order, showActions = true }: { order: OrderDet
       </section>
 
       <section className="border border-border p-5">
-        <h2 className="text-sm font-medium uppercase tracking-wider">배송지</h2>
+        <h2 className="text-sm font-medium uppercase tracking-wider">배송지 · 배송조회</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex gap-4">
             <dt className="w-24 shrink-0 text-muted">받는사람</dt>

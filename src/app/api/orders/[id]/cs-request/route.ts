@@ -5,6 +5,7 @@ import {
   OPEN_CS_STATUSES,
   type CsRequestType,
 } from "@/lib/csRequests";
+import { normalizeSize } from "@/lib/stock";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -18,6 +19,7 @@ export async function POST(request: Request, context: RouteContext) {
       type?: CsRequestType;
       reason?: string;
       exchangeSize?: string;
+      orderItemId?: string;
     };
 
     const type = body.type;
@@ -30,6 +32,9 @@ export async function POST(request: Request, context: RouteContext) {
     }
     if (type === "exchange" && !body.exchangeSize?.trim()) {
       return NextResponse.json({ message: "교환 희망 사이즈를 입력해주세요." }, { status: 400 });
+    }
+    if (type === "exchange" && !body.orderItemId) {
+      return NextResponse.json({ message: "교환할 주문 상품을 선택해주세요." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -76,6 +81,32 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
+    let orderItemId: string | null = null;
+    if (type === "exchange") {
+      const { data: orderItem } = await admin
+        .from("order_items")
+        .select("id, order_id, product_id, size")
+        .eq("id", body.orderItemId as string)
+        .maybeSingle();
+
+      if (!orderItem || orderItem.order_id !== id) {
+        return NextResponse.json({ message: "선택한 주문 상품을 찾을 수 없습니다." }, { status: 404 });
+      }
+      if (!orderItem.product_id) {
+        return NextResponse.json(
+          { message: "상품 정보가 없는 주문 항목은 교환할 수 없습니다." },
+          { status: 400 },
+        );
+      }
+      if (normalizeSize(orderItem.size) === normalizeSize(body.exchangeSize)) {
+        return NextResponse.json(
+          { message: "교환 희망 사이즈가 기존 사이즈와 같습니다." },
+          { status: 400 },
+        );
+      }
+      orderItemId = orderItem.id;
+    }
+
     const previousStatus = order.status;
     const nextOrderStatus = orderStatusForCsRequest(type);
 
@@ -89,6 +120,7 @@ export async function POST(request: Request, context: RouteContext) {
         reason,
         exchange_size: type === "exchange" ? body.exchangeSize?.trim() : null,
         previous_status: previousStatus,
+        ...(orderItemId ? { order_item_id: orderItemId } : {}),
       })
       .select("id, request_type, status, reason, exchange_size, created_at")
       .single();
@@ -98,7 +130,9 @@ export async function POST(request: Request, context: RouteContext) {
         {
           message: insertError?.message?.includes("order_cs_requests")
             ? "supabase/add_order_cs_requests.sql을 실행해주세요."
-            : insertError?.message || "요청 등록 실패",
+            : insertError?.message?.includes("order_item_id")
+              ? "supabase/add_exchange_stock_hold.sql을 실행해주세요."
+              : insertError?.message || "요청 등록 실패",
         },
         { status: 500 },
       );

@@ -129,6 +129,57 @@ export async function cancelTossPayment(
   return { ok: true, payment };
 }
 
+export type TossPaymentLookup = {
+  paymentKey: string;
+  orderId: string;
+  status: string;
+  totalAmount: number;
+  balanceAmount?: number;
+  currency?: string;
+  cancels?: { cancelAmount: number; cancelReason?: string; canceledAt?: string }[] | null;
+};
+
+/** 결제 조회 — 웹훅 검증용 */
+export async function fetchTossPayment(
+  paymentKey: string,
+  settlementCurrency = "KRW",
+): Promise<{ ok: true; payment: TossPaymentLookup } | { ok: false; message: string; code?: string }> {
+  const secretKey = getTossSecretKey(settlementCurrency);
+  if (!secretKey) {
+    return { ok: false, message: "토스 시크릿 키가 설정되지 않았습니다." };
+  }
+
+  const res = await fetch(
+    `https://api.tosspayments.com/v1/payments/${encodeURIComponent(paymentKey)}`,
+    {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`,
+      },
+    },
+  );
+  const payment = await res.json();
+  if (!res.ok) {
+    return {
+      ok: false,
+      message: payment.message || "결제 조회 실패",
+      code: payment.code,
+    };
+  }
+
+  return {
+    ok: true,
+    payment: {
+      paymentKey: payment.paymentKey,
+      orderId: payment.orderId,
+      status: payment.status,
+      totalAmount: payment.totalAmount,
+      balanceAmount: payment.balanceAmount,
+      currency: payment.currency,
+      cancels: payment.cancels ?? null,
+    },
+  };
+}
+
 /** DB total(minor) → Toss cancelAmount */
 export function orderTotalToTossCancelAmount(totalMinor: number, currency: string): number {
   const settlement = getCurrency(currency) as CurrencyOption;
