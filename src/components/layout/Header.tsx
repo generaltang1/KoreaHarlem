@@ -126,9 +126,6 @@ export function Header() {
                 <Link href="/admin/orders" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">
                   주문 관리
                 </Link>
-                <Link href="/admin/works/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">
-                  작품 등록
-                </Link>
                 <Link href="/admin/events/new" className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background">
                   이벤트 등록
                 </Link>
