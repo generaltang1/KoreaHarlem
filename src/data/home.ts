@@ -19,22 +19,6 @@ export interface Collection {
   image: string;
 }
 
-export const navLinks = [
-  {
-    label: "Explore",
-    children: [
-      { label: "전체 보기", href: "/works" },
-      { label: "음악", href: "/works?category=music" },
-      { label: "시각 예술", href: "/works?category=visual" },
-      { label: "공연", href: "/works?category=performance" },
-      { label: "문학", href: "/works?category=literature" },
-    ],
-  },
-  { label: "아티스트", href: "/artists" },
-  { label: "이벤트", href: "/events" },
-  { label: "Sale", href: "/sale" },
-];
-
 export const featuredWorks: Work[] = [
   {
     id: "1",
@@ -100,7 +84,7 @@ export const collections: Collection[] = [
     id: "music",
     title: "음악",
     subtitle: "MUSIC",
-    href: "/works?category=music",
+    href: "/artists",
     image: "from-violet-950 to-black",
   },
   {

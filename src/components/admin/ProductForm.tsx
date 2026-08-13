@@ -10,6 +10,13 @@ import { fetchSizeStockMap, saveProductSizeStocks, syncSizeStockKeys } from "@/l
 import { parseSizeGuide, type SizeGuideData } from "@/lib/sizeGuide";
 import { SizeGuideEditor } from "@/components/admin/SizeGuideEditor";
 import { ProductAddonSelect } from "@/components/admin/ProductAddonSelect";
+import {
+  MERCH_SUBCATEGORIES,
+  PRODUCT_CATEGORIES,
+  productCategoryLabel,
+  type ProductMerchSubcategory,
+  type ProductStoreCategory,
+} from "@/lib/productCategories";
 
 interface ExistingImage {
   id: string;
@@ -65,6 +72,8 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   const [allProducts, setAllProducts] = useState<AddonOption[]>([]);
   const [isPublished, setIsPublished] = useState(true);
+  const [category, setCategory] = useState<ProductStoreCategory | "">("");
+  const [subcategory, setSubcategory] = useState<ProductMerchSubcategory | "">("");
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -167,6 +176,8 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       setSizeGuide(sg);
       setSelectedAddonIds((addonRows ?? []).map((r) => r.addon_product_id));
       setIsPublished(data.is_published);
+      setCategory((data.category as ProductStoreCategory) ?? "merch");
+      setSubcategory((data.subcategory as ProductMerchSubcategory) ?? "");
       setExistingImages(
         [...(data.product_images ?? [])].sort(
           (a: ExistingImage, b: ExistingImage) => a.sort_order - b.sort_order,
@@ -230,6 +241,15 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       return;
     }
 
+    if (!category) {
+      setError("In Store 카테고리를 선택해주세요.");
+      return;
+    }
+    if (category === "merch" && !subcategory) {
+      setError("Merch 서브카테고리(Tops/Bottoms/Accessory)를 선택해주세요.");
+      return;
+    }
+
     setSaving(true);
     try {
       const stockValues: Record<string, number> = {};
@@ -254,6 +274,8 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         size_guide: sizeGuideEnabled && sizeGuide ? sizeGuide : null,
         is_sale: true,
         is_published: isPublished,
+        category,
+        subcategory: category === "merch" ? subcategory : null,
       };
       if (mode === "create") {
         payload.stock = totalStockValue;
@@ -345,6 +367,55 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
           rows={4}
           className="w-full resize-none border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
         />
+      </div>
+      <div className="grid gap-4 border border-border p-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+            In Store 카테고리 *
+          </label>
+          <select
+            value={category}
+            onChange={(e) => {
+              const next = e.target.value as ProductStoreCategory | "";
+              setCategory(next);
+              if (next !== "merch") setSubcategory("");
+            }}
+            required
+            className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+          >
+            <option value="">선택</option>
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        {category === "merch" && (
+          <div>
+            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+              Merch 서브카테고리 *
+            </label>
+            <select
+              value={subcategory}
+              onChange={(e) => setSubcategory(e.target.value as ProductMerchSubcategory | "")}
+              required
+              className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+            >
+              <option value="">선택</option>
+              {MERCH_SUBCATEGORIES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {category && category !== "merch" && (
+          <p className="self-end text-xs text-muted sm:col-span-2">
+            {productCategoryLabel(category)} 상품은 서브카테고리가 없습니다.
+          </p>
+        )}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

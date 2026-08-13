@@ -11,7 +11,7 @@ interface ListToolbarProps {
 
 function ListToolbarInner({
   searchPlaceholder,
-  preserveParams = ["size", "category", "q"],
+  preserveParams = ["size", "category", "sub"],
 }: ListToolbarProps) {
   const sizePreserve = preserveParams.filter((p) => p !== "size");
   const searchPreserve = preserveParams.filter((p) => p !== "q");

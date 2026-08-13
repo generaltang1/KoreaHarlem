@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { navLinks } from "@/data/home";
+import { navLinks } from "@/data/navigation";
+import { DesktopNavMenu, MobileNavMenu } from "@/components/layout/NavMenu";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useCart } from "@/context/CartContext";
@@ -77,34 +78,7 @@ export function Header() {
         </button>
 
         <nav className="hidden items-center gap-6 md:flex">
-          {navLinks.map((link) =>
-            link.children ? (
-              <div key={link.label} className="group relative">
-                <button className="text-xs uppercase tracking-widest transition-opacity hover:opacity-60">
-                  {link.label}
-                </button>
-                <div className="invisible absolute left-0 top-full z-50 min-w-[160px] border border-border bg-background py-2 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
-                  {link.children.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background"
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href!}
-                className="text-xs uppercase tracking-widest transition-opacity hover:opacity-60"
-              >
-                {link.label}
-              </Link>
-            ),
-          )}
+          <DesktopNavMenu items={navLinks} />
           {isAdmin && (
             <div className="group relative">
               <button className="text-xs uppercase tracking-widest text-rose-500 transition-opacity hover:opacity-60">
@@ -223,32 +197,7 @@ export function Header() {
 
       {menuOpen && (
         <nav className="border-t border-border px-4 py-4 md:hidden">
-          {navLinks.map((link) =>
-            link.children ? (
-              <div key={link.label} className="mb-4">
-                <p className="mb-2 text-[10px] uppercase tracking-widest text-muted">{link.label}</p>
-                {link.children.map((child) => (
-                  <Link
-                    key={child.href}
-                    href={child.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="block py-3 text-sm"
-                  >
-                    {child.label}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href!}
-                onClick={() => setMenuOpen(false)}
-                className="block py-3 text-sm uppercase tracking-widest"
-              >
-                {link.label}
-              </Link>
-            ),
-          )}
+          <MobileNavMenu items={navLinks} onNavigate={() => setMenuOpen(false)} />
           <div className="mt-4 border-t border-border pt-4">
             <Link
               href="/order-inquiry"

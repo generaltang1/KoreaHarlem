@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ProductMerchSubcategory, ProductStoreCategory } from "@/lib/productCategories";
 import type { ProductWithImages } from "@/lib/products";
 import { toIlikePattern } from "@/lib/search";
 
@@ -7,6 +8,8 @@ export interface AdminProductRow {
   title: string;
   price_krw: number;
   stock: number;
+  category: string;
+  subcategory: string | null;
   is_published: boolean;
   created_at: string;
   product_images: { url: string; sort_order: number }[];
@@ -19,7 +22,7 @@ export async function searchProductsPaged(
   let query = supabase
     .from("products")
     .select(
-      "id, title, price_krw, stock, is_published, created_at, product_images(url, sort_order)",
+      "id, title, price_krw, stock, category, subcategory, is_published, created_at, product_images(url, sort_order)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });
@@ -45,7 +48,13 @@ export async function searchProductsPaged(
 /** Public Sale listing — published + is_sale only. */
 export async function searchSaleProductsPaged(
   supabase: SupabaseClient,
-  options: { q?: string; from: number; to: number },
+  options: {
+    q?: string;
+    category?: ProductStoreCategory;
+    subcategory?: ProductMerchSubcategory;
+    from: number;
+    to: number;
+  },
 ): Promise<{ data: ProductWithImages[]; count: number; error: string | null }> {
   let query = supabase
     .from("products")
@@ -53,6 +62,13 @@ export async function searchSaleProductsPaged(
     .eq("is_published", true)
     .eq("is_sale", true)
     .order("created_at", { ascending: false });
+
+  if (options.category) {
+    query = query.eq("category", options.category);
+  }
+  if (options.subcategory) {
+    query = query.eq("subcategory", options.subcategory);
+  }
 
   const q = options.q?.trim();
   if (q) {

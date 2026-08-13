@@ -5,12 +5,15 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { productCategoryLabel } from "@/lib/productCategories";
 
 export interface AdminProductItem {
   id: string;
   title: string;
   price_krw: number;
   stock: number;
+  category: string;
+  subcategory: string | null;
   is_published: boolean;
   created_at: string;
   image_url: string | null;
@@ -89,7 +92,8 @@ export function AdminProductsList({ products }: { products: AdminProductItem[] }
                 <PublishStatusBadge published={product.is_published} />
               </div>
               <p className="mt-0.5 text-xs text-muted">
-                ₩{product.price_krw.toLocaleString("ko-KR")} · 재고 {product.stock}
+                {productCategoryLabel(product.category, product.subcategory)} · ₩
+                {product.price_krw.toLocaleString("ko-KR")} · 재고 {product.stock}
               </p>
               <p className="mt-1 text-[10px] text-muted">
                 {new Date(product.created_at).toLocaleDateString("ko-KR")}

@@ -14,5 +14,5 @@ export default async function LegacyMusicRedirectPage({ params }: PageProps) {
     redirect(`/music/album/${id}`);
   }
 
-  redirect("/works?category=music");
+  redirect("/artists");
 }

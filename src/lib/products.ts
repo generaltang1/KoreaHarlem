@@ -1,6 +1,8 @@
 import type { SizeStockMap } from "@/lib/stock";
 import { isSoldOutFromStocks } from "@/lib/stock";
 
+import type { ProductMerchSubcategory, ProductStoreCategory } from "@/lib/productCategories";
+
 export interface DbProduct {
   id: string;
   title: string;
@@ -9,6 +11,8 @@ export interface DbProduct {
   compare_at_price_krw?: number | null;
   stock: number;
   sizes: string[];
+  category: ProductStoreCategory;
+  subcategory?: ProductMerchSubcategory | null;
   is_sale: boolean;
   is_published: boolean;
   shipping_fee_krw?: number;

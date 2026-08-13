@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/commerce/ProductCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { ListToolbar } from "@/components/ui/ListToolbar";
 import { searchSaleProductsPaged } from "@/lib/productSearch";
+import { parseSaleCategoryFilter, salePageTitle } from "@/lib/productCategories";
 import {
   getRange,
   getTotalPages,
@@ -15,19 +16,24 @@ import {
 import { parseSearchQuery } from "@/lib/search";
 
 interface SalePageProps {
-  searchParams: Promise<{ page?: string; size?: string; q?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; q?: string; category?: string; sub?: string }>;
 }
 
 export default async function SalePage({ searchParams }: SalePageProps) {
-  const { page: pageParam, size: sizeParam, q: qParam } = await searchParams;
+  const { page: pageParam, size: sizeParam, q: qParam, category: categoryParam, sub: subParam } =
+    await searchParams;
   const page = parsePage(pageParam);
   const pageSize = parsePageSize(sizeParam);
   const q = parseSearchQuery(qParam);
   const { from, to } = getRange(page, pageSize);
+  const { category, subcategory } = parseSaleCategoryFilter(categoryParam, subParam);
+  const pageTitle = salePageTitle(categoryParam, subParam);
 
   const supabase = await createClient();
   const { data: products, count, error } = await searchSaleProductsPaged(supabase, {
     q,
+    category,
+    subcategory,
     from,
     to,
   });
@@ -37,11 +43,14 @@ export default async function SalePage({ searchParams }: SalePageProps) {
     <>
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-10 pb-24 md:px-6">
-        <ListToolbar searchPlaceholder="상품명 검색" />
+        <ListToolbar
+          searchPlaceholder="상품명 검색"
+          preserveParams={["size", "category", "sub", "q"]}
+        />
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-muted">Shop</p>
-            <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">Sale</h1>
+            <p className="text-[10px] uppercase tracking-widest text-muted">In Store</p>
+            <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">{pageTitle}</h1>
             <p className="mt-2 text-xs text-muted">
               {q ? `“${q}” 검색 결과 ${count}건` : `총 ${count}건`}
             </p>
@@ -51,13 +60,15 @@ export default async function SalePage({ searchParams }: SalePageProps) {
         {error ? (
           <div className="border border-border px-6 py-16 text-center">
             <p className="text-sm text-muted">
-              상품 테이블이 아직 없습니다. Supabase에서 `supabase/add_products.sql`을 실행해주세요.
+              {error.includes("category")
+                ? "Supabase에서 `supabase/add_product_category.sql`을 실행해주세요."
+                : "상품 테이블이 아직 없습니다. Supabase에서 `supabase/add_products.sql`을 실행해주세요."}
             </p>
           </div>
         ) : products.length === 0 ? (
           <div className="flex min-h-[40vh] items-center justify-center">
             <p className="text-sm text-muted">
-              {q ? "검색 결과가 없습니다." : "등록된 SALE 상품이 없습니다."}
+              {q ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
             </p>
           </div>
         ) : (
@@ -72,7 +83,7 @@ export default async function SalePage({ searchParams }: SalePageProps) {
           currentPage={page}
           totalPages={totalPages}
           basePath="/sale"
-          params={listParams({ pageSize, q })}
+          params={listParams({ pageSize, q, category: categoryParam, sub: subParam })}
         />
       </main>
       <Footer />

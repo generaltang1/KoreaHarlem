@@ -38,6 +38,8 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
       title: product.title,
       price_krw: product.price_krw,
       stock: product.stock,
+      category: product.category ?? "merch",
+      subcategory: product.subcategory ?? null,
       is_published: product.is_published,
       created_at: product.created_at,
       image_url: sorted[0]?.url ?? null,

@@ -5,22 +5,30 @@ import Image from "next/image";
 import { useState } from "react";
 import { PrivacyModal } from "@/components/ui/PrivacyModal";
 import { TermsModal } from "@/components/ui/TermsModal";
+import {
+  footerMagazineLinks,
+  footerMusicLinks,
+  footerStoreLinks,
+} from "@/data/navigation";
 
 const footerLinks = {
-  explore: [
-    { label: "전체 작품", href: "/works" },
-    { label: "아티스트", href: "/artists" },
-    { label: "이벤트", href: "/events" },
-    { label: "Sale", href: "/sale" },
-  ],
+  store: footerStoreLinks,
+  music: footerMusicLinks,
+  magazine: footerMagazineLinks,
   help: [
     { label: "문의하기", href: "/contact" },
     { label: "FAQ", href: "/faq" },
     { label: "배송 안내", href: "/shipping" },
   ],
-  info: [
-    { label: "소개", href: "/about" },
-  ],
+  info: [{ label: "소개", href: "/about" }],
+};
+
+const footerSectionLabels: Record<string, string> = {
+  store: "In Store",
+  music: "Music",
+  magazine: "Magazine",
+  help: "Help",
+  info: "Info",
 };
 
 export function Footer() {
@@ -31,7 +39,7 @@ export function Footer() {
     <>
       <footer className="border-t border-border bg-background">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-5 md:gap-12">
             <div className="col-span-2 md:col-span-1">
               <Link href="/" className="inline-block">
                 <Image
@@ -47,12 +55,18 @@ export function Footer() {
                 <br />
                 종합 예술 플랫폼
               </p>
+              <Link
+                href="/think"
+                className="mt-4 inline-block text-xs text-muted transition-colors hover:text-foreground"
+              >
+                Think
+              </Link>
             </div>
 
             {Object.entries(footerLinks).map(([key, links]) => (
               <div key={key}>
                 <p className="mb-4 text-[10px] font-medium uppercase tracking-widest">
-                  {key === "explore" ? "Explore" : key === "help" ? "Help" : "Info"}
+                  {footerSectionLabels[key]}
                 </p>
                 <ul className="space-y-2">
                   {links.map((link) => (
@@ -90,14 +104,9 @@ export function Footer() {
             ))}
           </div>
 
-          {/* Newsletter */}
           <div className="mt-16 border-t border-border pt-12">
-            <p className="text-[10px] font-medium uppercase tracking-widest">
-              Newsletter
-            </p>
-            <p className="mt-2 text-xs text-muted">
-              새로운 작품과 이벤트 소식을 받아보세요.
-            </p>
+            <p className="text-[10px] font-medium uppercase tracking-widest">Newsletter</p>
+            <p className="mt-2 text-xs text-muted">새로운 작품과 이벤트 소식을 받아보세요.</p>
             <form className="mt-4 flex max-w-md flex-col gap-2 sm:flex-row">
               <input
                 type="email"
@@ -113,7 +122,6 @@ export function Footer() {
             </form>
           </div>
 
-          {/* 회사 정보 */}
           <div className="mt-12 border-t border-border pt-8">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[10px] text-muted">
               <button
@@ -138,9 +146,7 @@ export function Footer() {
                 <span className="font-medium text-foreground">KoreaHarlem</span>
                 &nbsp;|&nbsp;사업자등록번호 : 569-09-02645&nbsp;|&nbsp;통신판매업신고번호 : 2024-서울마포-2977
               </p>
-              <p>
-                대표자 이메일 : koreaharlem@gmail.com
-              </p>
+              <p>대표자 이메일 : koreaharlem@gmail.com</p>
             </div>
 
             <p className="mt-4 text-[10px] text-muted">

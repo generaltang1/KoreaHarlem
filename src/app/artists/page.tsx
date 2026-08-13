@@ -41,8 +41,8 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
       <main className="mx-auto max-w-7xl px-4 py-16 pb-24 md:px-6">
         <ListToolbar searchPlaceholder="아티스트명 검색" />
         <div className="mb-10">
-          <p className="text-[10px] uppercase tracking-widest text-muted">Artists</p>
-          <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">아티스트</h1>
+          <p className="text-[10px] uppercase tracking-widest text-muted">Music</p>
+          <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">Artists</h1>
           {q && (
             <p className="mt-2 text-xs text-muted">
               “{q}” 검색 결과 {count}건

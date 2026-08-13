@@ -62,12 +62,14 @@ export function listParams(options: {
   pageSize: number;
   q?: string;
   category?: string;
+  sub?: string;
   status?: string;
 }): Record<string, string | undefined> {
   const q = options.q?.trim();
   return pageSizeParams(options.pageSize, {
     q: q || undefined,
     category: options.category,
+    sub: options.sub,
     status: options.status,
   });
 }

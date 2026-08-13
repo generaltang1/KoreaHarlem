@@ -57,7 +57,7 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
   return (
     <article>
       <Link
-        href="/works?category=music"
+        href="/artists"
         className="mb-8 inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted transition-colors hover:text-foreground"
       >
         ← 뒤로 가기
