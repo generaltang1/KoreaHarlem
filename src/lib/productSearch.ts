@@ -11,6 +11,7 @@ export interface AdminProductRow {
   category: string;
   subcategory: string | null;
   is_published: boolean;
+  is_sale: boolean;
   created_at: string;
   product_images: { url: string; sort_order: number }[];
 }
@@ -22,7 +23,7 @@ export async function searchProductsPaged(
   let query = supabase
     .from("products")
     .select(
-      "id, title, price_krw, stock, category, subcategory, is_published, created_at, product_images(url, sort_order)",
+      "id, title, price_krw, stock, category, subcategory, is_published, is_sale, created_at, product_images(url, sort_order)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });
@@ -45,7 +46,7 @@ export async function searchProductsPaged(
   };
 }
 
-/** Public Sale listing — published + is_sale only. */
+/** Public In Store listing — 진열함(is_published) 상품만. 판매안함도 목록·상세 노출. */
 export async function searchSaleProductsPaged(
   supabase: SupabaseClient,
   options: {
@@ -60,7 +61,6 @@ export async function searchSaleProductsPaged(
     .from("products")
     .select("*, product_images(*)", { count: "exact" })
     .eq("is_published", true)
-    .eq("is_sale", true)
     .order("created_at", { ascending: false });
 
   if (options.category) {

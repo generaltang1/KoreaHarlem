@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ProductWithImages } from "@/lib/products";
-import { getProductImages } from "@/lib/products";
+import { getProductImages, isPurchasable } from "@/lib/products";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 
@@ -19,8 +19,10 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const { addItem } = useCart();
   const [size, setSize] = useState(product.sizes[0] ?? "");
   const needsSize = product.sizes.length > 0;
+  const purchasable = isPurchasable(product);
 
   const addToCart = () => {
+    if (!purchasable) return;
     if (needsSize && !size) return;
     addItem({
       productId: product.id,
@@ -92,20 +94,28 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           )}
 
           <div className="mt-auto space-y-2 pt-8">
-            <button
-              type="button"
-              onClick={addToCart}
-              className="flex w-full items-center justify-center gap-2 bg-foreground py-3 text-xs uppercase tracking-widest text-background"
-            >
-              Add to cart
-            </button>
-            <Link
-              href={`/checkout?buy=${product.id}${size ? `&size=${encodeURIComponent(size)}` : ""}`}
-              onClick={onClose}
-              className="flex w-full items-center justify-center border border-border py-3 text-xs uppercase tracking-widest"
-            >
-              Buy now
-            </Link>
+            {!purchasable ? (
+              <p className="border border-amber-200 bg-amber-50 px-4 py-3 text-center text-xs text-amber-900">
+                판매 준비 중인 상품입니다.
+              </p>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={addToCart}
+                  className="flex w-full items-center justify-center gap-2 bg-foreground py-3 text-xs uppercase tracking-widest text-background"
+                >
+                  Add to cart
+                </button>
+                <Link
+                  href={`/checkout?buy=${product.id}${size ? `&size=${encodeURIComponent(size)}` : ""}`}
+                  onClick={onClose}
+                  className="flex w-full items-center justify-center border border-border py-3 text-xs uppercase tracking-widest"
+                >
+                  Buy now
+                </Link>
+              </>
+            )}
             <Link
               href={`/sale/${product.id}`}
               onClick={onClose}

@@ -71,6 +71,29 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
     const productIds = [...new Set(stockLines.map((l) => l.productId))];
+
+    const adminForSale = createServiceClient() ?? supabase;
+    if (productIds.length > 0) {
+      const { data: productsForSale } = await adminForSale
+        .from("products")
+        .select("id, title, is_published, is_sale")
+        .in("id", productIds);
+
+      for (const productId of productIds) {
+        const product = productsForSale?.find((p) => p.id === productId);
+        if (!product?.is_published || !product.is_sale) {
+          return NextResponse.json(
+            {
+              message: product
+                ? `"${product.title}"은(는) 현재 구매할 수 없는 상품입니다.`
+                : "구매할 수 없는 상품이 포함되어 있습니다.",
+            },
+            { status: 409 },
+          );
+        }
+      }
+    }
+
     const stockByProduct = await fetchSizeStockMaps(supabase, productIds);
     const stockErr = validateLinesAgainstStock(stockLines, stockByProduct);
     if (stockErr) {

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ProductDetail } from "@/lib/productDetail";
 import { buildCheckoutQuery } from "@/lib/productDetail";
-import { getProductImages, isSoldOut } from "@/lib/products";
+import { getProductImages, isPurchasable, isSoldOut } from "@/lib/products";
 import { getStockForSize } from "@/lib/stock";
 import { calcShippingFee, formatShippingLabel } from "@/lib/shipping";
 import { useCart } from "@/context/CartContext";
@@ -47,6 +47,7 @@ export function ProductDetailClient({
   const [message, setMessage] = useState("");
 
   const soldOut = isSoldOut({ ...product, sizeStocks: product.sizeStocks });
+  const purchasable = isPurchasable(product);
   const needsSize = product.sizes.length > 0;
   const mainImage = images[imageIndex] ?? images[0];
 
@@ -98,6 +99,7 @@ export function ProductDetailClient({
   const lineCount = 1 + selectedAddons.length;
 
   const validate = () => {
+    if (!purchasable) return "현재 판매 중인 상품이 아닙니다.";
     if (soldOut) return "품절된 상품입니다.";
     if (needsSize && !size) return "사이즈를 선택해주세요.";
     if (needsSize && getStockForSize(product.sizeStocks, size) <= 0) {
@@ -426,18 +428,24 @@ export function ProductDetailClient({
 
           {message && <p className="mt-3 text-xs text-rose-500">{message}</p>}
 
+          {!purchasable && (
+            <p className="mt-3 border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+              이 상품은 진열 중이며, 판매는 아직 시작되지 않았습니다.
+            </p>
+          )}
+
           <div className="mt-6 grid gap-2 sm:grid-cols-2">
             <button
               type="button"
-              disabled={soldOut}
+              disabled={!purchasable || soldOut}
               onClick={handleBuyNow}
               className="bg-foreground py-3 text-xs uppercase tracking-widest text-background disabled:opacity-40"
             >
-              {soldOut ? "Sold out" : "Buy it now"}
+              {!purchasable ? "판매 준비 중" : soldOut ? "Sold out" : "Buy it now"}
             </button>
             <button
               type="button"
-              disabled={soldOut}
+              disabled={!purchasable || soldOut}
               onClick={addAllToCart}
               className="border border-border py-3 text-xs uppercase tracking-widest disabled:opacity-40"
             >

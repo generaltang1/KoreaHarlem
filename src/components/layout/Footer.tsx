@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { PrivacyModal } from "@/components/ui/PrivacyModal";
 import { TermsModal } from "@/components/ui/TermsModal";
+import { UsageGuideModal } from "@/components/ui/UsageGuideModal";
 import {
   footerMagazineLinks,
   footerMusicLinks,
@@ -18,7 +19,7 @@ const footerLinks = {
   help: [
     { label: "문의하기", href: "/contact" },
     { label: "FAQ", href: "/faq" },
-    { label: "배송 안내", href: "/shipping" },
+    { label: "배송 안내", href: "/guide#shipping" },
   ],
   info: [{ label: "소개", href: "/about" }],
 };
@@ -34,6 +35,7 @@ const footerSectionLabels: Record<string, string> = {
 export function Footer() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   return (
     <>
@@ -83,6 +85,14 @@ export function Footer() {
                     <>
                       <li>
                         <button
+                          onClick={() => setGuideOpen(true)}
+                          className="text-xs text-muted transition-colors hover:text-foreground"
+                        >
+                          이용안내
+                        </button>
+                      </li>
+                      <li>
+                        <button
                           onClick={() => setTermsOpen(true)}
                           className="text-xs text-muted transition-colors hover:text-foreground"
                         >
@@ -125,6 +135,12 @@ export function Footer() {
           <div className="mt-12 border-t border-border pt-8">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[10px] text-muted">
               <button
+                onClick={() => setGuideOpen(true)}
+                className="transition-colors hover:text-foreground"
+              >
+                이용안내
+              </button>
+              <button
                 onClick={() => setTermsOpen(true)}
                 className="transition-colors hover:text-foreground"
               >
@@ -158,6 +174,7 @@ export function Footer() {
 
       {termsOpen && <TermsModal onClose={() => setTermsOpen(false)} />}
       {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
+      {guideOpen && <UsageGuideModal onClose={() => setGuideOpen(false)} />}
     </>
   );
 }

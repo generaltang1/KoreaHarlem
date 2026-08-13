@@ -48,3 +48,13 @@ export function isSoldOut(
   }
   return product.stock <= 0;
 }
+
+/** 진열함 — In Store 등 공개 영역에 노출 */
+export function isDisplayed(product: Pick<DbProduct, "is_published">): boolean {
+  return product.is_published;
+}
+
+/** 판매함 — 장바구니·결제 가능 (진열은 되어 있어야 함) */
+export function isPurchasable(product: Pick<DbProduct, "is_published" | "is_sale">): boolean {
+  return product.is_published && product.is_sale;
+}

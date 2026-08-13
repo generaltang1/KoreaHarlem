@@ -72,6 +72,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   const [allProducts, setAllProducts] = useState<AddonOption[]>([]);
   const [isPublished, setIsPublished] = useState(true);
+  const [isSale, setIsSale] = useState(true);
   const [category, setCategory] = useState<ProductStoreCategory | "">("");
   const [subcategory, setSubcategory] = useState<ProductMerchSubcategory | "">("");
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
@@ -176,6 +177,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       setSizeGuide(sg);
       setSelectedAddonIds((addonRows ?? []).map((r) => r.addon_product_id));
       setIsPublished(data.is_published);
+      setIsSale(data.is_sale);
       setCategory((data.category as ProductStoreCategory) ?? "merch");
       setSubcategory((data.subcategory as ProductMerchSubcategory) ?? "");
       setExistingImages(
@@ -272,7 +274,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
           : null,
         overseas_shipping: overseasShipping,
         size_guide: sizeGuideEnabled && sizeGuide ? sizeGuide : null,
-        is_sale: true,
+        is_sale: isSale,
         is_published: isPublished,
         category,
         subcategory: category === "merch" ? subcategory : null,
@@ -542,14 +544,63 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         excludeId={productId}
       />
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isPublished}
-          onChange={(e) => setIsPublished(e.target.checked)}
-        />
-        <span>공개 (Sale에 노출)</span>
-      </label>
+      <div className="border border-border p-4">
+        <p className="text-[10px] uppercase tracking-widest text-muted">표시 설정</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <fieldset>
+            <legend className="mb-2 text-xs font-medium">진열상태</legend>
+            <div className="flex gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="isPublished"
+                  checked={isPublished}
+                  onChange={() => setIsPublished(true)}
+                />
+                진열함
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="isPublished"
+                  checked={!isPublished}
+                  onChange={() => setIsPublished(false)}
+                />
+                진열안함
+              </label>
+            </div>
+            <p className="mt-1.5 text-[10px] text-muted">
+              진열안함이면 In Store에 노출되지 않습니다.
+            </p>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 text-xs font-medium">판매상태</legend>
+            <div className="flex gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="isSale"
+                  checked={isSale}
+                  onChange={() => setIsSale(true)}
+                />
+                판매함
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="isSale"
+                  checked={!isSale}
+                  onChange={() => setIsSale(false)}
+                />
+                판매안함
+              </label>
+            </div>
+            <p className="mt-1.5 text-[10px] text-muted">
+              판매안함이면 상품은 보이지만 구매할 수 없습니다 (티켓·프리오더 등).
+            </p>
+          </fieldset>
+        </div>
+      </div>
 
       <div>
         <div className="mb-2 flex items-center justify-between">

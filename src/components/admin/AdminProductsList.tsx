@@ -15,20 +15,35 @@ export interface AdminProductItem {
   category: string;
   subcategory: string | null;
   is_published: boolean;
+  is_sale: boolean;
   created_at: string;
   image_url: string | null;
 }
 
-function PublishStatusBadge({ published }: { published: boolean }) {
+function DisplayStatusBadge({ published }: { published: boolean }) {
   return (
     <span
       className={
         published
           ? "inline-flex shrink-0 items-center border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-emerald-800"
+          : "inline-flex shrink-0 items-center border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-neutral-600"
+      }
+    >
+      {published ? "진열함" : "진열안함"}
+    </span>
+  );
+}
+
+function SaleStatusBadge({ onSale }: { onSale: boolean }) {
+  return (
+    <span
+      className={
+        onSale
+          ? "inline-flex shrink-0 items-center border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-sky-800"
           : "inline-flex shrink-0 items-center border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-amber-900"
       }
     >
-      {published ? "공개" : "비공개"}
+      {onSale ? "판매함" : "판매안함"}
     </span>
   );
 }
@@ -89,7 +104,8 @@ export function AdminProductsList({ products }: { products: AdminProductItem[] }
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="truncate text-sm font-medium">{product.title}</p>
-                <PublishStatusBadge published={product.is_published} />
+                <DisplayStatusBadge published={product.is_published} />
+                <SaleStatusBadge onSale={product.is_sale} />
               </div>
               <p className="mt-0.5 text-xs text-muted">
                 {productCategoryLabel(product.category, product.subcategory)} · ₩

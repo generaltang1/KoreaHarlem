@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { ProductWithImages } from "@/lib/products";
-import { getProductImages, isSoldOut } from "@/lib/products";
+import { getProductImages, isPurchasable, isSoldOut } from "@/lib/products";
 import { useCurrency } from "@/context/CurrencyContext";
 import { QuickViewModal } from "@/components/commerce/QuickViewModal";
 
@@ -18,6 +18,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const soldOut = isSoldOut(product);
+  const purchasable = isPurchasable(product);
   const showSecond = hovered && images.length > 1;
   const activeImage = showSecond ? images[1] : images[0];
 
@@ -46,12 +47,12 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="pointer-events-none absolute right-2 top-2 text-[10px] uppercase tracking-widest">
             {soldOut ? (
               <span className="bg-background/90 px-1.5 py-0.5">Sold out</span>
-            ) : product.is_sale ? (
-              <span className="bg-background/90 px-1.5 py-0.5">Sale</span>
+            ) : !purchasable ? (
+              <span className="bg-background/90 px-1.5 py-0.5">Coming soon</span>
             ) : null}
           </div>
 
-          {!soldOut && (
+          {purchasable && !soldOut && (
             <button
               type="button"
               onClick={() => setQuickOpen(true)}

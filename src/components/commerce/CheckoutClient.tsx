@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
@@ -14,6 +15,13 @@ import {
 import { parseAddonsParam } from "@/lib/productDetail";
 import { calcShippingFee } from "@/lib/shipping";
 import { createClient } from "@/lib/supabase/client";
+import {
+  buildUnavailableAlertMessage,
+  fetchProductAvailability,
+  findUnavailableLines,
+  isProductPurchasable,
+} from "@/lib/cartAvailability";
+import { useCartProductAvailability } from "@/hooks/useCartProductAvailability";
 import {
   buildSettlementCurrency,
   getTossClientKey,
@@ -102,8 +110,18 @@ export function CheckoutClient() {
         .from("products")
         .select("*, product_images(*)")
         .eq("id", buyId)
+        .eq("is_published", true)
         .maybeSingle();
-      if (!main) return;
+      if (!main) {
+        setError("상품을 찾을 수 없거나 진열 중이 아닙니다.");
+        setBuyLines([]);
+        return;
+      }
+      if (!main.is_sale) {
+        setError("현재 판매 중인 상품이 아닙니다.");
+        setBuyLines([]);
+        return;
+      }
 
       const images = [...(main.product_images ?? [])].sort(
         (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order,
@@ -130,6 +148,8 @@ export function CheckoutClient() {
           .from("products")
           .select("*, product_images(*)")
           .eq("id", spec.productId)
+          .eq("is_published", true)
+          .eq("is_sale", true)
           .maybeSingle();
         if (!addon) continue;
         const addonImages = [...(addon.product_images ?? [])].sort(
@@ -162,6 +182,8 @@ export function CheckoutClient() {
   }, [buyId, buySize, buyQty, addonsParam, currency.code, currency.rateToKrw, toMinor]);
 
   const lines = buyLines ?? items;
+  const lineProductIds = useMemo(() => lines.map((line) => line.productId), [lines]);
+  const { availability, loading: availabilityLoading } = useCartProductAvailability(lineProductIds, lines.length > 0);
   const settlementCode = resolveSettlementCurrency(payMethod, currency.code);
   const settlement = useMemo(
     () => buildSettlementCurrency(settlementCode, liveRates),
@@ -226,6 +248,18 @@ export function CheckoutClient() {
       setError("결제할 상품이 없습니다.");
       return;
     }
+
+    const supabase = createClient();
+    const freshAvailability = await fetchProductAvailability(
+      supabase,
+      [...new Set(lines.map((line) => line.productId))],
+    );
+    const unavailable = findUnavailableLines(lines, freshAvailability);
+    if (unavailable.length > 0) {
+      alert(buildUnavailableAlertMessage(unavailable));
+      return;
+    }
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -472,14 +506,31 @@ export function CheckoutClient() {
       <section className="border border-border p-5">
         <h2 className="text-sm font-medium uppercase tracking-wider">주문상품</h2>
         <ul className="mt-4 divide-y divide-border">
-          {lines.map((line) => (
-            <li key={line.key} className="flex gap-4 py-4 text-sm">
+          {lines.map((line) => {
+            const purchasable = isProductPurchasable(availability.get(line.productId));
+            const showUnavailable = !availabilityLoading && !purchasable;
+            return (
+            <li
+              key={line.key}
+              className={`flex gap-4 py-4 text-sm ${showUnavailable ? "opacity-50" : ""}`}
+            >
               {line.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={line.imageUrl} alt="" className="h-20 w-20 shrink-0 object-cover" />
+                <img
+                  src={line.imageUrl}
+                  alt=""
+                  className={`h-20 w-20 shrink-0 object-cover ${showUnavailable ? "grayscale" : ""}`}
+                />
               )}
               <div className="min-w-0 flex-1">
-                <p className="font-medium">{line.title}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium">{line.title}</p>
+                  {showUnavailable && (
+                    <span className="shrink-0 border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-neutral-600">
+                      구매 불가
+                    </span>
+                  )}
+                </div>
                 {line.size && <p className="text-xs text-muted">사이즈: {line.size}</p>}
                 <p className="text-xs text-muted">수량: {line.quantity}</p>
               </div>
@@ -487,7 +538,8 @@ export function CheckoutClient() {
                 {formatMinorAmount(line.unitPriceMinor * line.quantity, currency)}
               </p>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </section>
 
@@ -559,7 +611,14 @@ export function CheckoutClient() {
             className="mt-1"
           />
           <span>
-            구매 약관 및 개인정보 수집·이용에 동의합니다. (필수)
+            <Link href="/guide" target="_blank" rel="noopener noreferrer" className="underline">
+              이용안내
+            </Link>
+            (결제·배송·교환·환불) 및{" "}
+            <Link href="/guide#refund" target="_blank" rel="noopener noreferrer" className="underline">
+              환불정책
+            </Link>
+            , 개인정보 수집·이용에 동의합니다. (필수)
           </span>
         </label>
       </section>

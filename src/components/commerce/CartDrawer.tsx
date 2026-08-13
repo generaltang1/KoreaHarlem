@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useMemo } from "react";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { formatMinorAmount } from "@/lib/currency";
+import { isProductPurchasable } from "@/lib/cartAvailability";
+import { useCartProductAvailability } from "@/hooks/useCartProductAvailability";
 
 export function CartDrawer() {
   const {
@@ -17,6 +20,9 @@ export function CartDrawer() {
     itemCount,
   } = useCart();
   const { currency } = useCurrency();
+
+  const productIds = useMemo(() => items.map((item) => item.productId), [items]);
+  const { availability, loading: availabilityLoading } = useCartProductAvailability(productIds, isOpen);
 
   if (!isOpen) return null;
 
@@ -47,15 +53,33 @@ export function CartDrawer() {
             <p className="py-16 text-center text-sm text-muted">장바구니가 비어 있습니다.</p>
           ) : (
             <ul className="space-y-5">
-              {items.map((item) => (
-                <li key={item.key} className="flex gap-3">
+              {items.map((item) => {
+                const purchasable = isProductPurchasable(availability.get(item.productId));
+                const showUnavailable = !availabilityLoading && !purchasable;
+                return (
+                <li
+                  key={item.key}
+                  className={`flex gap-3 ${showUnavailable ? "opacity-50" : ""}`}
+                >
                   <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-neutral-100">
                     {item.imageUrl ? (
-                      <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.title}
+                        fill
+                        className={`object-cover ${showUnavailable ? "grayscale" : ""}`}
+                      />
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{item.title}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-medium">{item.title}</p>
+                      {showUnavailable && (
+                        <span className="shrink-0 border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-neutral-600">
+                          구매 불가
+                        </span>
+                      )}
+                    </div>
                     {item.size && <p className="mt-0.5 text-xs text-muted">Size {item.size}</p>}
                     <p className="mt-1 text-sm">
                       {formatMinorAmount(item.unitPriceMinor, currency)}
@@ -86,7 +110,8 @@ export function CartDrawer() {
                     </div>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </div>

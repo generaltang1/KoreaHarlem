@@ -30,7 +30,8 @@ export async function fetchProductDetail(
       .from("products")
       .select("*, product_images(*)")
       .in("id", ids)
-      .eq("is_published", true);
+      .eq("is_published", true)
+      .eq("is_sale", true);
 
     const addonIds = (addonProducts ?? []).map((p) => p.id);
     const addonStockMaps = new Map<string, Awaited<ReturnType<typeof fetchSizeStockMap>>>();
