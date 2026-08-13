@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-13 (최신):** 아이디/비밀번호 찾기 배포됨 · Supabase Recovery 템플릿 설정됨 · **Resend SMTP는 도메인 후**
+> **2026-08-13 (최신):** 상품 상세 배송·환불 안내 배포 · **토스 심사 Footer·운영 데이터 미비** · Resend SMTP는 도메인 후
 
 ---
 
@@ -103,8 +103,48 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - [x] Footer **이용안내** 모달 (결제·배송·교환/반품·**환불안내**)
 - [x] 전용 페이지 `/guide` · `#shipping` · `#refund` 앵커
 - [x] 결제 페이지 약관 동의 → **이용안내**·**환불정책** 링크
+- [x] 상품 상세 **배송·교환·환불** 요약 + `/guide` 링크 (`ProductPolicyNotice` · `/sale/[id]`)
+- [x] 상품 상세 정책 안내 **커밋 · 배포**
 - [ ] 이용약관 본문과 **환불/청약철회** 문구 정합성 검토 (필요 시 TermsModal 보강)
-- [ ] 토스페이먼츠 **심사 체크리스트** 전체 점검
+- [ ] 토스페이먼츠 **심사 체크리스트** 전체 점검 (아래 상세)
+
+##### 토스페이먼츠 심사 체크리스트 (카드사·PG 심사)
+
+> 참고: [전자결제 심사 한 번에 통과](https://www.tosspayments.com/blog/articles/semo-7) · 심사 URL: `https://korea-harlem.vercel.app` (도메인 후 `.com` 교체 가능) · Auth SMTP(Resend)와 **무관**
+
+**점검 방법:** 배포 URL을 고객처럼 훑기 → 아래 표 ✅/❌ → 미비 보완 → 토스 **전자청약·심사 신청** + 서류(사업자등록증·정산계좌·신분증 등)
+
+| 구분 | 항목 | 상태 | 비고 |
+|------|------|------|------|
+| **상품** | 판매 가능 상품 1개 이상 (품절·샘플만 X) | [ ] | Admin: 진열함 + **판매함** + 재고 |
+| | 상품 이미지 고유·가독 (No image·중복 X) | [ ] | |
+| | 상품 상세에 배송·환불 정책 노출 | [x] | `ProductPolicyNotice` |
+| **Footer 법적 필수** | 상호명 | [x] | KoreaHarlem |
+| | 사업자등록번호 | [x] | 569-09-02645 |
+| | 통신판매업 신고번호 | [x] | 2024-서울마포-2977 |
+| | **대표자명** | [ ] | **사업자등록증과 동일하게 입력 필요** |
+| | **사업장 주소** | [ ] | **입력 필요** |
+| | **유선번호** (070·휴대폰 가능) | [ ] | **입력 필요** (현재 이메일만) |
+| | 대표 이메일 | [x] | koreaharlem@gmail.com |
+| **약관·정책** | 이용약관 · 개인정보처리방침 | [x] | Footer 모달 |
+| | 이용안내(배송·교환·환불) | [x] | `/guide` · Footer |
+| | 이용약관 ↔ `/guide` 환불 문구 정합성 | [ ] | |
+| **결제** | **비회원 구매** 가능 | [x] | 결제 + `/order-inquiry` |
+| | 테스트 결제 E2E (주문→성공→Admin) | [ ] | `test_ck_` / `test_sk_` |
+| | **라이브 키** Vercel Production (`live_ck_` / `live_sk_`) | [ ] | 심사·운영 URL |
+| | 웹훅 등록 | [ ] | `…/api/payments/toss/webhook` |
+| | Admin 환불·취소 1회 테스트 | [ ] | |
+| **신청** | 토스 전자청약 + 심사 URL 제출 | [ ] | 미비 수정 후 재신청 |
+
+**Footer 미비 3건** — `src/components/layout/Footer.tsx` 하단 · **운영자가 값 제공 후** 반영:
+
+```
+대표자: (입력 필요)
+주소: (입력 필요)
+전화: (입력 필요)
+```
+
+**심사 전 권장 순서:** Footer 3건 입력 → 상품 상세 정책 배포 → 판매함 상품 1개 + 결제 E2E → 라이브 키·웹훅 확인 → 토스 신청
 
 #### 3순위 — 진열/판매 + 장바구니 (2026-08-13 · 로컬)
 - [x] Admin **표시 설정**: 진열상태 · 판매상태 (라디오)
@@ -238,6 +278,8 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - [ ] Admin: 진열안함 / 판매안함 저장 → 목록·상세·장바구니·결제 동작
 - [ ] 장바구니 담은 뒤 Admin에서 상태 변경 → **구매 불가** 표시·결제 alert
 - [ ] Footer **이용안내** · `/guide` · 결제 페이지 환불 링크
+- [ ] Footer **대표자명 · 사업장 주소 · 유선번호** (토스 심사 필수)
+- [ ] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]` · 배포 후)
 - [ ] Music → Artists → Album → 재생
 - [ ] Think / Magazine Coming Soon
 - [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E (배포 후)
@@ -246,8 +288,8 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **아이디/비번 찾기** Supabase 기본 메일로 E2E 테스트  
-2. Admin **기존 상품 카테고리 지정** + QA (진열·판매·이용안내 포함)  
-3. **Admin 메뉴 분류** 또는 **토스 심사 체크리스트** 마무리  
-4. `koreaharlem.com` 준비 후 → **Resend 도메인 인증 → Supabase SMTP** 연결  
-5. 그다음: 비회원 CS 요청 · 플레이어 · CMS
+1. Footer **대표자 · 주소 · 전화** 입력 → 상품 상세 정책 **커밋·배포**  
+2. **토스 심사** — 판매함 상품 1개 · 결제 E2E · 라이브 키·웹훅 · 체크리스트 표 점검  
+3. Admin **기존 상품 카테고리 지정** + QA  
+4. **Admin 메뉴 분류** 또는 이용약관·환불 문구 정합성  
+5. `koreaharlem.com` 후 → **Resend SMTP** · Auth E2E · 비회원 CS 등

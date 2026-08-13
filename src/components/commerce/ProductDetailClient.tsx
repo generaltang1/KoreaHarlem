@@ -13,6 +13,7 @@ import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { createClient } from "@/lib/supabase/client";
 import { ProductImageZoom } from "@/components/commerce/ProductImageZoom";
+import { ProductPolicyNotice } from "@/components/commerce/ProductPolicyNotice";
 import { SizeGuideModal } from "@/components/commerce/SizeGuideModal";
 
 interface AddonPick {
@@ -469,6 +470,8 @@ export function ProductDetailClient({
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{product.description}</p>
         </div>
       )}
+
+      <ProductPolicyNotice />
 
       {product.size_guide && (
         <SizeGuideModal

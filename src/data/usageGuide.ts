@@ -53,3 +53,16 @@ export const usageGuideSections: UsageGuideSection[] = [
     ],
   },
 ];
+
+/** 상품 상세 페이지용 짧은 요약 (전문은 /guide) */
+export const productDetailPolicySummary = [
+  "배송: 택배 · 전국 · 주문 50,000원 미만 시 배송비 4,000원 · 1~3일",
+  "교환·반품: 수령 후 7일 이내 가능 (조건 및 예외는 이용안내 참고)",
+  "환불: 반품 확인 후 3영업일 이내 결제 수단으로 환불",
+] as const;
+
+export const productDetailPolicyLinks = [
+  { label: "배송 안내", href: "/guide#shipping" },
+  { label: "교환·반품", href: "/guide#exchange" },
+  { label: "환불", href: "/guide#refund" },
+] as const;
