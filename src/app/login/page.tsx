@@ -138,6 +138,15 @@ export default function LoginPage() {
               className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
             />
 
+            <div className="flex justify-end gap-3 text-[11px] text-muted">
+              <Link href="/find-id" className="hover:text-foreground">
+                아이디 찾기
+              </Link>
+              <Link href="/forgot-password" className="hover:text-foreground">
+                비밀번호 찾기
+              </Link>
+            </div>
+
             {error && <p className="text-xs text-rose-500">{error}</p>}
 
             <button

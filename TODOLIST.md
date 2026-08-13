@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-13 (최신):** 진열/판매 상태 · 장바구니 구매불가 UX · Footer **이용안내** 반영. `git log -1` · Vercel 배포 확인.
+> **2026-08-13 (최신):** 아이디/비밀번호 찾기 배포됨 · Supabase Recovery 템플릿 설정됨 · **Resend SMTP는 도메인 후**
 
 ---
 
@@ -117,7 +117,85 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 ---
 
 ### 계정 · 인증
-1. [ ] **아이디/비밀번호 찾기** — Supabase reset / OAuth 정책
+
+#### 아이디/비밀번호 찾기 (2026-08-13)
+
+**코드** — 배포됨 (`korea-harlem.vercel.app`)
+
+| 경로 | 역할 |
+|------|------|
+| `/forgot-password` | 이메일 입력 → `resetPasswordForEmail` |
+| `/auth/confirm` | 메일 `token_hash` 검증 → 세션 생성 |
+| `/auth/reset-password` | 새 비밀번호 → `updateUser({ password })` |
+| `/find-id` | 로그인 ID = 가입 이메일 안내 · OAuth 안내 |
+| `/login` | 아이디 찾기 · 비밀번호 찾기 링크 |
+
+**주요 파일:** `src/lib/auth/passwordReset.ts` · `src/components/auth/*` · `src/app/auth/confirm/route.ts`
+
+- [x] 비밀번호 찾기 · 아이디 찾기 · OAuth 안내 UI
+- [x] 로그인 페이지 링크 추가
+- [x] **커밋 · 푸시 · Vercel 배포**
+- [ ] `/forgot-password` → 메일 → 재설정 → 로그인 **E2E 테스트**
+
+#### Supabase Auth 설정 (Dashboard)
+
+**URL Configuration** — ✅ 완료 (추가 불필요)
+
+| 항목 | 값 |
+|------|-----|
+| Site URL | `https://korea-harlem.vercel.app` |
+| Redirect URLs | `https://korea-harlem.vercel.app/**` · `http://localhost:3000/**` · `https://*.vercel.app/**` 등 |
+
+> **Site URL ≠ 실제 도메인.** Auth·메일 링크(`{{ .SiteURL }}`)용. 사이트 주소 변경은 **Vercel 도메인 연결** 후 Site URL·Redirect URLs를 같이 수정.
+
+**Reset password 이메일 템플릿** — ✅ 저장됨 (Authentication → Emails → Reset password)
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/reset-password">
+  비밀번호 재설정
+</a>
+```
+
+- [x] Recovery 템플릿 PKCE 링크 (`/auth/confirm` → `/auth/reset-password`)
+- [ ] (선택) Confirm signup 템플릿도 동일 패턴 (`type=email`)
+- [ ] (선택) Subject 한글화 (`비밀번호 재설정`)
+
+**지금 (도메인 없음):** Supabase **기본 메일** 사용 — 시간당 **2통** · 본인 테스트용. Redirect URLs는 `/**` 와일드카드로 auth 경로 포함됨.
+
+#### Resend SMTP (운영 · 도메인 준비 후)
+
+> Auth 메일(비밀번호 찾기·회원가입 확인)은 **Vercel이 아닌 Supabase SMTP**에 연결. Vercel Marketplace Resend는 `RESEND_API_KEY`(앱에서 직접 발송)용.
+
+**선행 조건:** `koreaharlem.com`(또는 서브도메인) DNS → Resend **Domains** 인증. `*.vercel.app`은 Resend에 등록 불가.
+
+| 단계 | 작업 | 상태 |
+|------|------|------|
+| 1 | [resend.com](https://resend.com) 가입 · API Key (`re_...`) | [ ] |
+| 2 | Resend Domains → DNS(SPF/DKIM) 추가 → Verify | [ ] |
+| 3 | Supabase → Authentication → Emails → **SMTP Settings** | [ ] |
+
+**Supabase SMTP 값 (Resend 공식):**
+
+| 항목 | 값 |
+|------|-----|
+| Enable Custom SMTP | ON |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | Resend API Key |
+| Sender email | `noreply@<인증된-도메인>` (예: `noreply@koreaharlem.com`) |
+| Sender name | `KoreaHarlem` |
+
+**대안:** Resend Dashboard → Settings → Integrations → **Supabase Connect** (SMTP 자동 설정)
+
+**도메인 연결 후 추가 작업:**
+
+- [ ] Supabase Site URL → `https://koreaharlem.com` (또는 www)
+- [ ] Redirect URLs에 `https://koreaharlem.com/**` 추가
+- [ ] Vercel에 커스텀 도메인 연결
+- [ ] SMTP 연결 후 비밀번호 찾기 메일 재테스트 (Resend Activity 로그 확인)
+
+**참고:** Resend 무료 ~3,000통/월 · Supabase SMTP 설정 자체는 무료 · 저장 후 Password 칸 비어 보임 = 마스킹(정상)
 
 ### 음악 플레이어
 3. [ ] 앨범 종료 후 **전 아티스트 앨범 랜덤 연속 재생**
@@ -162,11 +240,14 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - [ ] Footer **이용안내** · `/guide` · 결제 페이지 환불 링크
 - [ ] Music → Artists → Album → 재생
 - [ ] Think / Magazine Coming Soon
+- [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E (배포 후)
 
 ---
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. Admin **기존 상품 카테고리 지정** + QA (진열·판매·이용안내 포함)  
-2. **Admin 메뉴 분류** 또는 **토스 심사 체크리스트** 마무리  
-3. 그다음: 비회원 CS 요청 · 아이디/비번 찾기 · 플레이어 · CMS
+1. **아이디/비번 찾기** Supabase 기본 메일로 E2E 테스트  
+2. Admin **기존 상품 카테고리 지정** + QA (진열·판매·이용안내 포함)  
+3. **Admin 메뉴 분류** 또는 **토스 심사 체크리스트** 마무리  
+4. `koreaharlem.com` 준비 후 → **Resend 도메인 인증 → Supabase SMTP** 연결  
+5. 그다음: 비회원 CS 요청 · 플레이어 · CMS
