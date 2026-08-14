@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-13 (최신):** 상품 상세 배송·환불 안내 배포 · **토스 심사 Footer·운영 데이터 미비** · Resend SMTP는 도메인 후
+> **2026-08-14 (최신):** Footer 토스 심사 사업자 정보(대표자·주소·전화) **배포** · Resend SMTP는 도메인 후
 
 ---
 
@@ -41,7 +41,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | 순위 | 항목 | 상태 |
 |------|------|------|
 | **1** | **메뉴 정리 (IA/네비) + 상품 카테고리** | **코드 완료** · Admin 메뉴 분류·기존 상품 카테고리 지정 잔여 |
-| **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer·`/guide`·결제 링크 · 토스 체크리스트 점검 잔여 |
+| **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer 사업자 정보 배포 · 체크리스트·결제 E2E 잔여 |
 | **3** | **진열/판매 상태 + 장바구니 UX** | **완료** · 배포됨 |
 | 4+ | 커머스 CS 잔여 · 백로그 · QA | 대기 |
 
@@ -105,6 +105,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - [x] 결제 페이지 약관 동의 → **이용안내**·**환불정책** 링크
 - [x] 상품 상세 **배송·교환·환불** 요약 + `/guide` 링크 (`ProductPolicyNotice` · `/sale/[id]`)
 - [x] 상품 상세 정책 안내 **커밋 · 배포**
+- [x] Footer **대표자명 · 주소 · 전화** (`Footer.tsx`, 2026-08-14 배포)
 - [ ] 이용약관 본문과 **환불/청약철회** 문구 정합성 검토 (필요 시 TermsModal 보강)
 - [ ] 토스페이먼츠 **심사 체크리스트** 전체 점검 (아래 상세)
 
@@ -122,9 +123,9 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | **Footer 법적 필수** | 상호명 | [x] | KoreaHarlem |
 | | 사업자등록번호 | [x] | 569-09-02645 |
 | | 통신판매업 신고번호 | [x] | 2024-서울마포-2977 |
-| | **대표자명** | [ ] | **사업자등록증과 동일하게 입력 필요** |
-| | **사업장 주소** | [ ] | **입력 필요** |
-| | **유선번호** (070·휴대폰 가능) | [ ] | **입력 필요** (현재 이메일만) |
+| | **대표자명** | [x] | 장재혁 |
+| | **사업장 주소** | [x] | 서울 마포구 동교로 183-6, 104호 (동교동) |
+| | **유선번호** (070·휴대폰 가능) | [x] | 010-5828-5171 |
 | | 대표 이메일 | [x] | koreaharlem@gmail.com |
 | **약관·정책** | 이용약관 · 개인정보처리방침 | [x] | Footer 모달 |
 | | 이용안내(배송·교환·환불) | [x] | `/guide` · Footer |
@@ -136,15 +137,16 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | | Admin 환불·취소 1회 테스트 | [ ] | |
 | **신청** | 토스 전자청약 + 심사 URL 제출 | [ ] | 미비 수정 후 재신청 |
 
-**Footer 미비 3건** — `src/components/layout/Footer.tsx` 하단 · **운영자가 값 제공 후** 반영:
+**Footer 사업자 정보** — `src/components/layout/Footer.tsx` (2026-08-14 배포)
 
 ```
-대표자: (입력 필요)
-주소: (입력 필요)
-전화: (입력 필요)
+대표자: 장재혁
+주소: 서울 마포구 동교로 183-6, 104호 (동교동)
+전화: 010-5828-5171
+이메일: koreaharlem@gmail.com
 ```
 
-**심사 전 권장 순서:** Footer 3건 입력 → 상품 상세 정책 배포 → 판매함 상품 1개 + 결제 E2E → 라이브 키·웹훅 확인 → 토스 신청
+**심사 전 권장 순서:** Footer 배포 확인 → 판매함 상품 1개 + 결제 E2E → 라이브 키·웹훅 확인 → 토스 신청
 
 #### 3순위 — 진열/판매 + 장바구니 (2026-08-13 · 로컬)
 - [x] Admin **표시 설정**: 진열상태 · 판매상태 (라디오)
@@ -277,9 +279,9 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - [ ] Admin: 기존 상품 카테고리 저장 후 해당 메뉴에 표시
 - [ ] Admin: 진열안함 / 판매안함 저장 → 목록·상세·장바구니·결제 동작
 - [ ] 장바구니 담은 뒤 Admin에서 상태 변경 → **구매 불가** 표시·결제 alert
-- [ ] Footer **이용안내** · `/guide` · 결제 페이지 환불 링크
-- [ ] Footer **대표자명 · 사업장 주소 · 유선번호** (토스 심사 필수)
-- [ ] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]` · 배포 후)
+- [x] Footer **이용안내** · `/guide` · 결제 페이지 환불 링크
+- [x] Footer **대표자명 · 사업장 주소 · 유선번호** (배포됨)
+- [ ] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]`)
 - [ ] Music → Artists → Album → 재생
 - [ ] Think / Magazine Coming Soon
 - [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E (배포 후)
@@ -288,8 +290,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. Footer **대표자 · 주소 · 전화** 입력 (토스 심사)  
-2. **토스 심사** — 판매함 상품 1개 · 결제 E2E · 라이브 키·웹훅 · 체크리스트 표 점검  
-3. Admin **기존 상품 카테고리 지정** + QA  
-4. **Admin 메뉴 분류** 또는 이용약관·환불 문구 정합성  
-5. `koreaharlem.com` 후 → **Resend SMTP** · Auth E2E · 비회원 CS 등
+1. **토스 심사** — 판매함 상품 1개 · 결제 E2E · 라이브 키·웹훅 · 체크리스트 표 점검  
+2. Admin **기존 상품 카테고리 지정** + QA  
+3. **Admin 메뉴 분류** 또는 이용약관·환불 문구 정합성  
+4. `koreaharlem.com` 후 → **Resend SMTP** · Auth E2E · 비회원 CS 등

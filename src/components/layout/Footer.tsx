@@ -160,9 +160,18 @@ export function Footer() {
             <div className="mt-4 space-y-1 text-[10px] leading-relaxed text-muted">
               <p>
                 <span className="font-medium text-foreground">KoreaHarlem</span>
-                &nbsp;|&nbsp;사업자등록번호 : 569-09-02645&nbsp;|&nbsp;통신판매업신고번호 : 2024-서울마포-2977
+                &nbsp;|&nbsp;대표자 : 장재혁
+                &nbsp;|&nbsp;사업자등록번호 : 569-09-02645
+                &nbsp;|&nbsp;통신판매업신고번호 : 2024-서울마포-2977
               </p>
-              <p>대표자 이메일 : koreaharlem@gmail.com</p>
+              <p>주소 : 서울 마포구 동교로 183-6, 104호 (동교동)</p>
+              <p>
+                전화 :{" "}
+                <a href="tel:010-5828-5171" className="transition-colors hover:text-foreground">
+                  010-5828-5171
+                </a>
+                &nbsp;|&nbsp;이메일 : koreaharlem@gmail.com
+              </p>
             </div>
 
             <p className="mt-4 text-[10px] text-muted">
