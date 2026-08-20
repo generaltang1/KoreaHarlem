@@ -46,7 +46,11 @@ export async function searchProductsPaged(
   };
 }
 
-/** Public In Store listing — 진열함(is_published) 상품만. 판매안함도 목록·상세 노출. */
+/**
+ * Public In Store listing —
+ * 진열함(is_published) + 재고 있음(stock > 0)만. 최신 등록순.
+ * Admin 재고 조정 시 sync_product_total_stock으로 stock이 갱신되면 다시 목록에 노출.
+ */
 export async function searchSaleProductsPaged(
   supabase: SupabaseClient,
   options: {
@@ -61,6 +65,7 @@ export async function searchSaleProductsPaged(
     .from("products")
     .select("*, product_images(*)", { count: "exact" })
     .eq("is_published", true)
+    .gt("stock", 0)
     .order("created_at", { ascending: false });
 
   if (options.category) {

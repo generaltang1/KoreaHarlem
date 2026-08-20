@@ -12,6 +12,7 @@ async function getHomeProducts(): Promise<ProductWithImages[]> {
       .from("products")
       .select("*, product_images(*)")
       .eq("is_published", true)
+      .gt("stock", 0)
       .order("created_at", { ascending: false })
       .limit(4);
 
