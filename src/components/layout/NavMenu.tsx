@@ -1,37 +1,142 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { NavItem } from "@/data/navigation";
 
-function DesktopSubMenu({ items }: { items: NavItem[] }) {
+function DesktopSubMenu({
+  items,
+  open,
+  onNavigate,
+}: {
+  items: NavItem[];
+  open: boolean;
+  onNavigate: () => void;
+}) {
+  const [openSub, setOpenSub] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) setOpenSub(null);
+  }, [open]);
+
   return (
-    <div className="invisible absolute left-0 top-full z-50 min-w-[180px] border border-border bg-background py-2 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
+    <div
+      className={`absolute left-0 top-full z-50 min-w-[180px] border border-border bg-background py-2 transition-all ${
+        open
+          ? "visible opacity-100"
+          : "invisible pointer-events-none opacity-0"
+      }`}
+    >
       {items.map((item) =>
         item.children ? (
-          <div key={item.label} className="group/sub relative">
-            <span className="block px-4 py-2 text-xs text-muted">{item.label}</span>
-            <div className="invisible absolute left-full top-0 z-50 min-w-[160px] border border-border bg-background py-2 opacity-0 transition-all group-hover/sub:visible group-hover/sub:opacity-100">
+          <div key={item.label} className="relative">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenSub((prev) => (prev === item.label ? null : item.label));
+              }}
+              className="flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-xs text-muted transition-colors hover:bg-foreground hover:text-background"
+              aria-expanded={openSub === item.label}
+            >
+              <span>{item.label}</span>
+              <span aria-hidden className="text-[10px]">
+                ›
+              </span>
+            </button>
+            <div
+              className={`absolute left-full top-0 z-50 hidden min-w-[160px] border border-border bg-background py-2 transition-all lg:block ${
+                openSub === item.label
+                  ? "visible opacity-100"
+                  : "invisible pointer-events-none opacity-0"
+              }`}
+            >
               {item.children.map((child) => (
                 <Link
                   key={child.href}
                   href={child.href!}
+                  onClick={onNavigate}
                   className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background"
                 >
                   {child.label}
                 </Link>
               ))}
             </div>
+            {openSub === item.label && (
+              <div className="border-t border-border bg-neutral-50 py-1 lg:hidden">
+                {item.children.map((child) => (
+                  <Link
+                    key={`inline-${child.href}`}
+                    href={child.href!}
+                    onClick={onNavigate}
+                    className="block px-6 py-2 text-xs transition-colors hover:bg-foreground hover:text-background"
+                  >
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <Link
             key={item.href ?? item.label}
             href={item.href!}
+            onClick={onNavigate}
             className="block px-4 py-2 text-xs transition-colors hover:bg-foreground hover:text-background"
           >
             {item.label}
           </Link>
         ),
       )}
+    </div>
+  );
+}
+
+function DesktopDropdown({
+  label,
+  items,
+  open,
+  onToggle,
+  onClose,
+}: {
+  label: string;
+  items: NavItem[];
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) onClose();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="text-xs uppercase tracking-widest transition-opacity hover:opacity-60"
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
+        {label}
+      </button>
+      <DesktopSubMenu items={items} open={open} onNavigate={onClose} />
     </div>
   );
 }
@@ -77,16 +182,22 @@ function MobileNavItems({
 }
 
 export function DesktopNavMenu({ items }: { items: NavItem[] }) {
+  const [openLabel, setOpenLabel] = useState<string | null>(null);
+
   return (
     <>
       {items.map((link) =>
         link.children ? (
-          <div key={link.label} className="group relative">
-            <button type="button" className="text-xs uppercase tracking-widest transition-opacity hover:opacity-60">
-              {link.label}
-            </button>
-            <DesktopSubMenu items={link.children} />
-          </div>
+          <DesktopDropdown
+            key={link.label}
+            label={link.label}
+            items={link.children}
+            open={openLabel === link.label}
+            onToggle={() =>
+              setOpenLabel((prev) => (prev === link.label ? null : link.label))
+            }
+            onClose={() => setOpenLabel(null)}
+          />
         ) : (
           <Link
             key={link.href}
