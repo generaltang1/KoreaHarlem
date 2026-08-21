@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-14 (최신):** Footer 토스 심사 사업자 정보(대표자·주소·전화) **배포** · Resend SMTP는 도메인 후
+> **2026-08-21 (최신):** 비회원 CS 요청 **배포** · 품절 숨김·iPad 메뉴 탭 배포됨 · Resend SMTP는 도메인 후
 
 ---
 
@@ -24,7 +24,7 @@
 | `add_order_cs_requests.sql` | CS 요청·상태이력 | 실행함 |
 | `add_stock_adjustment_logs.sql` | 수기 재고 조정 | 실행함 |
 | `add_product_category.sql` | IN STORE `category`/`subcategory` | **실행함** |
-| `add_exchange_stock_hold.sql` | 교환 hold RPC | **실행 여부 확인** |
+| `add_exchange_stock_hold.sql` | 교환 hold RPC | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
@@ -40,10 +40,10 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 
 | 순위 | 항목 | 상태 |
 |------|------|------|
-| **1** | **메뉴 정리 (IA/네비) + 상품 카테고리** | **코드 완료** · Admin 메뉴 분류·기존 상품 카테고리 지정 잔여 |
-| **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer 사업자 정보 배포 · 체크리스트·결제 E2E 잔여 |
-| **3** | **진열/판매 상태 + 장바구니 UX** | **완료** · 배포됨 |
-| 4+ | 커머스 CS 잔여 · 백로그 · QA | 대기 |
+| **1** | **메뉴 정리 (IA/네비) + 상품 카테고리** | **코드 완료** · iPad 탭 드롭다운 배포 · Admin 메뉴 분류·기존 상품 카테고리 지정 잔여 |
+| **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer·상품 상세 정책 배포 · 체크리스트·결제 E2E 잔여 |
+| **3** | **진열/판매 상태 + 장바구니 UX + 품절 숨김** | **완료** · 배포됨 |
+| 4+ | 비회원 CS E2E · 토스 심사 · QA | **비회원 CS 배포됨** |
 
 ### 공개 메뉴 IA (확정 · 반영됨)
 
@@ -64,22 +64,29 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - `category` null인 기존 상품 → **Shop All에만** 노출 · Admin에서 직접 지정
 - DB 값: `merch`/`cd`/`ticket` + Merch만 `subcategory`
 
-**진열/판매 상태 (Cafe24형 · 2026-08-13)**
-| 필드 | Admin UI | 공개 동작 |
-|------|----------|-----------|
-| `is_published` | 진열함 / 진열안함 | 진열안함 → In Store·상세 비노출 |
-| `is_sale` | 판매함 / 판매안함 | 판매안함 → 노출만, 구매·장바구니·결제 불가 (티켓·프리오더) |
+**진열/판매/재고 공개 노출 (Cafe24형)**
+
+| 조건 | 공개 목록(메인·In Store) | 상세·구매 |
+|------|--------------------------|-----------|
+| `is_published` = 진열안함 | 비노출 | — |
+| `stock` ≤ 0 (품절) | **비노출** (`stock > 0`만) | URL 직접 접근 시 Sold out |
+| `is_sale` = 판매안함 | 진열·재고 있으면 노출 | 구매·장바구니·결제 불가 |
+| Admin 재고 조정 → `sync_product_total_stock` | 재고 생기면 목록에 다시 노출 | |
+
+**정렬:** `created_at` 내림차순 (최신 등록 상품 우선)
 
 **주요 파일**
 | 구분 | 경로 |
 |------|------|
 | nav 정의 | `src/data/navigation.ts` |
-| 헤더 드롭다운 | `src/components/layout/NavMenu.tsx` |
+| 헤더 드롭다운 (클릭/터치 토글) | `src/components/layout/NavMenu.tsx` |
 | 카테고리 상수 | `src/lib/productCategories.ts` |
 | 진열/판매 폼 | `src/components/admin/ProductForm.tsx` |
 | In Store 필터 | `src/app/sale/page.tsx` · `src/lib/productSearch.ts` |
+| 메인 상품 | `src/app/page.tsx` |
 | 장바구니 상태 검증 | `src/lib/cartAvailability.ts` · `src/hooks/useCartProductAvailability.ts` |
 | 이용안내 | `src/data/usageGuide.ts` · `src/app/guide/page.tsx` · `UsageGuideModal` |
+| 상품 상세 정책 | `src/components/commerce/ProductPolicyNotice.tsx` |
 
 ---
 
@@ -95,6 +102,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - [x] `products.category` / `subcategory` + Admin 필수 선택 + Sale 필터
 - [x] SQL `add_product_category.sql` 실행
 - [x] Admin **작품 등록** 메뉴·페이지 제거
+- [x] **iPad/터치:** In Store·Magazine 드롭다운 **탭 토글** (`NavMenu.tsx`, `4db392d` 배포)
 - [ ] **기존 상품 카테고리 일괄 지정** (Admin에서 수동)
 - [ ] **Admin 메뉴 분류** (다음 단계)
 - [x] 커밋 · 푸시 · Vercel 배포 (메뉴 IA·카테고리)
@@ -148,13 +156,13 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 
 **심사 전 권장 순서:** Footer 배포 확인 → 판매함 상품 1개 + 결제 E2E → 라이브 키·웹훅 확인 → 토스 신청
 
-#### 3순위 — 진열/판매 + 장바구니 (2026-08-13 · 로컬)
+#### 3순위 — 진열/판매 + 장바구니 + 품절 목록 (배포됨)
 - [x] Admin **표시 설정**: 진열상태 · 판매상태 (라디오)
-- [x] In Store: `is_published`만 필터 (판매안함도 목록·상세 노출)
+- [x] In Store·메인: `is_published` + **`stock > 0`** (품절 숨김) · 최신순
 - [x] 상품 상세: 판매안함 → 구매/장바구니 비활성 + 안내 문구
 - [x] 주문 API: 진열안함·판매안함 상품 주문 차단
 - [x] 장바구니·결제: 구매 불가 상품 **회색 + 뱃지** · 결제 시 **alert** 차단
-- [x] 커밋 · 푸시 · Vercel 배포
+- [x] 커밋 · 푸시 · Vercel 배포 (`b05da43` 품절 숨김 포함)
 
 ---
 
@@ -263,34 +271,63 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 - [x] 회원 CS · 교환 hold · 수기 재고 · Cafe24형 재고 UX
 - [x] 비회원 조회 CS·송장 이력 · 일괄 상태 · 타임라인 · 웹훅 · 부분환불 UI
 - [x] Cafe24형 **진열/판매 상태** · 장바구니 구매불가 UX
+- [x] 메인·In Store **품절 상품 숨김** (`stock > 0`) · 최신순 (`b05da43`)
+
+### 비회원 CS 요청 (2026-08-21 · **배포됨**)
+
+| 경로/파일 | 역할 |
+|-----------|------|
+| `POST /api/orders/[id]/guest-cs-request` | 주문조회 비밀번호로 반품/교환/환불 접수 |
+| `src/lib/createOrderCsRequest.ts` | 회원·비회원 공용 CS 생성 |
+| `/order-inquiry` | 조회 후 **요청하기** 폼 |
+| lookup 응답 | 인증 후 `order.id` 포함 |
+
+- [x] guest-cs-request API · OrderCsRequestForm 비회원 연동
+- [x] 회원 `cs-request` → 공용 헬퍼 리팩터
+- [x] **커밋 · 푸시 · Vercel 배포**
+- [ ] E2E: 배송중/완료 비회원 주문 → 요청 → Admin 승인·검수·처리 완료
+
+**Admin CS 처리** (`AdminCsPanel` · 회원·비회원 동일)
+
+| 버튼 | 시점 | 동작 |
+|------|------|------|
+| 승인 | 요청접수 | 수락. 교환이면 희망 사이즈 재고 hold |
+| 반려 | 요청/승인 | 거절·주문 상태 복구 |
+| 회수·검수 완료 | 반품·교환 | 물품 확인 |
+| 처리 완료 | 요청~검수 | 반품·환불=토스 환불(+재고복구) / 교환=사이즈·재고 완료 |
+
+권장: 반품 = 승인 → 검수 → 처리 완료 · 교환 = 승인 → 검수 → 처리 완료 · 환불만 = (승인) → 처리 완료
 
 ### 잔여
-- [ ] 비회원 CS **요청** (order-inquiry)
 - [ ] 비회원 배송 전 취소 (선택)
 - [ ] 교환 차액 (사이즈별 가격 후)
 - [ ] 라이브 키 + 라이브 웹훅 (심사 후)
-- [ ] CS / hold / 수기재고 / **진열·판매·장바구니** QA
+- [ ] CS / hold / 수기재고 / **진열·판매·장바구니·품절숨김** QA
 
 ---
 
 ## 4) QA (짧게)
 
 - [ ] In Store: Shop All / Merch / CD / Ticket 필터·상품 노출
+- [ ] 메인·In Store에 **품절 상품이 안 보이는지** · 재고 올리면 다시 노출
 - [ ] Admin: 기존 상품 카테고리 저장 후 해당 메뉴에 표시
 - [ ] Admin: 진열안함 / 판매안함 저장 → 목록·상세·장바구니·결제 동작
 - [ ] 장바구니 담은 뒤 Admin에서 상태 변경 → **구매 불가** 표시·결제 alert
 - [x] Footer **이용안내** · `/guide` · 결제 페이지 환불 링크
 - [x] Footer **대표자명 · 사업장 주소 · 유선번호** (배포됨)
-- [ ] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]`)
+- [x] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]` · 배포됨)
+- [ ] iPad: In Store · Magazine **탭으로 드롭다운** 열림
 - [ ] Music → Artists → Album → 재생
 - [ ] Think / Magazine Coming Soon
-- [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E (배포 후)
+- [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E
+- [ ] `/order-inquiry` 비회원 CS 요청 · Admin 처리 (배포 후)
 
 ---
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **토스 심사** — 판매함 상품 1개 · 결제 E2E · 라이브 키·웹훅 · 체크리스트 표 점검  
-2. Admin **기존 상품 카테고리 지정** + QA  
-3. **Admin 메뉴 분류** 또는 이용약관·환불 문구 정합성  
-4. `koreaharlem.com` 후 → **Resend SMTP** · Auth E2E · 비회원 CS 등
+1. 비회원 CS **E2E 테스트** (배송중/완료 주문 → Admin 처리)  
+2. **토스 심사** — 판매함 상품 1개 · 결제 E2E · 라이브 키·웹훅  
+3. Admin **기존 상품 카테고리 지정** + QA (품절·iPad 메뉴 포함)  
+4. **Admin 메뉴 분류** 또는 이용약관·환불 문구 정합성  
+5. (선택) 비회원 배송 전 취소 · `koreaharlem.com` 후 **Resend SMTP**

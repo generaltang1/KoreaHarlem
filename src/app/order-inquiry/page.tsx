@@ -10,13 +10,29 @@ import {
   OrderCsRequestsSection,
   type OrderCsRequestItem,
 } from "@/components/commerce/OrderCsRequestsSection";
+import { OrderCsRequestForm } from "@/components/commerce/OrderCsRequestForm";
+import { OPEN_CS_STATUSES } from "@/lib/csRequests";
+
+interface GuestOrderItem {
+  id: string;
+  product_id: string | null;
+  title: string;
+  size: string | null;
+  quantity: number;
+  unit_price: number;
+  currency: string;
+  image_url: string | null;
+}
 
 interface GuestOrderData extends OrderDetailData {
+  id: string;
+  status: string;
   cancelReason?: string | null;
   cancelledAt?: string | null;
   refundedAt?: string | null;
   refundedAmount?: number | null;
   csRequests?: OrderCsRequestItem[];
+  items: GuestOrderItem[];
 }
 
 export default function OrderInquiryPage() {
@@ -27,30 +43,38 @@ export default function OrderInquiryPage() {
   const [error, setError] = useState("");
   const [order, setOrder] = useState<GuestOrderData | null>(null);
 
+  const lookupOrder = async () => {
+    const res = await fetch("/api/orders/lookup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        orderNumber: orderNumber.trim(),
+        password,
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || "조회 실패");
+    setOrder(json.order);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setOrder(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/orders/lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          orderNumber: orderNumber.trim(),
-          password,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "조회 실패");
-      setOrder(json.order);
+      await lookupOrder();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "조회 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
   };
+
+  const hasOpenRequest =
+    order?.csRequests?.some((r) => (OPEN_CS_STATUSES as readonly string[]).includes(r.status)) ??
+    false;
 
   return (
     <>
@@ -59,6 +83,7 @@ export default function OrderInquiryPage() {
         <h1 className="text-xl font-medium uppercase tracking-wider">주문조회</h1>
         <p className="mt-2 text-sm text-muted">
           비회원 주문의 경우 주문 시 입력한 이름, 주문번호, 비밀번호로 조회할 수 있습니다.
+          배송중·배송완료 주문은 반품/교환/환불도 요청할 수 있습니다.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4 border border-border p-5">
@@ -116,6 +141,20 @@ export default function OrderInquiryPage() {
               refundedAt={order.refundedAt}
               refundedAmount={order.refundedAmount}
               currency={order.currency}
+            />
+            <OrderCsRequestForm
+              orderId={order.id}
+              status={order.status}
+              hasOpenRequest={hasOpenRequest}
+              items={order.items}
+              guestPassword={password}
+              onSuccess={async () => {
+                try {
+                  await lookupOrder();
+                } catch (err: unknown) {
+                  setError(err instanceof Error ? err.message : "요청 후 주문 갱신에 실패했습니다.");
+                }
+              }}
             />
             <OrderCsRequestsSection requests={order.csRequests ?? []} />
             <div className="mt-8 text-center">

@@ -96,6 +96,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       order: {
+        id: order.id,
         orderNumber: order.order_number,
         status: order.status,
         statusLabel: orderStatusLabel(order.status),

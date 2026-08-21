@@ -16,6 +16,10 @@ interface OrderCsRequestFormProps {
   status: string;
   hasOpenRequest: boolean;
   items?: OrderCsFormItem[];
+  /** 비회원: 주문조회 시 사용한 비밀번호 (guest-cs-request API) */
+  guestPassword?: string;
+  /** 클라이언트 상태 갱신 (order-inquiry 등). 없으면 router.refresh() */
+  onSuccess?: () => void | Promise<void>;
 }
 
 export function OrderCsRequestForm({
@@ -23,6 +27,8 @@ export function OrderCsRequestForm({
   status,
   hasOpenRequest,
   items = [],
+  guestPassword,
+  onSuccess,
 }: OrderCsRequestFormProps) {
   const router = useRouter();
   const [type, setType] = useState<CsRequestType>("return");
@@ -34,6 +40,7 @@ export function OrderCsRequestForm({
   const [error, setError] = useState("");
 
   const exchangeableItems = useMemo(() => items.filter((item) => !!item.product_id), [items]);
+  const isGuest = !!guestPassword;
 
   if (!canRequestCs(status) || hasOpenRequest) return null;
 
@@ -57,10 +64,15 @@ export function OrderCsRequestForm({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/orders/${orderId}/cs-request`, {
+      const endpoint = isGuest
+        ? `/api/orders/${orderId}/guest-cs-request`
+        : `/api/orders/${orderId}/cs-request`;
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...(isGuest ? { password: guestPassword } : {}),
           type,
           reason: reason.trim(),
           exchangeSize: exchangeSize.trim() || undefined,
@@ -70,7 +82,11 @@ export function OrderCsRequestForm({
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "요청 실패");
       setOpen(false);
-      router.refresh();
+      setReason("");
+      setExchangeSize("");
+      setOrderItemId("");
+      if (onSuccess) await onSuccess();
+      else router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "요청 중 오류가 발생했습니다.");
     } finally {
