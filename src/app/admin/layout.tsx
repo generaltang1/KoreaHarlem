@@ -28,9 +28,12 @@ export default async function AdminLayout({
                 <Link href="/admin/products" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
                   상품 관리
                 </Link>
-                <Link href="/admin/orders" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-                  주문 관리
-                </Link>
+            <Link href="/admin/orders" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+              주문 관리
+            </Link>
+            <Link href="/admin/tips" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+              제보하기 관리
+            </Link>
             <Link href="/admin/events/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               이벤트 등록
             </Link>

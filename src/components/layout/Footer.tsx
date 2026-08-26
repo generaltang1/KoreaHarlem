@@ -6,6 +6,7 @@ import { useState } from "react";
 import { PrivacyModal } from "@/components/ui/PrivacyModal";
 import { TermsModal } from "@/components/ui/TermsModal";
 import { UsageGuideModal } from "@/components/ui/UsageGuideModal";
+import { TipReportModal } from "@/components/tips/TipReportModal";
 import {
   footerMagazineLinks,
   footerMusicLinks,
@@ -36,6 +37,7 @@ export function Footer() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
 
   return (
     <>
@@ -115,21 +117,18 @@ export function Footer() {
           </div>
 
           <div className="mt-16 border-t border-border pt-12">
-            <p className="text-[10px] font-medium uppercase tracking-widest">Newsletter</p>
-            <p className="mt-2 text-xs text-muted">새로운 작품과 이벤트 소식을 받아보세요.</p>
-            <form className="mt-4 flex max-w-md flex-col gap-2 sm:flex-row">
-              <input
-                type="email"
-                placeholder="이메일 주소"
-                className="flex-1 border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground sm:py-2.5 sm:text-xs"
-              />
-              <button
-                type="submit"
-                className="bg-foreground px-6 py-3 text-sm uppercase tracking-widest text-background transition-opacity hover:opacity-80 sm:py-2.5 sm:text-xs"
-              >
-                Submit
-              </button>
-            </form>
+            <p className="text-[10px] font-medium uppercase tracking-widest">Tip</p>
+            <p className="mt-2 max-w-md text-xs leading-relaxed text-muted">
+              일상에서 마주한 재미있는 순간을 사진·영상과 함께 제보해 주세요. 회원·비회원 모두
+              가능합니다.
+            </p>
+            <button
+              type="button"
+              onClick={() => setTipOpen(true)}
+              className="mt-4 border border-foreground bg-foreground px-6 py-3 text-[10px] uppercase tracking-widest text-background transition-opacity hover:opacity-80"
+            >
+              제보하기
+            </button>
           </div>
 
           <div className="mt-12 border-t border-border pt-8">
@@ -184,6 +183,7 @@ export function Footer() {
       {termsOpen && <TermsModal onClose={() => setTermsOpen(false)} />}
       {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
       {guideOpen && <UsageGuideModal onClose={() => setGuideOpen(false)} />}
+      {tipOpen && <TipReportModal onClose={() => setTipOpen(false)} />}
     </>
   );
 }

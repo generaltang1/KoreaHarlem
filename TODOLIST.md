@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-21 (최신):** 쇼핑 코어 **테스트 진행 중** · 다음 개발: **제보하기** · **Magazine** · 비회원 CS·품절숨김·iPad 메뉴 배포됨 · Resend SMTP는 도메인 후
+> **2026-08-26 (최신):** **제보하기** 배포 — Footer Newsletter 제거 · 제보 팝업 · Admin 제보 관리 · SQL 실행됨
 
 ---
 
@@ -25,6 +25,7 @@
 | `add_stock_adjustment_logs.sql` | 수기 재고 조정 | 실행함 |
 | `add_product_category.sql` | IN STORE `category`/`subcategory` | **실행함** |
 | `add_exchange_stock_hold.sql` | 교환 hold RPC | **실행함** |
+| `add_tip_reports.sql` | 제보하기 테이블·tips 버킷 | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
@@ -267,15 +268,16 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 
 쇼핑 코어(상품→주문→조회→CS)는 **사용자 테스트 진행 중**. 그 결과를 기다리며 아래를 우선 개발.
 
-#### A. 제보하기
-- [ ] 요구사항 확정 (제보 유형·필수 항목·로그인 여부·관리자 확인 경로)
-- [ ] 공개 제보 폼 페이지/진입점 (헤더·푸터·Think 등 — 위치 확정)
-- [ ] 제보 저장 (Supabase 테이블 또는 메일 수신)
-- [ ] Admin 제보 목록·상태 처리 (접수/확인/완료)
+#### A. 제보하기 (2026-08-26)
+- [x] Footer Newsletter 제거 → **제보하기** 버튼 + 팝업
+- [x] 제목 · contentEditable 본문(이미지 붙여넣기) · 이미지/동영상 첨부
+- [x] 회원·비회원 제출 (`POST /api/tips`, service role 업로드)
+- [x] Admin **제보하기 관리** 목록·상세·삭제 (`/admin/tips`)
+- [x] **SQL 실행:** `supabase/add_tip_reports.sql`
 - [ ] (선택) 접수 알림 메일 — Resend/SMTP는 도메인 후
-- [ ] 커밋 · 배포 · QA
+- [x] 커밋 · 배포 · QA
 
-> 현재 Footer에 `/contact`(문의하기) 링크는 있으나, **제보하기**는 별도 기능으로 신규 정의.
+> 진입점: Footer 하단 Tip 영역. 관리: Admin 메뉴 «제보하기 관리».
 
 #### B. Magazine
 - [ ] IA 확정: Culture / News (기존 플레이스홀더 `/magazine/culture` · `/magazine/news`)
@@ -352,8 +354,6 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **쇼핑 테스트** 결과 반영 (버그·QA 이슈 수정)  
-2. **다음 개발:** **제보하기** → **Magazine** (Culture/News)  
-3. **토스 심사** — 판매함 상품 · 결제 E2E · 라이브 키·웹훅  
-4. Admin **기존 상품 카테고리 지정** + 메뉴 분류  
-5. (선택) 비회원 배송 전 취소 · `koreaharlem.com` 후 **Resend SMTP**
+1. **다음 개발:** **Magazine** (Culture/News)  
+2. **토스 심사** — 라이브 키·웹훅·전자청약  
+3. (선택) Admin 메뉴 분류 · Resend SMTP (도메인 후) · 제보 접수 알림 메일
