@@ -48,6 +48,7 @@ export function ProductDetailClient({
   const [message, setMessage] = useState("");
 
   const soldOut = isSoldOut({ ...product, sizeStocks: product.sizeStocks });
+  const showStock = product.show_stock !== false;
   const purchasable = isPurchasable(product);
   const needsSize = product.sizes.length > 0;
   const mainImage = images[imageIndex] ?? images[0];
@@ -107,7 +108,11 @@ export function ProductDetailClient({
       return "선택한 사이즈는 품절입니다.";
     }
     if (!needsSize && availableForSize <= 0) return "품절된 상품입니다.";
-    if (quantity > maxQty) return `최대 ${maxQty}개까지 주문할 수 있습니다.`;
+    if (quantity > maxQty) {
+      return showStock
+        ? `최대 ${maxQty}개까지 주문할 수 있습니다.`
+        : "주문 가능 수량을 초과했습니다.";
+    }
     for (const { addon } of product.addons) {
       const pick = addonPicks[addon.id];
       if (!pick) continue;
@@ -305,13 +310,15 @@ export function ProductDetailClient({
                   return (
                     <option key={s} value={s} disabled={qty <= 0}>
                       {s}
-                      {qty <= 0 ? " (품절)" : ` (재고 ${qty})`}
+                      {qty <= 0 ? " (품절)" : showStock ? ` (재고 ${qty})` : ""}
                     </option>
                   );
                 })}
               </select>
               <p className="mt-1 text-[10px] text-muted">
-                (최소 1개 / 최대 {maxQty || 1}개)
+                {showStock
+                  ? `(최소 1개 / 최대 ${maxQty || 1}개)`
+                  : "(최소 1개)"}
               </p>
             </div>
           )}
@@ -330,7 +337,7 @@ export function ProductDetailClient({
               }
               className="w-24 border border-border px-3 py-2 text-sm"
             />
-            {maxQty > 0 && (
+            {showStock && maxQty > 0 && (
               <p className="mt-1 text-[10px] text-muted">남은 재고 {maxQty}개</p>
             )}
           </div>
@@ -377,10 +384,15 @@ export function ProductDetailClient({
                             <option value="">사이즈 선택</option>
                             {addon.sizes.map((s) => {
                               const qty = getStockForSize(addon.sizeStocks ?? {}, s);
+                              const addonShowStock = addon.show_stock !== false;
                               return (
                                 <option key={s} value={s} disabled={qty <= 0}>
                                   {s}
-                                  {qty <= 0 ? " (품절)" : ` (재고 ${qty})`}
+                                  {qty <= 0
+                                    ? " (품절)"
+                                    : addonShowStock
+                                      ? ` (재고 ${qty})`
+                                      : ""}
                                 </option>
                               );
                             })}

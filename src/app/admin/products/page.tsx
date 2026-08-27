@@ -42,6 +42,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
       subcategory: product.subcategory ?? null,
       is_published: product.is_published,
       is_sale: product.is_sale,
+      show_stock: product.show_stock,
       created_at: product.created_at,
       image_url: sorted[0]?.url ?? null,
     };

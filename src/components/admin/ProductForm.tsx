@@ -73,6 +73,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [allProducts, setAllProducts] = useState<AddonOption[]>([]);
   const [isPublished, setIsPublished] = useState(true);
   const [isSale, setIsSale] = useState(true);
+  const [showStock, setShowStock] = useState(true);
   const [category, setCategory] = useState<ProductStoreCategory | "">("");
   const [subcategory, setSubcategory] = useState<ProductMerchSubcategory | "">("");
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
@@ -178,6 +179,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       setSelectedAddonIds((addonRows ?? []).map((r) => r.addon_product_id));
       setIsPublished(data.is_published);
       setIsSale(data.is_sale);
+      setShowStock(data.show_stock ?? true);
       setCategory((data.category as ProductStoreCategory) ?? "merch");
       setSubcategory((data.subcategory as ProductMerchSubcategory) ?? "");
       setExistingImages(
@@ -276,6 +278,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         size_guide: sizeGuideEnabled && sizeGuide ? sizeGuide : null,
         is_sale: isSale,
         is_published: isPublished,
+        show_stock: showStock,
         category,
         subcategory: category === "merch" ? subcategory : null,
       };
@@ -597,6 +600,33 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             </div>
             <p className="mt-1.5 text-[10px] text-muted">
               판매안함이면 상품은 보이지만 구매할 수 없습니다 (티켓·프리오더 등).
+            </p>
+          </fieldset>
+          <fieldset className="sm:col-span-2">
+            <legend className="mb-2 text-xs font-medium">재고표시상태</legend>
+            <div className="flex gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="showStock"
+                  checked={showStock}
+                  onChange={() => setShowStock(true)}
+                />
+                표시함
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="showStock"
+                  checked={!showStock}
+                  onChange={() => setShowStock(false)}
+                />
+                표시안함
+              </label>
+            </div>
+            <p className="mt-1.5 text-[10px] text-muted">
+              표시안함이면 구매자 상품 상세에 남은 재고 수량이 보이지 않습니다. (품절은 그대로
+              표시)
             </p>
           </fieldset>
         </div>

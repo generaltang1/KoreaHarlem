@@ -16,6 +16,7 @@ export interface AdminProductItem {
   subcategory: string | null;
   is_published: boolean;
   is_sale: boolean;
+  show_stock?: boolean;
   created_at: string;
   image_url: string | null;
 }
@@ -44,6 +45,20 @@ function SaleStatusBadge({ onSale }: { onSale: boolean }) {
       }
     >
       {onSale ? "판매함" : "판매안함"}
+    </span>
+  );
+}
+
+function StockDisplayBadge({ show }: { show: boolean }) {
+  return (
+    <span
+      className={
+        show
+          ? "inline-flex shrink-0 items-center border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-violet-800"
+          : "inline-flex shrink-0 items-center border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-neutral-600"
+      }
+    >
+      {show ? "재고표시" : "재고숨김"}
     </span>
   );
 }
@@ -106,6 +121,7 @@ export function AdminProductsList({ products }: { products: AdminProductItem[] }
                 <p className="truncate text-sm font-medium">{product.title}</p>
                 <DisplayStatusBadge published={product.is_published} />
                 <SaleStatusBadge onSale={product.is_sale} />
+                <StockDisplayBadge show={product.show_stock !== false} />
               </div>
               <p className="mt-0.5 text-xs text-muted">
                 {productCategoryLabel(product.category, product.subcategory)} · ₩

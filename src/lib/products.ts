@@ -15,6 +15,8 @@ export interface DbProduct {
   subcategory?: ProductMerchSubcategory | null;
   is_sale: boolean;
   is_published: boolean;
+  /** 재고표시상태 — true=표시함, false=표시안함 (구매자 상세). 미설정 시 표시함 */
+  show_stock?: boolean;
   shipping_fee_krw?: number;
   free_shipping_threshold_krw?: number | null;
   overseas_shipping?: boolean;

@@ -12,6 +12,7 @@ export interface AdminProductRow {
   subcategory: string | null;
   is_published: boolean;
   is_sale: boolean;
+  show_stock?: boolean;
   created_at: string;
   product_images: { url: string; sort_order: number }[];
 }
@@ -23,7 +24,7 @@ export async function searchProductsPaged(
   let query = supabase
     .from("products")
     .select(
-      "id, title, price_krw, stock, category, subcategory, is_published, is_sale, created_at, product_images(url, sort_order)",
+      "id, title, price_krw, stock, category, subcategory, is_published, is_sale, show_stock, created_at, product_images(url, sort_order)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });

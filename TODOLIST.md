@@ -26,6 +26,7 @@
 | `add_product_category.sql` | IN STORE `category`/`subcategory` | **실행함** |
 | `add_exchange_stock_hold.sql` | 교환 hold RPC | **실행함** |
 | `add_tip_reports.sql` | 제보하기 테이블·tips 버킷 | **실행함** |
+| `add_product_show_stock.sql` | 재고표시상태 `show_stock` | **미실행** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
@@ -72,7 +73,10 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | `is_published` = 진열안함 | 비노출 | — |
 | `stock` ≤ 0 (품절) | **비노출** (`stock > 0`만) | URL 직접 접근 시 Sold out |
 | `is_sale` = 판매안함 | 진열·재고 있으면 노출 | 구매·장바구니·결제 불가 |
+| `show_stock` = 표시안함 | (목록 영향 없음) | 남은 재고 수량 숨김 · 품절만 표시 |
 | Admin 재고 조정 → `sync_product_total_stock` | 재고 생기면 목록에 다시 노출 | |
+
+SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 
 **정렬:** `created_at` 내림차순 (최신 등록 상품 우선)
 
