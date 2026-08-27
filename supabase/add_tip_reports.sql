@@ -46,9 +46,10 @@ create policy "tip_report_attachments: 관리자 삭제"
   using (public.is_admin());
 
 -- Storage: tips 버킷 (제보 첨부·본문 붙여넣기 이미지)
+-- 파일당 1GB (버킷 한도). Free 플랜 전역 상한은 50MB — Pro에서 Storage Settings 전역 한도를 1GB+로 올려야 함
 insert into storage.buckets (id, name, public, file_size_limit)
-values ('tips', 'tips', true, 104857600)
-on conflict (id) do update set public = true, file_size_limit = 104857600;
+values ('tips', 'tips', true, 1073741824)
+on conflict (id) do update set public = true, file_size_limit = 1073741824;
 
 -- 정책이 이미 있으면 있을 수 있어 drop 후 재생성
 drop policy if exists "tips: 전체 읽기" on storage.objects;

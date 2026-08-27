@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { TIP_MAX_ATTACHMENTS, TIP_MAX_IMAGE_BYTES, TIP_MAX_VIDEO_BYTES } from "@/lib/tips";
 
 interface TipReportModalProps {
@@ -77,7 +78,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
           continue;
         }
         if (isVideo && file.size > TIP_MAX_VIDEO_BYTES) {
-          setError("동영상은 파일당 100MB 이하여야 합니다.");
+          setError("동영상은 파일당 1GB 이하여야 합니다.");
           continue;
         }
         next.push({
@@ -170,28 +171,101 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
     }
 
     setSubmitting(true);
-    try {
-      const form = new FormData();
-      form.set("title", t);
-      form.set("contentHtml", contentHtml);
+    let tipId: string | null = null;
 
+    type UploadSlot = {
+      path: string;
+      token: string;
+      signedUrl: string;
+      fileName: string;
+      mimeType: string;
+      kind: "image" | "video";
+      pasteId?: string;
+    };
+
+    const parseJsonResponse = async (res: Response) => {
+      const text = await res.text();
+      try {
+        return JSON.parse(text) as { message?: string; ok?: boolean; id?: string; uploads?: UploadSlot[] };
+      } catch {
+        if (text.includes("Request Entity Too Large") || text.includes("FUNCTION_PAYLOAD_TOO_LARGE")) {
+          throw new Error("파일 크기가 서버 제한을 초과했습니다. 동영상은 1GB 이하 MP4(H.264)를 권장합니다.");
+        }
+        throw new Error("서버 응답을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      }
+    };
+
+    try {
       const pasteEntries: PasteImage[] = [];
       pasteMapRef.current.forEach((file, id) => {
         pasteEntries.push({ id, file });
       });
-      for (const p of pasteEntries) {
-        form.append("pasteImages", p.file, p.file.name || `paste-${p.id}.png`);
-        form.append("pasteIds", p.id);
-      }
-      for (const a of attachments) {
-        form.append("attachments", a.file, a.file.name);
+
+      const initRes = await fetch("/api/tips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: t,
+          contentHtml,
+          attachments: attachments.map((a) => ({
+            name: a.file.name,
+            mimeType: a.file.type,
+            size: a.file.size,
+          })),
+          pasteImages: pasteEntries.map((p) => ({
+            pasteId: p.id,
+            name: p.file.name || `paste-${p.id}.png`,
+            mimeType: p.file.type || "image/png",
+            size: p.file.size,
+          })),
+        }),
+      });
+      const initJson = await parseJsonResponse(initRes);
+      if (!initRes.ok) throw new Error(initJson.message || "제보에 실패했습니다.");
+
+      tipId = initJson.id ?? null;
+      const uploadSlots = initJson.uploads ?? [];
+
+      if (uploadSlots.length > 0) {
+        const supabase = createClient();
+        const pasteById = new Map(pasteEntries.map((p) => [p.id, p.file]));
+        const attachmentFiles = attachments.map((a) => a.file);
+        let attachmentIdx = 0;
+
+        for (const slot of uploadSlots) {
+          const file = slot.pasteId
+            ? pasteById.get(slot.pasteId)
+            : attachmentFiles[attachmentIdx++];
+          if (!file) throw new Error("첨부 파일을 찾을 수 없습니다.");
+
+          const { error: upErr } = await supabase.storage
+            .from("tips")
+            .uploadToSignedUrl(slot.path, slot.token, file, { contentType: slot.mimeType });
+          if (upErr) throw new Error(`파일 업로드 실패: ${upErr.message}`);
+        }
+
+        const completeRes = await fetch(`/api/tips/${tipId}/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            uploads: uploadSlots.map((slot) => ({
+              path: slot.path,
+              fileName: slot.fileName,
+              mimeType: slot.mimeType,
+              kind: slot.kind,
+              pasteId: slot.pasteId,
+            })),
+          }),
+        });
+        const completeJson = await parseJsonResponse(completeRes);
+        if (!completeRes.ok) throw new Error(completeJson.message || "제보 완료 처리에 실패했습니다.");
       }
 
-      const res = await fetch("/api/tips", { method: "POST", body: form });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "제보에 실패했습니다.");
       setDone(true);
     } catch (err: unknown) {
+      if (tipId) {
+        await fetch(`/api/tips/${tipId}/abort`, { method: "POST" }).catch(() => {});
+      }
       setError(err instanceof Error ? err.message : "제보에 실패했습니다.");
     } finally {
       setSubmitting(false);
