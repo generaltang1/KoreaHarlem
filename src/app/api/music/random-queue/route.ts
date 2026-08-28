@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     }[];
   };
 
-  let albums = ((data ?? []) as AlbumRow[]).filter(
+  const albums = ((data ?? []) as AlbumRow[]).filter(
     (album) =>
       album.id !== excludeAlbumId &&
       Array.isArray(album.album_tracks) &&
