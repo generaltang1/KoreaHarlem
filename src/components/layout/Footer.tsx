@@ -158,7 +158,7 @@ export function Footer() {
 
             <div className="mt-4 space-y-1 text-[10px] leading-relaxed text-muted">
               <p>
-                <span className="font-medium text-foreground">KoreaHarlem</span>
+                <span className="font-medium text-foreground">koreaharlem</span>
                 &nbsp;|&nbsp;대표자 : 장재혁
                 &nbsp;|&nbsp;사업자등록번호 : 569-09-02645
                 &nbsp;|&nbsp;통신판매업신고번호 : 2024-서울마포-2977
@@ -174,7 +174,7 @@ export function Footer() {
             </div>
 
             <p className="mt-4 text-[10px] text-muted">
-              © {new Date().getFullYear()} KoreaHarlem. All rights reserved.
+              © {new Date().getFullYear()} koreaharlem. All rights reserved.
             </p>
           </div>
         </div>

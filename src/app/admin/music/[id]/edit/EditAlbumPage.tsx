@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { loadDurationFromFile, loadDurationFromUrl } from "@/lib/audioDuration";
 import { buildCroppedCover } from "@/lib/image/cropCover";
 
 interface EditAlbumPageProps {
@@ -21,6 +22,7 @@ interface TrackEditRow {
   title: string;
   description: string;
   audio_url?: string;
+  duration?: number | null;
   audioFile: File | null;
   removed: boolean;
   isTitleTrack: boolean;
@@ -100,6 +102,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
           title: track.title,
           description: track.description ?? "",
           audio_url: track.audio_url,
+          duration: track.duration ?? null,
           audioFile: null,
           removed: false,
           isTitleTrack: track.is_title_track ?? false,
@@ -204,6 +207,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       for (let i = 0; i < validTracks.length; i++) {
         const row = validTracks[i];
         let audio_url = row.audio_url;
+        let duration: number | null | undefined = undefined;
 
         if (row.audioFile) {
           const audioExt = row.audioFile.name.split(".").pop();
@@ -214,6 +218,9 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
           if (audioErr) throw audioErr;
           const { data: audioUrlData } = supabase.storage.from("audio").getPublicUrl(audioPath);
           audio_url = audioUrlData.publicUrl;
+          duration = await loadDurationFromFile(row.audioFile);
+        } else if (audio_url && !row.duration) {
+          duration = await loadDurationFromUrl(audio_url);
         }
 
         if (row.id) {
@@ -224,6 +231,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
               title: row.title.trim(),
               description: row.description.trim() || null,
               audio_url: audio_url!,
+              ...(duration != null ? { duration } : {}),
               is_title_track: row.isTitleTrack,
             })
             .eq("id", row.id);
@@ -235,6 +243,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
             title: row.title.trim(),
             description: row.description.trim() || null,
             audio_url: audio_url!,
+            duration: duration ?? null,
             is_title_track: row.isTitleTrack,
           });
           if (insertErr) throw insertErr;

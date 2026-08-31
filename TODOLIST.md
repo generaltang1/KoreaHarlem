@@ -6,7 +6,9 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-26 (최신):** **제보하기** 배포 — Footer Newsletter 제거 · 제보 팝업 · Admin 제보 관리 · SQL 실행됨
+> **2026-08-31 (최신):** **음악 플레이어·앨범 UI** — PC 전용 음량 · 진행바 드래그 시크 · 수록곡 duration 표시 · `show_stock` 배포 · Footer `koreaharlem` 소문자
+
+> **2026-08-26:** **제보하기** 배포 — Footer Newsletter 제거 · 제보 팝업 · Admin 제보 관리 · SQL 실행됨
 
 ---
 
@@ -15,7 +17,7 @@
 ### A. 코드
 1. `git pull` (또는 이번 PC에서 커밋·푸시 후 pull)
 2. `npm install` (필요 시) → `.env.local` 확인
-3. `npm run dev` — **CSS 깨질 때:** 예전 `next dev` 프로세스 종료 → `.next` 삭제 → 재시작 (3000 포트 확인)
+3. `npm run dev` — **CSS/JS 404·깨짐:** `next dev` 실행 중 `npm run build` 하지 말 것 → 프로세스 종료 → `.next` 삭제 → 재시작
 
 ### B. Supabase SQL
 
@@ -26,7 +28,9 @@
 | `add_product_category.sql` | IN STORE `category`/`subcategory` | **실행함** |
 | `add_exchange_stock_hold.sql` | 교환 hold RPC | **실행함** |
 | `add_tip_reports.sql` | 제보하기 테이블·tips 버킷 | **실행함** |
-| `add_product_show_stock.sql` | 재고표시상태 `show_stock` | **미실행** |
+| `add_product_show_stock.sql` | 재고표시상태 `show_stock` | **실행함** |
+| `update_storage_buckets_1gb.sql` | Storage 버킷 1GB | **실행함** |
+| `update_tips_file_size_1gb.sql` | tips 버킷 파일 크기 1GB | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
@@ -45,7 +49,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | **1** | **메뉴 정리 (IA/네비) + 상품 카테고리** | **코드 완료** · iPad 탭 드롭다운 배포 · Admin 메뉴 분류·기존 상품 카테고리 지정 잔여 |
 | **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer·상품 상세 정책 배포 · 체크리스트·결제 E2E 잔여 |
 | **3** | **진열/판매 상태 + 장바구니 UX + 품절 숨김** | **완료** · 배포됨 |
-| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **Magazine** | 쇼핑 테스트 중 · 콘텐츠 개발 착수 |
+| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **Magazine** | 쇼핑 테스트 중 · Magazine 착수 예정 |
 
 ### 공개 메뉴 IA (확정 · 반영됨)
 
@@ -76,7 +80,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | `show_stock` = 표시안함 | (목록 영향 없음) | 남은 재고 수량 숨김 · 품절만 표시 |
 | Admin 재고 조정 → `sync_product_total_stock` | 재고 생기면 목록에 다시 노출 | |
 
-SQL: `supabase/add_product_show_stock.sql` (실행 필요)
+SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 
 **정렬:** `created_at` 내림차순 (최신 등록 상품 우선)
 
@@ -91,7 +95,10 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 | 메인 상품 | `src/app/page.tsx` |
 | 장바구니 상태 검증 | `src/lib/cartAvailability.ts` · `src/hooks/useCartProductAvailability.ts` |
 | 이용안내 | `src/data/usageGuide.ts` · `src/app/guide/page.tsx` · `UsageGuideModal` |
-| 상품 상세 정책 | `src/components/commerce/ProductPolicyNotice.tsx` |
+| 상품 상세 정책 | `src/components/commerce/ProductPolicyNotice.tsx` · `ProductDetailClient.tsx` (`show_stock`) |
+| 음악 플레이어 | `src/components/player/MusicPlayer.tsx` · `PlayerProgressBar.tsx` · `PlayerContext.tsx` |
+| 앨범 상세 | `src/components/music/AlbumDetailClient.tsx` · `src/hooks/useTrackDurations.ts` |
+| 곡 길이 | `src/lib/audioDuration.ts` · `POST /api/music/durations` |
 
 ---
 
@@ -133,7 +140,7 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 | **상품** | 판매 가능 상품 1개 이상 (품절·샘플만 X) | [ ] | Admin: 진열함 + **판매함** + 재고 |
 | | 상품 이미지 고유·가독 (No image·중복 X) | [ ] | |
 | | 상품 상세에 배송·환불 정책 노출 | [x] | `ProductPolicyNotice` |
-| **Footer 법적 필수** | 상호명 | [x] | KoreaHarlem |
+| **Footer 법적 필수** | 상호명 | [x] | koreaharlem (소문자) |
 | | 사업자등록번호 | [x] | 569-09-02645 |
 | | 통신판매업 신고번호 | [x] | 2024-서울마포-2977 |
 | | **대표자명** | [x] | 장재혁 |
@@ -150,7 +157,7 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 | | Admin 환불·취소 1회 테스트 | [ ] | |
 | **신청** | 토스 전자청약 + 심사 URL 제출 | [ ] | 미비 수정 후 재신청 |
 
-**Footer 사업자 정보** — `src/components/layout/Footer.tsx` (2026-08-14 배포)
+**Footer 사업자 정보** — `src/components/layout/Footer.tsx` (상호 **koreaharlem** 소문자, 2026-08-31)
 
 ```
 대표자: 장재혁
@@ -160,6 +167,12 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 ```
 
 **심사 전 권장 순서:** Footer 배포 확인 → 판매함 상품 1개 + 결제 E2E → 라이브 키·웹훅 확인 → 토스 신청
+
+#### 4순위 — 재고표시상태 `show_stock` (2026-08-31 · 배포됨)
+- [x] SQL `add_product_show_stock.sql` 실행
+- [x] Admin **재고표시상태** 라디오 (표시함 / 표시안함)
+- [x] 구매자 상세: `show_stock=false`면 남은 재고 수량 숨김 · 품절만 표시
+- [x] 커밋 · 배포
 
 #### 3순위 — 진열/판매 + 장바구니 + 품절 목록 (배포됨)
 - [x] Admin **표시 설정**: 진열상태 · 판매상태 (라디오)
@@ -252,12 +265,18 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 
 **참고:** Resend 무료 ~3,000통/월 · Supabase SMTP 설정 자체는 무료 · 저장 후 Password 칸 비어 보임 = 마스킹(정상)
 
-### 음악 플레이어
-3. [x] 앨범 종료 후 **다른 앨범 랜덤 재생** (반복 끔 = 기본 · `/api/music/random-queue`)
-4. [x] **셔플** (하단 재생바 on/off · 유튜브 뮤직 스타일 아이콘)
+### 음악 플레이어 (2026-08-31 업데이트)
+- [x] 앨범 종료 후 **다른 앨범 랜덤 재생** (반복 끔 = 기본 · `/api/music/random-queue`)
+- [x] **셔플** (하단 재생바 on/off · 유튜브 뮤직 스타일 아이콘)
 - [x] **반복** 3단계: 끔 → 모두 반복(●) → 한 곡 반복(1)
-- [x] 앱 음량 슬라이더 (모바일 포함) · `audio.muted` 음소거 · localStorage 저장
-6. [ ] 앨범 상세 **우측 다른 앨범 추천**
+- [x] **음량 조절** — Windows·macOS PC만 스피커·슬라이더 표시 (`useSupportsAppVolume`) · iOS/Android/태블릿은 숨김
+- [x] **진행바 드래그 시크** (유튜브 뮤직 스타일 · `PlayerProgressBar`)
+- [x] 모바일 레이아웃: 재생 컨트롤 우측 정렬 · 앨범 커버/이전곡 겹침 방지
+- [x] 앨범 수록곡: Play/Playing 제거 · **곡 길이(duration)** 표시
+- [x] 곡 길이 자동 로딩: 병렬 메타데이터 읽기 · sessionStorage 캐시 · `POST /api/music/durations` DB 백필
+- [x] Admin 음원 업로드·앨범 수정 시 `duration` DB 저장 (`audioDuration.ts`)
+- [ ] 앨범 상세 **우측 다른 앨범 추천**
+- [ ] 로컬 변경분 **커밋 · 배포** (음악 플레이어·duration·Footer)
 
 ### 음악 커뮤니티 · 판매
 5. [ ] 앨범 **댓글/평가** (커뮤니티)
@@ -274,7 +293,7 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 
 쇼핑 코어(상품→주문→조회→CS)는 **사용자 테스트 진행 중**. 그 결과를 기다리며 아래를 우선 개발.
 
-#### A. 제보하기 (2026-08-26)
+#### A. 제보하기 (2026-08-26 · 완료)
 - [x] Footer Newsletter 제거 → **제보하기** 버튼 + 팝업
 - [x] 제목 · contentEditable 본문(이미지 붙여넣기) · 이미지/동영상 첨부
 - [x] 회원·비회원 제출 (`POST /api/tips`, service role 업로드)
@@ -306,6 +325,7 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 - [x] 비회원 조회 CS·송장 이력 · 일괄 상태 · 타임라인 · 웹훅 · 부분환불 UI
 - [x] Cafe24형 **진열/판매 상태** · 장바구니 구매불가 UX
 - [x] 메인·In Store **품절 상품 숨김** (`stock > 0`) · 최신순 (`b05da43`)
+- [x] **재고표시상태** `show_stock` (Admin·구매자 상세)
 
 ### 비회원 CS 요청 (2026-08-21 · **배포됨**)
 
@@ -351,7 +371,9 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 - [x] Footer **대표자명 · 사업장 주소 · 유선번호** (배포됨)
 - [x] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]` · 배포됨)
 - [ ] iPad: In Store · Magazine **탭으로 드롭다운** 열림
-- [ ] Music → Artists → Album → 재생
+- [ ] Music → Artists → Album → 재생 · **수록곡 duration 전곡 표시**
+- [ ] 플레이어: PC 음량 슬라이더 · 모바일 스피커 숨김 · 진행바 드래그 시크
+- [ ] 상품 상세 `show_stock=false` 시 재고 수량 숨김
 - [ ] Think / Magazine Coming Soon
 - [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E
 - [ ] `/order-inquiry` 비회원 CS 요청 · Admin 처리 (배포 후)
@@ -360,6 +382,7 @@ SQL: `supabase/add_product_show_stock.sql` (실행 필요)
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **다음 개발:** **Magazine** (Culture/News)  
-2. **토스 심사** — 라이브 키·웹훅·전자청약  
-3. (선택) Admin 메뉴 분류 · Resend SMTP (도메인 후) · 제보 접수 알림 메일
+1. **음악 플레이어·앨범 UI** — 로컬 변경분 **커밋 · 배포** (미배포 시)
+2. **다음 개발:** **Magazine** (Culture/News)
+3. **토스 심사** — 라이브 키·웹훅·전자청약
+4. (선택) Admin 메뉴 분류 · 기존 상품 카테고리 지정 · Resend SMTP (도메인 후) · 제보 접수 알림 메일

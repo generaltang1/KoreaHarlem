@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePlayer } from "@/context/PlayerContext";
+import { useTrackDurations } from "@/hooks/useTrackDurations";
 import type { AlbumWithTracks } from "@/lib/albums";
 import { getAlbumArtistName, mapAlbumToPlayerTracks } from "@/lib/albums";
 
@@ -12,7 +13,7 @@ interface AlbumDetailClientProps {
 }
 
 function formatDuration(sec?: number | null) {
-  if (!sec) return "--:--";
+  if (!sec || !isFinite(sec)) return null;
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
@@ -25,7 +26,11 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
   );
 
   const playerTracks = mapAlbumToPlayerTracks(album);
-  const sortedTracks = [...album.album_tracks].sort((a, b) => a.track_order - b.track_order);
+  const sortedTracks = useMemo(
+    () => [...album.album_tracks].sort((a, b) => a.track_order - b.track_order),
+    [album.album_tracks],
+  );
+  const loadedDurations = useTrackDurations(sortedTracks);
   const selectedTrack = sortedTracks.find((t) => t.id === selectedTrackId) ?? sortedTracks[0];
   const artist = getAlbumArtistName(album);
 
@@ -111,6 +116,8 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
           {sortedTracks.map((track, index) => {
             const isActive = isAlbumQueueActive && currentTrack?.id === track.id;
             const isSelected = selectedTrack?.id === track.id;
+            const trackDuration = track.duration ?? loadedDurations[track.id] ?? null;
+            const durationLabel = formatDuration(trackDuration);
 
             return (
               <button
@@ -134,9 +141,8 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
                     )}
                   </div>
                 </div>
-                <span className="text-[10px] text-muted">{formatDuration(track.duration)}</span>
-                <span className="text-[10px] uppercase tracking-widest text-muted">
-                  {isActive && isPlaying ? "Playing" : "Play"}
+                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted">
+                  {durationLabel ?? ""}
                 </span>
               </button>
             );

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { loadDurationFromFile } from "@/lib/audioDuration";
 import { buildCroppedCover } from "@/lib/image/cropCover";
 
 interface ArtistOption {
@@ -136,6 +137,7 @@ export default function NewAlbumPage() {
         const { error: audioErr } = await supabase.storage.from("audio").upload(audioPath, audioFile);
         if (audioErr) throw audioErr;
         const { data: audioUrlData } = supabase.storage.from("audio").getPublicUrl(audioPath);
+        const duration = await loadDurationFromFile(audioFile);
 
         const { error: trackErr } = await supabase.from("album_tracks").insert({
           album_id: album.id,
@@ -143,6 +145,7 @@ export default function NewAlbumPage() {
           title: row.title.trim(),
           description: row.description.trim() || null,
           audio_url: audioUrlData.publicUrl,
+          duration,
           is_title_track: row.isTitleTrack,
         });
         if (trackErr) throw trackErr;
