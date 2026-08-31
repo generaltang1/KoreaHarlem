@@ -162,7 +162,7 @@ export function HomeSections({ products }: HomeSectionsProps) {
               >
                 {s.id === "shop" && <ShopPanel products={products} />}
                 {s.id === "magazine" && <ComingSoonPanel label="MAGAZINE" />}
-                {s.id === "think" && <ComingSoonPanel label="THINK" />}
+                {s.id === "think" && <ThinkPanel />}
               </div>
             ))}
           </div>
@@ -201,6 +201,21 @@ function ShopPanel({ products }: { products: ProductWithImages[] }) {
       {products.slice(0, 4).map((product) => (
         <HomeProductCard key={product.id} product={product} />
       ))}
+    </div>
+  );
+}
+
+function ThinkPanel() {
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center border border-border bg-neutral-50 px-6 text-center">
+      <p className="text-[10px] uppercase tracking-[0.3em] text-muted">THINK</p>
+      <p className="mt-3 text-sm text-muted">자유 게시판</p>
+      <Link
+        href="/think"
+        className="mt-6 border border-foreground px-6 py-2.5 text-[10px] uppercase tracking-widest hover:bg-foreground hover:text-background"
+      >
+        게시판 보기
+      </Link>
     </div>
   );
 }

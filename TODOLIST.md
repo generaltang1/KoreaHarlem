@@ -6,7 +6,9 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-31 (최신):** **음악 플레이어·앨범 UI** — PC 전용 음량 · 진행바 드래그 시크 · 수록곡 duration 표시 · `show_stock` 배포 · Footer `koreaharlem` 소문자
+> **2026-08-31 (최신):** **THINK 게시판** 1차 개발 — DC 스타일 목록·글쓰기·추천·유튜브 · 본문 인라인 이미지 · `add_think_board.sql` **실행 필요** · `YOUTUBE_API_KEY` Vercel 등록
+
+> **2026-08-31:** **음악 플레이어·앨범 UI** 배포 (`a826e46`) — PC 전용 음량 · 진행바 드래그 시크 · 수록곡 duration · `show_stock` · Footer `koreaharlem` 소문자
 
 > **2026-08-26:** **제보하기** 배포 — Footer Newsletter 제거 · 제보 팝업 · Admin 제보 관리 · SQL 실행됨
 
@@ -31,14 +33,21 @@
 | `add_product_show_stock.sql` | 재고표시상태 `show_stock` | **실행함** |
 | `update_storage_buckets_1gb.sql` | Storage 버킷 1GB | **실행함** |
 | `update_tips_file_size_1gb.sql` | tips 버킷 파일 크기 1GB | **실행함** |
+| `add_think_board.sql` | THINK 게시판·think Storage 버킷 | **미실행** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
 > `is_published` / `is_sale` 컬럼은 `add_products.sql` 초기 스키마에 포함. **별도 SQL 불필요.**
 
 ### C. 환경 변수
-`NEXT_PUBLIC_SUPABASE_*` · `SUPABASE_SERVICE_ROLE_KEY` · `TOSS_*` · 카카오 OAuth  
-Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy** 필요 (변경만으로는 반영 안 됨).
+`NEXT_PUBLIC_SUPABASE_*` · `SUPABASE_SERVICE_ROLE_KEY` · `TOSS_*` · `YOUTUBE_API_KEY` · 카카오 OAuth  
+Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY` 등록 후 **Redeploy** 필요 (변경만으로는 반영 안 됨).
+
+**`YOUTUBE_API_KEY` (THINK 유튜브 검색)**
+- 로컬: `.env.local` · Vercel: Settings → Environment Variables
+- Google Cloud: **API 및 서비스 → 사용자 인증 정보** → API 키 → **YouTube Data API v3** 사용 설정
+- **애플리케이션 제한(HTTP 리퍼러)** 예: `https://korea-harlem.vercel.app/*` · `http://localhost:3000/*`
+- **홈페이지 URL(도메인) 변경 시:** Google Cloud Console에서 위 API 키의 **애플리케이션 제한 → HTTP 리퍼러**에 **새 도메인 URL을 추가**해야 THINK 글쓰기 유튜브 검색이 동작함 (기존 `*.vercel.app`만 두면 커스텀 도메인에서 거부될 수 있음)
 
 ---
 
@@ -49,7 +58,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | **1** | **메뉴 정리 (IA/네비) + 상품 카테고리** | **코드 완료** · iPad 탭 드롭다운 배포 · Admin 메뉴 분류·기존 상품 카테고리 지정 잔여 |
 | **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer·상품 상세 정책 배포 · 체크리스트·결제 E2E 잔여 |
 | **3** | **진열/판매 상태 + 장바구니 UX + 품절 숨김** | **완료** · 배포됨 |
-| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **Magazine** | 쇼핑 테스트 중 · Magazine 착수 예정 |
+| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **THINK** · **Magazine** | THINK 코드 완료(미배포) · Magazine 착수 예정 |
 
 ### 공개 메뉴 IA (확정 · 반영됨)
 
@@ -60,7 +69,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*` 등록 후 **Redeploy
 | 1-3 | CD | `?category=cd` | |
 | 1-4 | Ticket | `?category=ticket` | |
 | 2 | **Music** | `/artists` | 아티스트 → 앨범 → 재생 |
-| 3 | **Think** | `/think` | Coming Soon |
+| 3 | **Think** | `/think` | 게시판 (전체글·개념글·공지) |
 | 4 | **Magazine** | `/magazine/culture` · `/magazine/news` | Coming Soon |
 
 **제거됨:** Explore · Sale · 아티스트 · 이벤트 (구 헤더) · Admin **작품 등록** (`/admin/works/new`)
@@ -99,6 +108,9 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 | 음악 플레이어 | `src/components/player/MusicPlayer.tsx` · `PlayerProgressBar.tsx` · `PlayerContext.tsx` |
 | 앨범 상세 | `src/components/music/AlbumDetailClient.tsx` · `src/hooks/useTrackDurations.ts` |
 | 곡 길이 | `src/lib/audioDuration.ts` · `POST /api/music/durations` |
+| THINK 게시판 | `src/app/think/**` · `src/components/think/**` · `src/lib/think.ts` |
+| THINK API | `src/app/api/think/posts` · `youtube/search` |
+| THINK Admin | `/admin/think` · `AdminThinkList.tsx` |
 
 ---
 
@@ -109,7 +121,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 #### 1순위 — 메뉴·카테고리 (2026-08-13)
 - [x] 헤더/푸터: In Store · Music · Think · Magazine
 - [x] In Store 하위: Shop All / Merch(Tops·Bottoms·Accessory) / CD / Ticket
-- [x] `/think` · `/magazine/culture` · `/magazine/news` 플레이스홀더
+- [x] `/think` 게시판 · `/magazine/culture` · `/magazine/news` (Magazine은 플레이스홀더)
 - [x] Music → `/artists` · `/music` redirect 정리
 - [x] `products.category` / `subcategory` + Admin 필수 선택 + Sale 필터
 - [x] SQL `add_product_category.sql` 실행
@@ -261,6 +273,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 - [ ] Supabase Site URL → `https://koreaharlem.com` (또는 www)
 - [ ] Redirect URLs에 `https://koreaharlem.com/**` 추가
 - [ ] Vercel에 커스텀 도메인 연결
+- [ ] **Google Cloud** `YOUTUBE_API_KEY` → **애플리케이션 제한(HTTP 리퍼러)** 에 새 도메인 추가 (예: `https://koreaharlem.com/*`)
 - [ ] SMTP 연결 후 비밀번호 찾기 메일 재테스트 (Resend Activity 로그 확인)
 
 **참고:** Resend 무료 ~3,000통/월 · Supabase SMTP 설정 자체는 무료 · 저장 후 Password 칸 비어 보임 = 마스킹(정상)
@@ -276,7 +289,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 - [x] 곡 길이 자동 로딩: 병렬 메타데이터 읽기 · sessionStorage 캐시 · `POST /api/music/durations` DB 백필
 - [x] Admin 음원 업로드·앨범 수정 시 `duration` DB 저장 (`audioDuration.ts`)
 - [ ] 앨범 상세 **우측 다른 앨범 추천**
-- [ ] 로컬 변경분 **커밋 · 배포** (음악 플레이어·duration·Footer)
+- [x] 커밋 · 배포 (`a826e46` · 2026-08-31)
 
 ### 음악 커뮤니티 · 판매
 5. [ ] 앨범 **댓글/평가** (커뮤니티)
@@ -303,6 +316,27 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 - [x] 커밋 · 배포 · QA
 
 > 진입점: Footer 하단 Tip 영역. 관리: Admin 메뉴 «제보하기 관리».
+
+#### C. THINK 게시판 (2026-08-31 · **코드 완료 · 미커밋·미배포**)
+
+DC인사이드 스타일 자유 게시판. SQL·`YOUTUBE_API_KEY` 설정 후 QA.
+
+- [x] 탭: **전체글** · **개념글**(추천 20+) · **공지**
+- [x] 목록: 번호·제목·글쓴이·작성일·**조회**·**추천** (말머리 없음) · 페이징(50) · 검색
+- [x] 글쓰기 `/think/new`: contentEditable 본문 (이미지 사이에 글 작성)
+- [x] **이미지:** 모달 다중 선택·드래그 → **적용** 시 본문 삽입 (최대 50장·20MB) · 붙여넣기(Ctrl+V)
+- [x] **동영상:** 첨부 (최대 5개·100MB)
+- [x] **유튜브:** 검색 모달 → 본문/상세에서 사이트 내 재생 (`YOUTUBE_API_KEY`)
+- [x] 회원: 닉네임 표시 · 비회원: 닉네임 10자(기본 익명) + IP `(110.98)` · DB에 **전체 IP** 저장
+- [x] 추천: IP당 1회 · 20개 이상 → 개념글
+- [x] 관리자만 **공지** 체크박스 (서버에서 `isCurrentUserAdmin` 검증)
+- [x] Admin `/admin/think` 목록·삭제
+- [x] 메인 `HomeSections` THINK 패널 → 게시판 링크
+- [ ] **SQL 실행:** `supabase/add_think_board.sql`
+- [ ] `.env.local` + Vercel **`YOUTUBE_API_KEY`** 등록 · Redeploy
+- [ ] 커밋 · 푸시 · Vercel 배포 · QA
+
+**주요 파일:** `supabase/add_think_board.sql` · `ThinkBoard.tsx` · `ThinkPostEditor.tsx` · `ThinkImageUploadModal.tsx` · `YouTubeSearchModal.tsx` · `thinkEditor.ts`
 
 #### B. Magazine
 - [ ] IA 확정: Culture / News (기존 플레이스홀더 `/magazine/culture` · `/magazine/news`)
@@ -371,10 +405,11 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 - [x] Footer **대표자명 · 사업장 주소 · 유선번호** (배포됨)
 - [x] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]` · 배포됨)
 - [ ] iPad: In Store · Magazine **탭으로 드롭다운** 열림
-- [ ] Music → Artists → Album → 재생 · **수록곡 duration 전곡 표시**
-- [ ] 플레이어: PC 음량 슬라이더 · 모바일 스피커 숨김 · 진행바 드래그 시크
+- [ ] Music → Artists → Album → 재생 · 수록곡 duration 전곡 표시
+- [x] 플레이어: PC 음량 슬라이더 · 모바일 스피커 숨김 · 진행바 드래그 시크 (배포됨)
 - [ ] 상품 상세 `show_stock=false` 시 재고 수량 숨김
-- [ ] Think / Magazine Coming Soon
+- [ ] **THINK:** 목록 탭·글쓰기·본문 이미지 삽입·유튜브·추천·비회원 IP·공지(SQL·API키 후)
+- [ ] Magazine Coming Soon
 - [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E
 - [ ] `/order-inquiry` 비회원 CS 요청 · Admin 처리 (배포 후)
 
@@ -382,7 +417,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **음악 플레이어·앨범 UI** — 로컬 변경분 **커밋 · 배포** (미배포 시)
-2. **다음 개발:** **Magazine** (Culture/News)
+1. **THINK** — `add_think_board.sql` 실행 · `YOUTUBE_API_KEY` 확인 → **커밋 · 배포 · QA**
+2. **Magazine** (Culture/News) — 다음 대형 기능
 3. **토스 심사** — 라이브 키·웹훅·전자청약
 4. (선택) Admin 메뉴 분류 · 기존 상품 카테고리 지정 · Resend SMTP (도메인 후) · 제보 접수 알림 메일

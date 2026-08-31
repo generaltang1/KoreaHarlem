@@ -1,18 +1,16 @@
+import { Suspense } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Link from "next/link";
+import { ThinkBoard } from "@/components/think/ThinkBoard";
 
 export default function ThinkPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto flex min-h-[50vh] max-w-7xl flex-col items-center justify-center px-4 py-24 text-center md:px-6">
-        <p className="text-[10px] uppercase tracking-widest text-muted">Think</p>
-        <h1 className="mt-2 text-2xl font-medium uppercase tracking-wider">Coming Soon</h1>
-        <p className="mt-4 max-w-md text-sm text-muted">아직 준비 중인 콘텐츠입니다.</p>
-        <Link href="/" className="mt-8 text-xs uppercase tracking-widest underline">
-          홈으로
-        </Link>
+      <main className="mx-auto max-w-5xl px-4 py-12 pb-28 md:px-6">
+        <Suspense fallback={<p className="text-center text-sm text-muted">불러오는 중…</p>}>
+          <ThinkBoard />
+        </Suspense>
       </main>
       <Footer />
     </>
