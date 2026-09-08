@@ -70,11 +70,18 @@ export async function POST(request: Request) {
       }));
 
     const supabase = await createClient();
+    const admin = createServiceClient();
+    if (!admin) {
+      return NextResponse.json(
+        { message: "서버 설정 오류(SUPABASE_SERVICE_ROLE_KEY). 주문 생성을 진행할 수 없습니다." },
+        { status: 500 },
+      );
+    }
+
     const productIds = [...new Set(stockLines.map((l) => l.productId))];
 
-    const adminForSale = createServiceClient() ?? supabase;
     if (productIds.length > 0) {
-      const { data: productsForSale } = await adminForSale
+      const { data: productsForSale } = await admin
         .from("products")
         .select("id, title, is_published, is_sale")
         .in("id", productIds);
@@ -94,7 +101,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const stockByProduct = await fetchSizeStockMaps(supabase, productIds);
+    const stockByProduct = await fetchSizeStockMaps(admin, productIds);
     const stockErr = validateLinesAgainstStock(stockLines, stockByProduct);
     if (stockErr) {
       return NextResponse.json({ message: stockErr }, { status: 409 });
@@ -115,7 +122,8 @@ export async function POST(request: Request) {
       guestPasswordHash = await hashGuestPassword(guestPassword);
     }
 
-    const orderNumber = await allocateOrderNumber(supabase);
+    // 주문 INSERT는 service role 사용 (비회원: SELECT 정책이 auth.uid()=user_id만 허용 → insert().select()가 RLS에 막힘)
+    const orderNumber = await allocateOrderNumber(admin);
     if (!orderNumber) {
       return NextResponse.json(
         { message: "주문번호 생성 실패. supabase/add_guest_orders.sql 실행 여부를 확인하세요." },
@@ -153,7 +161,7 @@ export async function POST(request: Request) {
     };
     if (paymentMethod) orderPayload.payment_method = paymentMethod;
 
-    let { data: order, error: orderError } = await supabase
+    let { data: order, error: orderError } = await admin
       .from("orders")
       .insert(orderPayload)
       .select("id")
@@ -161,7 +169,7 @@ export async function POST(request: Request) {
 
     if (orderError?.message?.includes("payment_method")) {
       delete orderPayload.payment_method;
-      const retry = await supabase.from("orders").insert(orderPayload).select("id").single();
+      const retry = await admin.from("orders").insert(orderPayload).select("id").single();
       order = retry.data;
       orderError = retry.error;
     }
@@ -180,7 +188,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error: itemsError } = await supabase.from("order_items").insert(
+    const { error: itemsError } = await admin.from("order_items").insert(
       items.map((item) => ({
         order_id: order.id,
         product_id: item.productId,
@@ -194,11 +202,10 @@ export async function POST(request: Request) {
     );
 
     if (itemsError) {
-      await createServiceClient()?.from("orders").delete().eq("id", order.id);
+      await admin.from("orders").delete().eq("id", order.id);
       return NextResponse.json({ message: itemsError.message }, { status: 500 });
     }
 
-    const admin = createServiceClient() ?? supabase;
     const { error: reserveError } = await admin.rpc("reserve_stock_for_order", {
       p_order_id: order.id,
     });
