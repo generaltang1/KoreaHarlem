@@ -3,7 +3,6 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getClientIp } from "@/lib/requestIp";
 import {
-  THINK_GUEST_DEFAULT_NICKNAME,
   THINK_MAX_GUEST_NICKNAME,
   formatThinkAuthorDisplay,
   getMemberNickname,
