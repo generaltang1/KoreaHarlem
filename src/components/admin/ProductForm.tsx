@@ -17,6 +17,7 @@ import {
   type ProductMerchSubcategory,
   type ProductStoreCategory,
 } from "@/lib/productCategories";
+import { parseTicketLineup, type TicketLineupItem } from "@/lib/ticketMeta";
 
 interface ExistingImage {
   id: string;
@@ -76,6 +77,14 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [showStock, setShowStock] = useState(true);
   const [category, setCategory] = useState<ProductStoreCategory | "">("");
   const [subcategory, setSubcategory] = useState<ProductMerchSubcategory | "">("");
+  const [eventStartsAt, setEventStartsAt] = useState("");
+  const [eventEndsAt, setEventEndsAt] = useState("");
+  const [venue, setVenue] = useState("");
+  const [minorsAllowed, setMinorsAllowed] = useState(false);
+  const [featuredOnHome, setFeaturedOnHome] = useState(false);
+  const [lineup, setLineup] = useState<TicketLineupItem[]>([
+    { time_label: "", role: "", artist_name: "" },
+  ]);
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -182,6 +191,15 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       setShowStock(data.show_stock ?? true);
       setCategory((data.category as ProductStoreCategory) ?? "merch");
       setSubcategory((data.subcategory as ProductMerchSubcategory) ?? "");
+      setEventStartsAt(data.event_starts_at ? String(data.event_starts_at).slice(0, 16) : "");
+      setEventEndsAt(data.event_ends_at ? String(data.event_ends_at).slice(0, 16) : "");
+      setVenue(data.venue ?? "");
+      setMinorsAllowed(Boolean(data.minors_allowed));
+      setFeaturedOnHome(Boolean(data.featured_on_home));
+      {
+        const rows = parseTicketLineup(data.lineup);
+        setLineup(rows.length > 0 ? rows.map((r) => ({ time_label: r.time_label, role: r.role ?? "", artist_name: r.artist_name })) : [{ time_label: "", role: "", artist_name: "" }]);
+      }
       setExistingImages(
         [...(data.product_images ?? [])].sort(
           (a: ExistingImage, b: ExistingImage) => a.sort_order - b.sort_order,
@@ -282,6 +300,22 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         category,
         subcategory: category === "merch" ? subcategory : null,
       };
+      if (category === "ticket") {
+        payload.event_starts_at = eventStartsAt ? new Date(eventStartsAt).toISOString() : null;
+        payload.event_ends_at = eventEndsAt ? new Date(eventEndsAt).toISOString() : null;
+        payload.venue = venue.trim() || null;
+        payload.minors_allowed = minorsAllowed;
+        payload.featured_on_home = featuredOnHome;
+        payload.lineup = lineup
+          .map((row) => ({
+            time_label: row.time_label.trim(),
+            role: (row.role ?? "").trim() || undefined,
+            artist_name: row.artist_name.trim(),
+          }))
+          .filter((row) => row.time_label || row.artist_name);
+      } else {
+        payload.featured_on_home = false;
+      }
       if (mode === "create") {
         payload.stock = totalStockValue;
       }
@@ -297,10 +331,26 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         if (insertError || !product) throw insertError ?? new Error("상품 생성 실패");
         id = product.id;
 
+        if (category === "ticket" && featuredOnHome && id) {
+          await supabase
+            .from("products")
+            .update({ featured_on_home: false })
+            .eq("category", "ticket")
+            .neq("id", id);
+          await supabase.from("products").update({ featured_on_home: true }).eq("id", id);
+        }
+
         for (let i = 0; i < newFiles.length; i++) {
           await uploadProductImage(supabase, product.id, newFiles[i], i);
         }
       } else if (id) {
+        if (category === "ticket" && featuredOnHome) {
+          await supabase
+            .from("products")
+            .update({ featured_on_home: false })
+            .eq("category", "ticket")
+            .neq("id", id);
+        }
         const { error: updateError } = await supabase.from("products").update(payload).eq("id", id);
         if (updateError) throw updateError;
 
@@ -422,6 +472,117 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
           </p>
         )}
       </div>
+
+      {category === "ticket" && (
+        <div className="space-y-4 border border-border p-4">
+          <p className="text-[10px] uppercase tracking-widest text-muted">티켓 전용 정보</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-xs">
+              시작 일시
+              <input
+                type="datetime-local"
+                value={eventStartsAt}
+                onChange={(e) => setEventStartsAt(e.target.value)}
+                className="mt-1 w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+              />
+            </label>
+            <label className="block text-xs">
+              종료 일시
+              <input
+                type="datetime-local"
+                value={eventEndsAt}
+                onChange={(e) => setEventEndsAt(e.target.value)}
+                className="mt-1 w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+              />
+            </label>
+          </div>
+          <label className="block text-xs">
+            장소
+            <input
+              value={venue}
+              onChange={(e) => setVenue(e.target.value)}
+              className="mt-1 w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+              placeholder="예: THE GRAY SEOUL"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={minorsAllowed}
+              onChange={(e) => setMinorsAllowed(e.target.checked)}
+            />
+            19세 미만 관람 가능
+          </label>
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={featuredOnHome}
+              onChange={(e) => setFeaturedOnHome(e.target.checked)}
+            />
+            메인 홈 티켓 섹션에 노출 (한 개만 권장)
+          </label>
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[10px] uppercase tracking-widest text-muted">Line-up &amp; Time Table</p>
+              <button
+                type="button"
+                onClick={() =>
+                  setLineup((prev) => [...prev, { time_label: "", role: "", artist_name: "" }])
+                }
+                className="text-[10px] uppercase tracking-widest hover:underline"
+              >
+                + 행 추가
+              </button>
+            </div>
+            <div className="space-y-2">
+              {lineup.map((row, i) => (
+                <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_1.5fr_auto]">
+                  <input
+                    value={row.time_label}
+                    onChange={(e) =>
+                      setLineup((prev) =>
+                        prev.map((r, idx) => (idx === i ? { ...r, time_label: e.target.value } : r)),
+                      )
+                    }
+                    placeholder="22:00 - 23:30"
+                    className="border border-border px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={row.role ?? ""}
+                    onChange={(e) =>
+                      setLineup((prev) =>
+                        prev.map((r, idx) => (idx === i ? { ...r, role: e.target.value } : r)),
+                      )
+                    }
+                    placeholder="역할 (DJ SET 등)"
+                    className="border border-border px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={row.artist_name}
+                    onChange={(e) =>
+                      setLineup((prev) =>
+                        prev.map((r, idx) =>
+                          idx === i ? { ...r, artist_name: e.target.value } : r,
+                        ),
+                      )
+                    }
+                    placeholder="아티스트명"
+                    className="border border-border px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setLineup((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="text-xs text-muted hover:text-foreground"
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">판매가 (KRW) *</label>

@@ -2,6 +2,7 @@ import type { SizeStockMap } from "@/lib/stock";
 import { isSoldOutFromStocks } from "@/lib/stock";
 
 import type { ProductMerchSubcategory, ProductStoreCategory } from "@/lib/productCategories";
+import type { TicketLineupItem } from "@/lib/ticketMeta";
 
 export interface DbProduct {
   id: string;
@@ -21,6 +22,12 @@ export interface DbProduct {
   free_shipping_threshold_krw?: number | null;
   overseas_shipping?: boolean;
   size_guide?: { rows: string[][] } | null;
+  event_starts_at?: string | null;
+  event_ends_at?: string | null;
+  venue?: string | null;
+  minors_allowed?: boolean;
+  lineup?: TicketLineupItem[] | null;
+  featured_on_home?: boolean;
   created_at: string;
 }
 

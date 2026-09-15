@@ -6,9 +6,13 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-08-31 (최신):** **THINK 게시판** 1차 개발 — DC 스타일 목록·글쓰기·추천·유튜브 · 본문 인라인 이미지 · `add_think_board.sql` **실행 필요** · `YOUTUBE_API_KEY` Vercel 등록
+> **2026-09-15 (최신):** **메인 Stitch 리디자인 후속** — 다크 헤더(로고 좌측·홈 링크·흰 워드마크) · 히어로 Three.js 은하+열화상 호버 · 티켓 타임테이블 롤링 · 품절 메인/In Store 비노출(사이즈 재고) · More 링크 · 비회원 닉 ㅇㅇ+IP 마스킹. **코드 완료 · 미커밋·미배포**
 
-> **2026-08-31:** **음악 플레이어·앨범 UI** 배포 (`a826e46`) — PC 전용 음량 · 진행바 드래그 시크 · 수록곡 duration · `show_stock` · Footer `koreaharlem` 소문자
+> **2026-09-15:** **메인 Stitch 1차** — 스와이프 제거 · DJ SET 상단바 · 티켓 메타/featured · THINK 포스트잇·댓글·하트 · COLLECTION/STORE · Footer 좌측+제보 · SQL (`add_dj_set_tracks` · `add_product_ticket_meta` · `add_think_comments`) **실행함**
+
+> **2026-08-31:** **THINK 게시판** 1차 개발 — DC 스타일 목록·글쓰기·추천·유튜브 · 본문 인라인 이미지 · `add_think_board.sql` · `YOUTUBE_API_KEY`
+
+> **2026-08-31:** **음악 플레이어·앨범 UI** 배포 (`a826e46`) — PC 전용 음량 · 진행바 드래그 시크 · 수록곡 duration · `show_stock`
 
 > **2026-08-26:** **제보하기** 배포 — Footer Newsletter 제거 · 제보 팝업 · Admin 제보 관리 · SQL 실행됨
 
@@ -18,7 +22,7 @@
 
 ### A. 코드
 1. `git pull` (또는 이번 PC에서 커밋·푸시 후 pull)
-2. `npm install` (필요 시) → `.env.local` 확인
+2. `npm install` (**필수** — `three` 추가됨) → `.env.local` 확인
 3. `npm run dev` — **CSS/JS 404·깨짐:** `next dev` 실행 중 `npm run build` 하지 말 것 → 프로세스 종료 → `.next` 삭제 → 재시작
 
 ### B. Supabase SQL
@@ -33,7 +37,10 @@
 | `add_product_show_stock.sql` | 재고표시상태 `show_stock` | **실행함** |
 | `update_storage_buckets_1gb.sql` | Storage 버킷 1GB | **실행함** |
 | `update_tips_file_size_1gb.sql` | tips 버킷 파일 크기 1GB | **실행함** |
-| `add_think_board.sql` | THINK 게시판·think Storage 버킷 | **미실행** |
+| `add_think_board.sql` | THINK 게시판·think Storage 버킷 | **실행함** |
+| `add_dj_set_tracks.sql` | DJ SET 상단 재생 큐·dj-set 버킷 | **실행함** |
+| `add_product_ticket_meta.sql` | 티켓 메타·featured_on_home | **실행함** |
+| `add_think_comments.sql` | THINK 댓글·comment_count | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
@@ -58,7 +65,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY` �
 | **1** | **메뉴 정리 (IA/네비) + 상품 카테고리** | **코드 완료** · iPad 탭 드롭다운 배포 · Admin 메뉴 분류·기존 상품 카테고리 지정 잔여 |
 | **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer·상품 상세 정책 배포 · 체크리스트·결제 E2E 잔여 |
 | **3** | **진열/판매 상태 + 장바구니 UX + 품절 숨김** | **완료** · 배포됨 |
-| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **THINK** · **Magazine** | THINK 코드 완료(미배포) · Magazine 착수 예정 |
+| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **THINK** · **Magazine** | THINK·메인 Stitch **코드 완료 · 미커밋·미배포** · Magazine 본기능 착수 예정 |
 
 ### 공개 메뉴 IA (확정 · 반영됨)
 
@@ -84,7 +91,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY` �
 | 조건 | 공개 목록(메인·In Store) | 상세·구매 |
 |------|--------------------------|-----------|
 | `is_published` = 진열안함 | 비노출 | — |
-| `stock` ≤ 0 (품절) | **비노출** (`stock > 0`만) | URL 직접 접근 시 Sold out |
+| 품절 (`products.stock` 또는 **사이즈 재고** 전부 0) | **비노출** (메인 featured 티켓 포함) | URL 직접 접근 시 Sold out |
 | `is_sale` = 판매안함 | 진열·재고 있으면 노출 | 구매·장바구니·결제 불가 |
 | `show_stock` = 표시안함 | (목록 영향 없음) | 남은 재고 수량 숨김 · 품절만 표시 |
 | Admin 재고 조정 → `sync_product_total_stock` | 재고 생기면 목록에 다시 노출 | |
@@ -101,7 +108,10 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 | 카테고리 상수 | `src/lib/productCategories.ts` |
 | 진열/판매 폼 | `src/components/admin/ProductForm.tsx` |
 | In Store 필터 | `src/app/sale/page.tsx` · `src/lib/productSearch.ts` |
-| 메인 상품 | `src/app/page.tsx` |
+| 메인 홈 | `src/app/page.tsx` · `src/components/home/Hero.tsx` · `HeroGalaxy.tsx` · `HomeTicket.tsx` · `HomeMagazine.tsx` · `HomeThinkSticky.tsx` · `HomeCollection.tsx` · `HomeStore.tsx` |
+| 다크 헤더 | `src/components/layout/Header.tsx` · `NavMenu.tsx` (`variant="dark"`) |
+| DJ SET | `src/components/player/DjSetBar.tsx` · `src/context/DjSetContext.tsx` · `/admin/dj-set` |
+| 티켓 메타·롤링 라인업 | `src/components/commerce/TicketEventInfo.tsx` · `ProductForm.tsx` |
 | 장바구니 상태 검증 | `src/lib/cartAvailability.ts` · `src/hooks/useCartProductAvailability.ts` |
 | 이용안내 | `src/data/usageGuide.ts` · `src/app/guide/page.tsx` · `UsageGuideModal` |
 | 상품 상세 정책 | `src/components/commerce/ProductPolicyNotice.tsx` · `ProductDetailClient.tsx` (`show_stock`) |
@@ -109,6 +119,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 | 앨범 상세 | `src/components/music/AlbumDetailClient.tsx` · `src/hooks/useTrackDurations.ts` |
 | 곡 길이 | `src/lib/audioDuration.ts` · `POST /api/music/durations` |
 | THINK 게시판 | `src/app/think/**` · `src/components/think/**` · `src/lib/think.ts` |
+| THINK 댓글 | `ThinkComments.tsx` · `POST /api/think/posts/[id]/comments` |
 | THINK API | `src/app/api/think/posts` · `youtube/search` |
 | THINK Admin | `/admin/think` · `AdminThinkList.tsx` |
 
@@ -188,7 +199,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 
 #### 3순위 — 진열/판매 + 장바구니 + 품절 목록 (배포됨)
 - [x] Admin **표시 설정**: 진열상태 · 판매상태 (라디오)
-- [x] In Store·메인: `is_published` + **`stock > 0`** (품절 숨김) · 최신순
+- [x] In Store·메인: `is_published` + **품절 숨김** (`productSearch` · 사이즈 재고 기준, `products.stock`만 보지 않음) · 최신순
 - [x] 상품 상세: 판매안함 → 구매/장바구니 비활성 + 안내 문구
 - [x] 주문 API: 진열안함·판매안함 상품 주문 차단
 - [x] 장바구니·결제: 구매 불가 상품 **회색 + 뱃지** · 결제 시 **alert** 차단
@@ -317,9 +328,9 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 
 > 진입점: Footer 하단 Tip 영역. 관리: Admin 메뉴 «제보하기 관리».
 
-#### C. THINK 게시판 (2026-08-31 · **코드 완료 · 미커밋·미배포**)
+#### C. THINK 게시판 (2026-09-15 · **코드 완료 · 미커밋·미배포**)
 
-DC인사이드 스타일 자유 게시판. SQL·`YOUTUBE_API_KEY` 설정 후 QA.
+DC인사이드 스타일 자유 게시판. SQL 실행됨. `YOUTUBE_API_KEY`·배포 QA 잔여.
 
 - [x] 탭: **전체글** · **개념글**(추천 20+) · **공지**
 - [x] 목록: 번호·제목·글쓴이·작성일·**조회**·**추천** (말머리 없음) · 페이징(50) · 검색
@@ -327,23 +338,41 @@ DC인사이드 스타일 자유 게시판. SQL·`YOUTUBE_API_KEY` 설정 후 QA.
 - [x] **이미지:** 모달 다중 선택·드래그 → **적용** 시 본문 삽입 (최대 50장·20MB) · 붙여넣기(Ctrl+V)
 - [x] **동영상:** 첨부 (최대 5개·100MB)
 - [x] **유튜브:** 검색 모달 → 본문/상세에서 사이트 내 재생 (`YOUTUBE_API_KEY`)
-- [x] 회원: 닉네임 표시 · 비회원: 닉네임 10자(기본 익명) + IP `(110.98)` · DB에 **전체 IP** 저장
+- [x] 회원: 닉네임 표시 · 비회원: 기본닉 **ㅇㅇ** + IP 마스킹 `(110.98)` · DB에 **전체 IP** 저장
 - [x] 추천: IP당 1회 · 20개 이상 → 개념글
+- [x] **댓글** (회원·비회원 동일 닉/IP 규칙) · `comment_count`
 - [x] 관리자만 **공지** 체크박스 (서버에서 `isCurrentUserAdmin` 검증)
 - [x] Admin `/admin/think` 목록·삭제
-- [x] 메인 `HomeSections` THINK 패널 → 게시판 링크
-- [ ] **SQL 실행:** `supabase/add_think_board.sql`
+- [x] 메인 `HomeThinkSticky` 포스트잇 보드 → `/think` More
+- [x] **SQL 실행:** `supabase/add_think_board.sql` · `add_think_comments.sql`
 - [ ] `.env.local` + Vercel **`YOUTUBE_API_KEY`** 등록 · Redeploy
 - [ ] 커밋 · 푸시 · Vercel 배포 · QA
 
-**주요 파일:** `supabase/add_think_board.sql` · `ThinkBoard.tsx` · `ThinkPostEditor.tsx` · `ThinkImageUploadModal.tsx` · `YouTubeSearchModal.tsx` · `thinkEditor.ts`
+**주요 파일:** `supabase/add_think_board.sql` · `add_think_comments.sql` · `ThinkBoard.tsx` · `ThinkPostEditor.tsx` · `ThinkComments.tsx` · `ThinkImageUploadModal.tsx` · `YouTubeSearchModal.tsx` · `think.ts`
+
+#### D. 메인 Stitch 리디자인 (2026-09-15 · **코드 완료 · 미커밋·미배포**)
+
+`code.html` 시안 톤. **메뉴 IA는 기존 유지** (In Store · Music · Think · Magazine).
+
+- [x] 스와이프/구 `HomeSections` 제거 → MAGAZINE · TICKET · THINK · COLLECTION · STORE
+- [x] DJ SET 상단바 (`DjSetBar` · Admin `/admin/dj-set`)
+- [x] 티켓 메타 · `featured_on_home` · 메인 1장 · 이미지 `object-contain`
+- [x] 타임테이블 **세로 롤링 휠** (`wheel-roll-track` · 호버 시 일시정지) — 정적 나열 아님
+- [x] 품절 티켓 **메인에도 비노출** (사이즈 재고 기준, In Store와 동일)
+- [x] MAGAZINE/TICKET/THINK/COLLECTION/STORE **More** → 각 목록 경로
+- [x] 다크 헤더 `#0a0a0c` · 로고 **좌측** · 클릭 시 `/` · 흰 워드마크 (`invert` 없음)
+- [x] 히어로: Three.js 은하 배경 (`HeroGalaxy` · `three`) + 열화상 마우스 글로우 + 서울 시계 바
+- [x] THINK 포스트잇 · Footer 다크 + 제보 좌측
+- [x] SQL: `add_dj_set_tracks` · `add_product_ticket_meta` · `add_think_comments`
+- [ ] 커밋 · 푸시 · Vercel 배포
+- [ ] QA: 히어로 은하 · 헤더 로고/홈 · 품절 숨김 · 롤링 라인업 · DJ SET 음원 등록
 
 #### B. Magazine
 - [ ] IA 확정: Culture / News (기존 플레이스홀더 `/magazine/culture` · `/magazine/news`)
 - [ ] 매거진 글 스키마 (제목·본문·커버·카테고리·발행일·진열)
 - [ ] Admin 매거진 등록·수정·목록
 - [ ] 공개 목록·상세 UI (Coming Soon 해제)
-- [ ] 메인 `HomeSections` MAGAZINE 패널 연동 (선택)
+- [ ] 메인 `HomeMagazine` 연동 (현재 플레이스홀더 커버)
 - [ ] 커밋 · 배포 · QA
 
 > 관련 백로그(플레이어·커뮤니티·CMS 7·8·10)는 Magazine/제보 이후 또는 병행.
@@ -358,7 +387,7 @@ DC인사이드 스타일 자유 게시판. SQL·`YOUTUBE_API_KEY` 설정 후 QA.
 - [x] 회원 CS · 교환 hold · 수기 재고 · Cafe24형 재고 UX
 - [x] 비회원 조회 CS·송장 이력 · 일괄 상태 · 타임라인 · 웹훅 · 부분환불 UI
 - [x] Cafe24형 **진열/판매 상태** · 장바구니 구매불가 UX
-- [x] 메인·In Store **품절 상품 숨김** (`stock > 0`) · 최신순 (`b05da43`)
+- [x] 메인·In Store **품절 상품 숨김** (사이즈 재고 기준 · 메인 featured 티켓 포함)
 - [x] **재고표시상태** `show_stock` (Admin·구매자 상세)
 
 ### 비회원 CS 요청 (2026-08-21 · **배포됨**)
@@ -397,7 +426,7 @@ DC인사이드 스타일 자유 게시판. SQL·`YOUTUBE_API_KEY` 설정 후 QA.
 ## 4) QA (짧게)
 
 - [ ] In Store: Shop All / Merch / CD / Ticket 필터·상품 노출
-- [ ] 메인·In Store에 **품절 상품이 안 보이는지** · 재고 올리면 다시 노출
+- [ ] 메인·In Store에 **품절 상품이 안 보이는지** · 재고 올리면 다시 노출 (사이즈 재고 포함)
 - [ ] Admin: 기존 상품 카테고리 저장 후 해당 메뉴에 표시
 - [ ] Admin: 진열안함 / 판매안함 저장 → 목록·상세·장바구니·결제 동작
 - [ ] 장바구니 담은 뒤 Admin에서 상태 변경 → **구매 불가** 표시·결제 alert
@@ -408,8 +437,9 @@ DC인사이드 스타일 자유 게시판. SQL·`YOUTUBE_API_KEY` 설정 후 QA.
 - [ ] Music → Artists → Album → 재생 · 수록곡 duration 전곡 표시
 - [x] 플레이어: PC 음량 슬라이더 · 모바일 스피커 숨김 · 진행바 드래그 시크 (배포됨)
 - [ ] 상품 상세 `show_stock=false` 시 재고 수량 숨김
-- [ ] **THINK:** 목록 탭·글쓰기·본문 이미지 삽입·유튜브·추천·비회원 IP·공지(SQL·API키 후)
-- [ ] Magazine Coming Soon
+- [ ] **THINK:** 목록 탭·글쓰기·본문 이미지 삽입·유튜브·추천(하트)·댓글·비회원 ㅇㅇ(IP)·공지
+- [ ] **메인 Stitch:** 흰 로고·홈 이동 · 히어로 은하 · 열화상 호버 · 티켓 롤링 라인업 · 품절 비노출 · DJ SET · 포스트잇 · More 링크
+- [ ] Magazine Coming Soon (메인 `HomeMagazine` 플레이스홀더)
 - [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E
 - [ ] `/order-inquiry` 비회원 CS 요청 · Admin 처리 (배포 후)
 
@@ -417,7 +447,7 @@ DC인사이드 스타일 자유 게시판. SQL·`YOUTUBE_API_KEY` 설정 후 QA.
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **THINK** — `add_think_board.sql` 실행 · `YOUTUBE_API_KEY` 확인 → **커밋 · 배포 · QA**
-2. **Magazine** (Culture/News) — 다음 대형 기능
+1. **커밋 · 푸시 · Vercel 배포** — 메인 Stitch 리디자인(히어로 은하·다크 헤더·품절 숨김·롤링 타임테이블) 아직 미배포
+2. **QA** — 히어로 · 로고 홈 이동 · 품절 티켓 메인/In Store · DJ SET 음원 등록 · THINK 댓글/ㅇㅇ
 3. **토스 심사** — 라이브 키·웹훅·전자청약
-4. (선택) Admin 메뉴 분류 · 기존 상품 카테고리 지정 · Resend SMTP (도메인 후) · 제보 접수 알림 메일
+4. **Magazine** 본기능 · (선택) Admin 메뉴 분류 · Resend SMTP

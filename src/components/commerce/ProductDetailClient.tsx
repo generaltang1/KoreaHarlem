@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ProductImageZoom } from "@/components/commerce/ProductImageZoom";
 import { ProductPolicyNotice } from "@/components/commerce/ProductPolicyNotice";
 import { SizeGuideModal } from "@/components/commerce/SizeGuideModal";
+import { TicketEventInfo } from "@/components/commerce/TicketEventInfo";
 
 interface AddonPick {
   productId: string;
@@ -475,6 +476,19 @@ export function ProductDetailClient({
           </div>
         </div>
       </div>
+
+      {product.category === "ticket" && (
+        <div className="mt-12 border border-border p-6">
+          <h2 className="mb-4 text-sm font-medium uppercase tracking-widest">Event Info</h2>
+          <TicketEventInfo
+            eventStartsAt={product.event_starts_at}
+            eventEndsAt={product.event_ends_at}
+            venue={product.venue}
+            minorsAllowed={product.minors_allowed}
+            lineup={product.lineup}
+          />
+        </div>
+      )}
 
       {product.description && (
         <div className="mt-16 border-t border-border pt-10">

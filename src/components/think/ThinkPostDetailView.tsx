@@ -1,19 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { ThinkPostDetail } from "@/lib/think";
 import { formatThinkDate, THINK_CONCEPT_THRESHOLD } from "@/lib/think";
 import { ThinkPostContent } from "@/components/think/ThinkPostContent";
+import { ThinkComments } from "@/components/think/ThinkComments";
 
 type ThinkPostDetailViewProps = {
   initialPost: ThinkPostDetail;
+  isLoggedIn?: boolean;
 };
 
-export function ThinkPostDetailView({ initialPost }: ThinkPostDetailViewProps) {
+export function ThinkPostDetailView({
+  initialPost,
+  isLoggedIn = false,
+}: ThinkPostDetailViewProps) {
   const [post, setPost] = useState(initialPost);
   const [recommending, setRecommending] = useState(false);
   const [recommendMsg, setRecommendMsg] = useState("");
+
+  const onCountChange = useCallback((count: number) => {
+    setPost((prev) => ({ ...prev, comment_count: count }));
+  }, []);
 
   const recommend = async () => {
     setRecommending(true);
@@ -64,7 +73,10 @@ export function ThinkPostDetailView({ initialPost }: ThinkPostDetailViewProps) {
             <span>{post.author_display}</span>
             <span>{formatThinkDate(post.created_at)}</span>
             <span>조회 {post.view_count}</span>
-            <span>추천 {post.recommend_count}</span>
+            <span className="inline-flex items-center gap-1">
+              <span aria-hidden>♥</span> {post.recommend_count}
+            </span>
+            <span>댓글 {post.comment_count ?? 0}</span>
           </div>
         </header>
 
@@ -81,13 +93,19 @@ export function ThinkPostDetailView({ initialPost }: ThinkPostDetailViewProps) {
             type="button"
             onClick={() => void recommend()}
             disabled={recommending}
-            className="border border-border px-5 py-2 text-xs hover:bg-neutral-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 border border-border px-5 py-2 text-xs hover:bg-neutral-50 disabled:opacity-50"
+            aria-label="추천"
           >
-            {recommending ? "처리 중…" : "추천"}
+            <span className="text-base text-red-500" aria-hidden>
+              ♥
+            </span>
+            <span>{recommending ? "…" : post.recommend_count}</span>
           </button>
           {recommendMsg && <p className="text-xs text-muted">{recommendMsg}</p>}
         </footer>
       </div>
+
+      <ThinkComments postId={post.id} isLoggedIn={isLoggedIn} onCountChange={onCountChange} />
     </article>
   );
 }

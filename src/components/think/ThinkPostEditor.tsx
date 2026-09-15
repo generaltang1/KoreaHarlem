@@ -50,7 +50,7 @@ export function ThinkPostEditor({
   const savedRangeRef = useRef<Range | null>(null);
 
   const [title, setTitle] = useState("");
-  const [guestNickname, setGuestNickname] = useState("");
+  const [guestNickname, setGuestNickname] = useState("ㅇㅇ");
   const [isNotice, setIsNotice] = useState(false);
   const [videoAttachments, setVideoAttachments] = useState<VideoAttachPreview[]>([]);
   const [youtubeVideos, setYoutubeVideos] = useState<ThinkYoutubeInput[]>([]);
@@ -260,7 +260,7 @@ export function ThinkPostEditor({
               value={guestNickname}
               onChange={(e) => setGuestNickname(e.target.value.slice(0, THINK_MAX_GUEST_NICKNAME))}
               maxLength={THINK_MAX_GUEST_NICKNAME}
-              placeholder="미입력 시 익명"
+              placeholder="미입력 시 ㅇㅇ"
               className="w-40 border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
             />
             <span className="text-[10px] text-muted">비회원 · 최대 {THINK_MAX_GUEST_NICKNAME}자 · IP 일부 공개</span>

@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ThinkPostDetailView } from "@/components/think/ThinkPostDetailView";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { getCurrentUser } from "@/lib/auth/session";
 import { formatThinkAuthorDisplay, type ThinkPostDetail } from "@/lib/think";
 
 interface PageProps {
@@ -24,9 +25,10 @@ export default async function ThinkPostPage({ params }: PageProps) {
 
   const viewCount = (post.view_count ?? 0) + 1;
 
-  const [{ data: attachments }, { data: youtubeVideos }] = await Promise.all([
+  const [{ data: attachments }, { data: youtubeVideos }, user] = await Promise.all([
     admin.from("think_post_attachments").select("*").eq("post_id", id).order("sort_order"),
     admin.from("think_post_youtube").select("*").eq("post_id", id).order("sort_order"),
+    getCurrentUser(),
   ]);
 
   const detail: ThinkPostDetail = {
@@ -41,7 +43,7 @@ export default async function ThinkPostPage({ params }: PageProps) {
     <>
       <Header />
       <main className="mx-auto max-w-3xl px-4 py-12 pb-28 md:px-6">
-        <ThinkPostDetailView initialPost={detail} />
+        <ThinkPostDetailView initialPost={detail} isLoggedIn={!!user} />
       </main>
       <Footer />
     </>

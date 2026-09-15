@@ -15,8 +15,20 @@ export type ThinkPost = {
   is_notice: boolean;
   recommend_count: number;
   view_count: number;
+  comment_count?: number;
   created_at: string;
   updated_at: string;
+};
+
+export type ThinkComment = {
+  id: string;
+  post_id: string;
+  user_id: string | null;
+  author_nickname: string;
+  author_ip: string;
+  body: string;
+  created_at: string;
+  author_display?: string;
 };
 
 export type ThinkAttachment = {
@@ -48,6 +60,7 @@ export type ThinkPostDetail = ThinkPost & {
   author_display: string;
   attachments: ThinkAttachment[];
   youtube_videos: ThinkYoutube[];
+  comment_count?: number;
 };
 
 export const THINK_CONCEPT_THRESHOLD = 20;
@@ -61,7 +74,7 @@ export const THINK_MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 export const THINK_MAX_TITLE_LENGTH = 120;
 export const THINK_MAX_CONTENT_LENGTH = 50000;
 export const THINK_MAX_GUEST_NICKNAME = 10;
-export const THINK_GUEST_DEFAULT_NICKNAME = "익명";
+export const THINK_GUEST_DEFAULT_NICKNAME = "ㅇㅇ";
 
 export type ThinkFileMeta = {
   name: string;
@@ -160,6 +173,7 @@ export function normalizeGuestNickname(input: string | null | undefined): string
 export function formatThinkAuthorDisplay(
   post: Pick<ThinkPost, "user_id" | "author_nickname" | "author_ip">,
 ): string {
+  // 회원: 닉네임만 / 비회원: 닉네임 + 마스킹 IP (전체 IP는 DB에만 보관)
   if (post.user_id) return post.author_nickname;
   return `${post.author_nickname}${maskIpForDisplay(post.author_ip)}`;
 }

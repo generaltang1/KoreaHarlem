@@ -25,9 +25,12 @@ export default async function AdminLayout({
             <Link href="/admin/music" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               음악 관리
             </Link>
-                <Link href="/admin/products" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-                  상품 관리
-                </Link>
+            <Link href="/admin/dj-set" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+              DJ SET
+            </Link>
+            <Link href="/admin/products" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
+              상품 관리
+            </Link>
             <Link href="/admin/orders" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
               주문 관리
             </Link>

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePlayer } from "@/context/PlayerContext";
+import { useDjSet } from "@/context/DjSetContext";
 import type { RepeatMode } from "@/lib/playerPreferences";
 import { useSupportsAppVolume } from "@/hooks/useSupportsAppVolume";
 import {
@@ -44,6 +45,7 @@ export function MusicPlayer() {
     cycleRepeat,
     audioRef,
   } = usePlayer();
+  const { isPlaying: djPlaying } = useDjSet();
 
   const supportsAppVolume = useSupportsAppVolume();
   const prevTrackId = useRef<string | null>(null);
@@ -72,7 +74,8 @@ export function MusicPlayer() {
     }
   }, [isPlaying, audioRef, currentTrack]);
 
-  if (!currentTrack) return null;
+  // DJ SET 재생 중에는 하단 바 숨김 (트랙 상태는 유지)
+  if (!currentTrack || djPlaying) return null;
 
   const albumLink = currentTrack.albumId ? `/music/album/${currentTrack.albumId}` : null;
 

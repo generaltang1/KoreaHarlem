@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/context/PlayerContext";
+import { DjSetProvider } from "@/context/DjSetContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { CartProvider } from "@/context/CartContext";
 import { MusicPlayer } from "@/components/player/MusicPlayer";
@@ -34,9 +35,11 @@ export default function RootLayout({
         <CurrencyProvider>
           <CartProvider>
             <PlayerProvider>
-              {children}
-              <MusicPlayer />
-              <CartDrawer />
+              <DjSetProvider>
+                {children}
+                <MusicPlayer />
+                <CartDrawer />
+              </DjSetProvider>
             </PlayerProvider>
           </CartProvider>
         </CurrencyProvider>

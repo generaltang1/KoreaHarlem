@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProductMerchSubcategory, ProductStoreCategory } from "@/lib/productCategories";
 import type { ProductWithImages } from "@/lib/products";
+import { isSoldOut } from "@/lib/products";
+import { fetchSizeStockMaps } from "@/lib/productSizeStock";
 import { toIlikePattern } from "@/lib/search";
 
 export interface AdminProductRow {
@@ -49,8 +51,8 @@ export async function searchProductsPaged(
 
 /**
  * Public In Store listing —
- * 진열함(is_published) + 재고 있음(stock > 0)만. 최신 등록순.
- * Admin 재고 조정 시 sync_product_total_stock으로 stock이 갱신되면 다시 목록에 노출.
+ * 진열함(is_published) + 품절 아님.
+ * products.stock 과 product_size_stock 이 어긋나도 사이즈 재고를 기준으로 판정.
  */
 export async function searchSaleProductsPaged(
   supabase: SupabaseClient,
@@ -64,9 +66,8 @@ export async function searchSaleProductsPaged(
 ): Promise<{ data: ProductWithImages[]; count: number; error: string | null }> {
   let query = supabase
     .from("products")
-    .select("*, product_images(*)", { count: "exact" })
+    .select("*, product_images(*)")
     .eq("is_published", true)
-    .gt("stock", 0)
     .order("created_at", { ascending: false });
 
   if (options.category) {
@@ -79,18 +80,37 @@ export async function searchSaleProductsPaged(
   const q = options.q?.trim();
   if (q) {
     const pattern = toIlikePattern(q);
-    query = query.or(`title.ilike."${pattern}",description.ilike."${pattern}"`);
+    query = query.ilike("title", pattern);
   }
 
-  const { data, count, error } = await query.range(options.from, options.to);
+  // 페이지네이션 전에 품절을 걸러야 하므로 여유 있게 가져온 뒤 슬라이스
+  const fetchLimit = Math.max(options.to + 1, 200);
+  const { data, error } = await query.limit(fetchLimit);
 
   if (error) {
     return { data: [], count: 0, error: error.message };
   }
 
+  const rows = (data ?? []) as ProductWithImages[];
+  const stockMaps = await fetchSizeStockMaps(
+    supabase,
+    rows.map((p) => p.id),
+  );
+
+  const available = rows.filter((product) => {
+    const sizeStocks = stockMaps.get(product.id);
+    // size stock 행이 있으면 그 기준, 없으면 products.stock
+    if (sizeStocks && Object.keys(sizeStocks).length > 0) {
+      return !isSoldOut({ ...product, sizeStocks });
+    }
+    return (product.stock ?? 0) > 0;
+  });
+
+  const page = available.slice(options.from, options.to + 1);
+
   return {
-    data: (data ?? []) as ProductWithImages[],
-    count: count ?? 0,
+    data: page,
+    count: available.length,
     error: null,
   };
 }

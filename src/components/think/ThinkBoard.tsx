@@ -121,7 +121,7 @@ export function ThinkBoard() {
               <th className="w-28 px-3 py-2.5">글쓴이</th>
               <th className="w-20 px-3 py-2.5">작성일</th>
               <th className="w-14 px-3 py-2.5 text-right">조회</th>
-              <th className="w-14 px-3 py-2.5 text-right">추천</th>
+              <th className="w-14 px-3 py-2.5 text-right">♥</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">

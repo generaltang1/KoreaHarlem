@@ -15,6 +15,7 @@ import {
   type RepeatMode,
 } from "@/lib/playerPreferences";
 import { shuffleQueueFromIndex, shuffleRemainingQueue } from "@/lib/playerShuffle";
+import { notifyMusicTakeover } from "@/lib/playbackFocus";
 
 export interface Track {
   id: string;
@@ -127,6 +128,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const loadTrackAtIndex = useCallback((tracks: Track[], index: number, autoplay = true) => {
     const track = tracks[index];
     if (!track) return;
+    if (autoplay) notifyMusicTakeover();
     queueRef.current = tracks;
     queueIndexRef.current = index;
     setQueue(tracks);
@@ -184,7 +186,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const setTrack = useCallback(
     (track: Track) => {
       if (currentTrack?.id === track.id) {
-        setIsPlaying((playing) => !playing);
+        setIsPlaying((playing) => {
+          if (!playing) notifyMusicTakeover();
+          return !playing;
+        });
         return;
       }
       const ordered = isShuffleRef.current ? shuffleQueueFromIndex([track], 0) : [track];
@@ -274,6 +279,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [loadTrackAtIndex]);
 
   const play = useCallback(() => {
+    notifyMusicTakeover();
     audioRef.current?.play();
     setIsPlaying(true);
   }, []);
