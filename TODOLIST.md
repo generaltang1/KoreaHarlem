@@ -6,7 +6,9 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-09-15 (최신):** **메인 Stitch 리디자인 후속** — 다크 헤더(로고 좌측·홈 링크·흰 워드마크) · 히어로 Three.js 은하+열화상 호버 · 티켓 타임테이블 롤링 · 품절 메인/In Store 비노출(사이즈 재고) · More 링크 · 비회원 닉 ㅇㅇ+IP 마스킹. **코드 완료 · 미커밋·미배포**
+> **2026-09-15 (최신):** **메인 Store·히어로 다듬기** — 하단 Store를 `/sale`과 동일 조건(`searchSaleProductsPaged`: 진열함+품절 숨김·사이즈 재고)으로 통일 · Ticket 탭용 티켓 목록 합침 · 히어로 `Thermal Sensor Active` 배지 제거. **코드 완료 · 미커밋·미배포**
+
+> **2026-09-15:** **메인 Stitch 리디자인 후속** — 다크 헤더(로고 좌측·홈 링크·흰 워드마크) · 히어로 Three.js 은하+열화상 호버 · 티켓 타임테이블 롤링 · 품절 메인 featured 티켓 비노출 · More 링크 · 비회원 닉 ㅇㅇ+IP 마스킹
 
 > **2026-09-15:** **메인 Stitch 1차** — 스와이프 제거 · DJ SET 상단바 · 티켓 메타/featured · THINK 포스트잇·댓글·하트 · COLLECTION/STORE · Footer 좌측+제보 · SQL (`add_dj_set_tracks` · `add_product_ticket_meta` · `add_think_comments`) **실행함**
 
@@ -91,12 +93,14 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY` �
 | 조건 | 공개 목록(메인·In Store) | 상세·구매 |
 |------|--------------------------|-----------|
 | `is_published` = 진열안함 | 비노출 | — |
-| 품절 (`products.stock` 또는 **사이즈 재고** 전부 0) | **비노출** (메인 featured 티켓 포함) | URL 직접 접근 시 Sold out |
+| 품절 (`products.stock` 또는 **사이즈 재고** 전부 0) | **비노출** (메인 featured 티켓 · 하단 Store · `/sale` 동일) | URL 직접 접근 시 Sold out |
 | `is_sale` = 판매안함 | 진열·재고 있으면 노출 | 구매·장바구니·결제 불가 |
 | `show_stock` = 표시안함 | (목록 영향 없음) | 남은 재고 수량 숨김 · 품절만 표시 |
 | Admin 재고 조정 → `sync_product_total_stock` | 재고 생기면 목록에 다시 노출 | |
 
 SQL: `supabase/add_product_show_stock.sql` (**실행함**)
+
+**메인 하단 Store vs `/sale`:** 둘 다 `searchSaleProductsPaged` — 진열함 + 품절 숨김. Ticket 필터는 `/sale?category=ticket`과 같은 재고 있는 티켓 후보를 합쳐 표시(최대 5개).
 
 **정렬:** `created_at` 내림차순 (최신 등록 상품 우선)
 
@@ -358,14 +362,16 @@ DC인사이드 스타일 자유 게시판. SQL 실행됨. `YOUTUBE_API_KEY`·배
 - [x] DJ SET 상단바 (`DjSetBar` · Admin `/admin/dj-set`)
 - [x] 티켓 메타 · `featured_on_home` · 메인 1장 · 이미지 `object-contain`
 - [x] 타임테이블 **세로 롤링 휠** (`wheel-roll-track` · 호버 시 일시정지) — 정적 나열 아님
-- [x] 품절 티켓 **메인에도 비노출** (사이즈 재고 기준, In Store와 동일)
+- [x] 품절 티켓 **메인 featured에도 비노출** (사이즈 재고 기준)
+- [x] **메인 하단 Store** = `/sale`과 동일 조건 (`getHomeStoreProducts` → `searchSaleProductsPaged`) · Ticket 탭용 티켓 목록 합침
 - [x] MAGAZINE/TICKET/THINK/COLLECTION/STORE **More** → 각 목록 경로
 - [x] 다크 헤더 `#0a0a0c` · 로고 **좌측** · 클릭 시 `/` · 흰 워드마크 (`invert` 없음)
 - [x] 히어로: Three.js 은하 배경 (`HeroGalaxy` · `three`) + 열화상 마우스 글로우 + 서울 시계 바
+- [x] 히어로 **Thermal Sensor Active / INFRARED… 배지 UI 제거** (글로우 오버레이는 유지)
 - [x] THINK 포스트잇 · Footer 다크 + 제보 좌측
 - [x] SQL: `add_dj_set_tracks` · `add_product_ticket_meta` · `add_think_comments`
 - [ ] 커밋 · 푸시 · Vercel 배포
-- [ ] QA: 히어로 은하 · 헤더 로고/홈 · 품절 숨김 · 롤링 라인업 · DJ SET 음원 등록
+- [ ] QA: 히어로 은하 · 헤더 로고/홈 · 하단 Store 품절 숨김(`/sale`과 동일) · 롤링 라인업 · DJ SET 음원 등록
 
 #### B. Magazine
 - [ ] IA 확정: Culture / News (기존 플레이스홀더 `/magazine/culture` · `/magazine/news`)
@@ -387,7 +393,7 @@ DC인사이드 스타일 자유 게시판. SQL 실행됨. `YOUTUBE_API_KEY`·배
 - [x] 회원 CS · 교환 hold · 수기 재고 · Cafe24형 재고 UX
 - [x] 비회원 조회 CS·송장 이력 · 일괄 상태 · 타임라인 · 웹훅 · 부분환불 UI
 - [x] Cafe24형 **진열/판매 상태** · 장바구니 구매불가 UX
-- [x] 메인·In Store **품절 상품 숨김** (사이즈 재고 기준 · 메인 featured 티켓 포함)
+- [x] 메인·In Store **품절 상품 숨김** (사이즈 재고 기준 · featured 티켓 · **하단 Store=`searchSaleProductsPaged`**)
 - [x] **재고표시상태** `show_stock` (Admin·구매자 상세)
 
 ### 비회원 CS 요청 (2026-08-21 · **배포됨**)
@@ -438,7 +444,7 @@ DC인사이드 스타일 자유 게시판. SQL 실행됨. `YOUTUBE_API_KEY`·배
 - [x] 플레이어: PC 음량 슬라이더 · 모바일 스피커 숨김 · 진행바 드래그 시크 (배포됨)
 - [ ] 상품 상세 `show_stock=false` 시 재고 수량 숨김
 - [ ] **THINK:** 목록 탭·글쓰기·본문 이미지 삽입·유튜브·추천(하트)·댓글·비회원 ㅇㅇ(IP)·공지
-- [ ] **메인 Stitch:** 흰 로고·홈 이동 · 히어로 은하 · 열화상 호버 · 티켓 롤링 라인업 · 품절 비노출 · DJ SET · 포스트잇 · More 링크
+- [ ] **메인 Stitch:** 흰 로고·홈 이동 · 히어로 은하 · 열화상 호버(배지 없음) · 티켓 롤링 · 하단 Store=`/sale` 동일 품절숨김 · DJ SET · 포스트잇 · More
 - [ ] Magazine Coming Soon (메인 `HomeMagazine` 플레이스홀더)
 - [ ] `/forgot-password` · `/find-id` · 로그인 링크 · 비밀번호 재설정 E2E
 - [ ] `/order-inquiry` 비회원 CS 요청 · Admin 처리 (배포 후)
@@ -447,7 +453,7 @@ DC인사이드 스타일 자유 게시판. SQL 실행됨. `YOUTUBE_API_KEY`·배
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **커밋 · 푸시 · Vercel 배포** — 메인 Stitch 리디자인(히어로 은하·다크 헤더·품절 숨김·롤링 타임테이블) 아직 미배포
-2. **QA** — 히어로 · 로고 홈 이동 · 품절 티켓 메인/In Store · DJ SET 음원 등록 · THINK 댓글/ㅇㅇ
+1. **커밋 · 푸시 · Vercel 배포** — 메인 Stitch + Store=`/sale` 동일조건 + 히어로 Thermal 배지 제거 아직 미배포
+2. **QA** — 히어로 · 로고 홈 · 하단 Store/Ticket 품절 숨김(`/sale`과 비교) · DJ SET · THINK 댓글/ㅇㅇ
 3. **토스 심사** — 라이브 키·웹훅·전자청약
 4. **Magazine** 본기능 · (선택) Admin 메뉴 분류 · Resend SMTP

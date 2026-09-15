@@ -147,23 +147,6 @@ export function Hero() {
         <div className="relative z-20 mx-auto w-full max-w-[1720px] px-6 pb-16 pt-16 sm:px-10 sm:pt-24">
           <div className="flex flex-col justify-between gap-10 lg:flex-row lg:items-end">
             <div className="max-w-4xl space-y-4">
-              <div className="mb-2 inline-flex items-center gap-2.5 rounded border border-neutral-700/80 bg-black/60 px-3 py-1 font-mono text-[11px] text-neutral-300 shadow-lg backdrop-blur-md">
-                <span className="flex items-center gap-1">
-                  <span
-                    className="h-2 w-2 animate-pulse rounded-full"
-                    style={{ backgroundColor: "#FF1F3D", boxShadow: "0 0 10px #FF1F3D" }}
-                  />
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#FF6600" }} />
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#FFDF00" }} />
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#2BE659" }} />
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#00D2FF" }} />
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white">
-                  Thermal Sensor Active
-                </span>
-                <span className="text-[9px] text-neutral-600">/</span>
-                <span className="text-[10px] text-neutral-400">INFRARED HOVER SPECTRUM</span>
-              </div>
               <h1 className="text-3xl font-black leading-[1.12] tracking-tight text-white sm:text-5xl lg:text-7xl">
                 koreaharlem 2026
               </h1>

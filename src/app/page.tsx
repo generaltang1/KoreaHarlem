@@ -13,6 +13,7 @@ import { formatThinkAuthorDisplay, type ThinkPostListItem } from "@/lib/think";
 import type { ProductWithImages } from "@/lib/products";
 import { isSoldOut } from "@/lib/products";
 import { fetchSizeStockMaps } from "@/lib/productSizeStock";
+import { searchSaleProductsPaged } from "@/lib/productSearch";
 
 async function getFeaturedTicket(): Promise<ProductWithImages | null> {
   try {
@@ -118,14 +119,30 @@ async function getHomeAlbums() {
 async function getHomeStoreProducts(): Promise<ProductWithImages[]> {
   try {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("products")
-      .select("*, product_images(*)")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false })
-      .limit(40);
+    // /sale 과 동일: 진열함(is_published) + 품절 아님
+    // Ticket 탭이 /sale?category=ticket 과 같은 후보를 갖도록 티켓 목록도 합침
+    const [all, tickets] = await Promise.all([
+      searchSaleProductsPaged(supabase, { from: 0, to: 199 }),
+      searchSaleProductsPaged(supabase, {
+        category: "ticket",
+        from: 0,
+        to: 199,
+      }),
+    ]);
 
-    return (data ?? []) as ProductWithImages[];
+    const seen = new Set<string>();
+    const merged: ProductWithImages[] = [];
+    for (const product of [...all.data, ...tickets.data]) {
+      if (seen.has(product.id)) continue;
+      seen.add(product.id);
+      merged.push(product);
+    }
+
+    merged.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return merged;
   } catch {
     return [];
   }
