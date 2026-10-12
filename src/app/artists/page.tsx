@@ -64,7 +64,7 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
                 href={`/artists/${artist.id}`}
                 className="group text-center transition-opacity hover:opacity-90"
               >
-                <div className="relative mx-auto aspect-square w-full max-w-[200px] overflow-hidden rounded-full bg-neutral-100">
+                <div className="relative mx-auto aspect-square w-full max-w-[200px] overflow-hidden bg-neutral-100">
                   {artist.image_url ? (
                     <Image
                       src={artist.image_url}

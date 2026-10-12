@@ -6,7 +6,9 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-09-15 (최신):** **메인 Store·히어로 다듬기** — 하단 Store를 `/sale`과 동일 조건(`searchSaleProductsPaged`: 진열함+품절 숨김·사이즈 재고)으로 통일 · Ticket 탭용 티켓 목록 합침 · 히어로 `Thermal Sensor Active` 배지 제거. **코드 완료 · 미커밋·미배포**
+> **2026-10-12 (최신):** **Music 홈 + 디지털 음원 판매** — `/music` Stitch 홈(NEW RELEASES 틱커 · COLLECTION 우측 로컬 재생 · ARTISTS 10명 · CD & VINYL 4장) · COLLECTION 재생 시 하단 플레이어 숨김·DJ SET 정지 · 앨범/트랙 Toss 결제 · My Page → My Music MP3/WAV 다운로드 · `add_music_digital_sales.sql` **실행함**. **코드 완료 · 미커밋·미배포**
+
+> **2026-09-15:** **메인 Store·히어로 다듬기** — 하단 Store를 `/sale`과 동일 조건(`searchSaleProductsPaged`: 진열함+품절 숨김·사이즈 재고)으로 통일 · Ticket 탭용 티켓 목록 합침 · 히어로 `Thermal Sensor Active` 배지 제거. **코드 완료 · 미커밋·미배포**
 
 > **2026-09-15:** **메인 Stitch 리디자인 후속** — 다크 헤더(로고 좌측·홈 링크·흰 워드마크) · 히어로 Three.js 은하+열화상 호버 · 티켓 타임테이블 롤링 · 품절 메인 featured 티켓 비노출 · More 링크 · 비회원 닉 ㅇㅇ+IP 마스킹
 
@@ -43,6 +45,7 @@
 | `add_dj_set_tracks.sql` | DJ SET 상단 재생 큐·dj-set 버킷 | **실행함** |
 | `add_product_ticket_meta.sql` | 티켓 메타·featured_on_home | **실행함** |
 | `add_think_comments.sql` | THINK 댓글·comment_count | **실행함** |
+| `add_music_digital_sales.sql` | 디지털 앨범/트랙 가격 · WAV/MP3 URL · `order_items` 디지털 라인 · `music_entitlements` | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
@@ -67,7 +70,7 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY` �
 | **1** | **메뉴 정리 (IA/네비) + 상품 카테고리** | **코드 완료** · iPad 탭 드롭다운 배포 · Admin 메뉴 분류·기존 상품 카테고리 지정 잔여 |
 | **2** | **이용안내 · 환불정책 (토스 심사)** | **부분 완료** — Footer·상품 상세 정책 배포 · 체크리스트·결제 E2E 잔여 |
 | **3** | **진열/판매 상태 + 장바구니 UX + 품절 숨김** | **완료** · 배포됨 |
-| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **THINK** · **Magazine** | THINK·메인 Stitch **코드 완료 · 미커밋·미배포** · Magazine 본기능 착수 예정 |
+| 4+ | 쇼핑 E2E·토스 심사 · **제보하기** · **THINK** · **Music 홈/디지털 판매** · **Magazine** | THINK·메인 Stitch·Music 홈 **코드 완료 · 미커밋·미배포** · Magazine 본기능 착수 예정 |
 
 ### 공개 메뉴 IA (확정 · 반영됨)
 
@@ -75,9 +78,9 @@ Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY` �
 |------|------|------|------|
 | 1 | **In Store** | `/sale` | Shop All = 전체 |
 | 1-2 | Merch | `?category=merch&sub=tops\|bottoms\|accessory` | 2단 드롭다운 |
-| 1-3 | CD | `?category=cd` | |
+| 1-3 | CD & VINYL | `?category=cd` | 라벨만 변경 · DB 값 `cd` 유지 |
 | 1-4 | Ticket | `?category=ticket` | |
-| 2 | **Music** | `/artists` | 아티스트 → 앨범 → 재생 |
+| 2 | **Music** | `/music` | 뮤직 홈 · More → `/artists` · 앨범 상세 `/music/album/[id]` |
 | 3 | **Think** | `/think` | 게시판 (전체글·개념글·공지) |
 | 4 | **Magazine** | `/magazine/culture` · `/magazine/news` | Coming Soon |
 
@@ -121,6 +124,9 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 | 상품 상세 정책 | `src/components/commerce/ProductPolicyNotice.tsx` · `ProductDetailClient.tsx` (`show_stock`) |
 | 음악 플레이어 | `src/components/player/MusicPlayer.tsx` · `PlayerProgressBar.tsx` · `PlayerContext.tsx` |
 | 앨범 상세 | `src/components/music/AlbumDetailClient.tsx` · `src/hooks/useTrackDurations.ts` |
+| Music 홈 | `src/app/music/page.tsx` · `src/components/music/MusicHomeClient.tsx` |
+| 디지털 판매 | `src/lib/musicCatalog.ts` · `musicEntitlements.ts` · `playbackFocus.ts` · `CartContext` (`digital_album`/`digital_track`) |
+| My Music | `src/app/mypage/music/page.tsx` · `GET /api/music/download` |
 | 곡 길이 | `src/lib/audioDuration.ts` · `POST /api/music/durations` |
 | THINK 게시판 | `src/app/think/**` · `src/components/think/**` · `src/lib/think.ts` |
 | THINK 댓글 | `ThinkComments.tsx` · `POST /api/think/posts/[id]/comments` |
@@ -135,9 +141,9 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 
 #### 1순위 — 메뉴·카테고리 (2026-08-13)
 - [x] 헤더/푸터: In Store · Music · Think · Magazine
-- [x] In Store 하위: Shop All / Merch(Tops·Bottoms·Accessory) / CD / Ticket
+- [x] In Store 하위: Shop All / Merch(Tops·Bottoms·Accessory) / CD & VINYL / Ticket
 - [x] `/think` 게시판 · `/magazine/culture` · `/magazine/news` (Magazine은 플레이스홀더)
-- [x] Music → `/artists` · `/music` redirect 정리
+- [x] Music → `/music` 홈 · `/artists` 는 ARTISTS More · 구 `/music/[id]` → `/music/album/[id]` redirect
 - [x] `products.category` / `subcategory` + Admin 필수 선택 + Sale 필터
 - [x] SQL `add_product_category.sql` 실행
 - [x] Admin **작품 등록** 메뉴·페이지 제거
@@ -305,10 +311,33 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 - [x] Admin 음원 업로드·앨범 수정 시 `duration` DB 저장 (`audioDuration.ts`)
 - [ ] 앨범 상세 **우측 다른 앨범 추천**
 - [x] 커밋 · 배포 (`a826e46` · 2026-08-31)
+- [x] Music 홈 COLLECTION 재생은 **하단 MusicPlayer를 쓰지 않음** · DJ SET 정지 (`playbackFocus`)
 
 ### 음악 커뮤니티 · 판매
 5. [ ] 앨범 **댓글/평가** (커뮤니티)
-9. [ ] **음원/앨범 유료 판매 + mp3/wav 다운로드**
+9. [x] **음원/앨범 유료 판매 + mp3/wav 다운로드** (2026-10-12 · 코드 완료 · SQL 실행함 · 미커밋)
+
+#### Music 홈 + 디지털 판매 (2026-10-12 · **코드 완료 · SQL 실행함 · 미커밋·미배포**)
+
+Stitch `stitch_music/` 시안. 헤더/푸터 IA 유지. 스트리밍은 무료 · 구매만 결제.
+
+- [x] Music 메뉴 → `/music` (아티스트 목록이 아님)
+- [x] **NEW RELEASES** — `created_at` 역순 최신 앨범 가로 틱커 (`bandcamp-ticker`)
+- [x] **COLLECTION** — 랜덤 앨범 그리드 · 클릭 시 우측 패널(커버·트랙·로컬 `<audio>`)
+- [x] COLLECTION 재생 시 `player.close()` + DJ SET pause · 하단 재생바 미노출
+- [x] 앨범·트랙 각각 장바구니 (`kind: digital_album` / `digital_track`) · 기존 Toss 체크아웃
+- [x] 디지털만 담으면 배송지 생략 · **로그인 필수**
+- [x] 결제 완료 시 `music_entitlements` 부여 (Toss confirm·webhook)
+- [x] My Page → **My Music** — 한 행: 커버 | 아티스트 · 곡명 | MP3/WAV 다운로드
+- [x] `GET /api/music/download` — 구매 권한 확인 후 `Content-Disposition: attachment`
+- [x] **ARTISTS** 랜덤 10명 + More → `/artists` · 아티스트 사진 **네모**
+- [x] **CD & VINYL** 최신 CD 4장 + More → `/sale?category=cd` · nav/카테고리 라벨 변경
+- [x] Admin 앨범 등록/수정: 디지털 판매가 · 트랙 가격 · WAV 원본 업로드
+- [x] **SQL 실행:** `supabase/add_music_digital_sales.sql`
+- [ ] 커밋 · 푸시 · Vercel 배포
+- [ ] QA: 틱커 자동 스크롤 · COLLECTION 재생 시 DJ/하단바 정지 · 디지털 결제 → My Music 다운로드
+
+**주요 파일:** `supabase/add_music_digital_sales.sql` · `MusicHomeClient.tsx` · `src/app/music/page.tsx` · `src/app/mypage/music/page.tsx` · `src/app/api/music/download/route.ts` · `src/lib/musicEntitlements.ts` · `src/lib/playbackFocus.ts`
 
 ### 콘텐츠 · CMS
 7. [ ] 상품·앨범 **예약 업로드 + 임시저장**
@@ -440,7 +469,9 @@ DC인사이드 스타일 자유 게시판. SQL 실행됨. `YOUTUBE_API_KEY`·배
 - [x] Footer **대표자명 · 사업장 주소 · 유선번호** (배포됨)
 - [x] 상품 상세 **배송·교환·환불** 섹션 (`/sale/[id]` · 배포됨)
 - [ ] iPad: In Store · Magazine **탭으로 드롭다운** 열림
-- [ ] Music → Artists → Album → 재생 · 수록곡 duration 전곡 표시
+- [ ] Music 홈: NEW RELEASES 틱커 · COLLECTION 우측 재생(하단바·DJ SET 미사용) · ARTISTS More · CD & VINYL More
+- [ ] `/artists` 사진 네모 · 앨범 → `/music/album/[id]` 재생 · 수록곡 duration
+- [ ] 디지털 앨범/트랙 장바구니 → 로그인 결제 → My Music MP3/WAV 다운로드
 - [x] 플레이어: PC 음량 슬라이더 · 모바일 스피커 숨김 · 진행바 드래그 시크 (배포됨)
 - [ ] 상품 상세 `show_stock=false` 시 재고 수량 숨김
 - [ ] **THINK:** 목록 탭·글쓰기·본문 이미지 삽입·유튜브·추천(하트)·댓글·비회원 ㅇㅇ(IP)·공지
@@ -453,7 +484,7 @@ DC인사이드 스타일 자유 게시판. SQL 실행됨. `YOUTUBE_API_KEY`·배
 
 ## 5) 한 줄 요약 — 지금 할 일
 
-1. **커밋 · 푸시 · Vercel 배포** — 메인 Stitch + Store=`/sale` 동일조건 + 히어로 Thermal 배지 제거 아직 미배포
-2. **QA** — 히어로 · 로고 홈 · 하단 Store/Ticket 품절 숨김(`/sale`과 비교) · DJ SET · THINK 댓글/ㅇㅇ
+1. **커밋 · 푸시 · Vercel 배포** — 메인 Stitch + **Music 홈/디지털 판매** 아직 미배포 (`add_music_digital_sales.sql` 은 실행함)
+2. **QA** — Music 틱커·COLLECTION 단독 재생 · 디지털 결제→My Music 다운로드 · 히어로 · DJ SET · THINK
 3. **토스 심사** — 라이브 키·웹훅·전자청약
 4. **Magazine** 본기능 · (선택) Admin 메뉴 분류 · Resend SMTP

@@ -1,9 +1,10 @@
-/** DJ SET ↔ MUSIC 하단 플레이어 상호 배타 재생용 가벼운 이벤트 버스 */
+/** DJ SET ↔ MUSIC 하단 플레이어 ↔ COLLECTION 패널 상호 배타 재생용 가벼운 이벤트 버스 */
 
 type Listener = () => void;
 
 const musicTakeoverListeners = new Set<Listener>();
 const djTakeoverListeners = new Set<Listener>();
+const collectionPauseListeners = new Set<Listener>();
 
 export function onMusicTakeover(listener: Listener): () => void {
   musicTakeoverListeners.add(listener);
@@ -21,4 +22,13 @@ export function onDjTakeover(listener: Listener): () => void {
 
 export function notifyDjTakeover() {
   djTakeoverListeners.forEach((fn) => fn());
+}
+
+export function onCollectionPause(listener: Listener): () => void {
+  collectionPauseListeners.add(listener);
+  return () => collectionPauseListeners.delete(listener);
+}
+
+export function notifyCollectionPause() {
+  collectionPauseListeners.forEach((fn) => fn());
 }

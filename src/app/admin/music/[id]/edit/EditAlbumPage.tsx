@@ -24,6 +24,9 @@ interface TrackEditRow {
   audio_url?: string;
   duration?: number | null;
   audioFile: File | null;
+  wavFile: File | null;
+  download_wav_url?: string | null;
+  digitalPrice: string;
   removed: boolean;
   isTitleTrack: boolean;
 }
@@ -34,9 +37,17 @@ function newTrackRow(): TrackEditRow {
     title: "",
     description: "",
     audioFile: null,
+    wavFile: null,
+    digitalPrice: "",
     removed: false,
     isTitleTrack: false,
   };
+}
+
+function parsePrice(value: string): number | null {
+  const n = Number(value.replace(/,/g, "").trim());
+  if (!value.trim() || !Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n);
 }
 
 export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
@@ -53,6 +64,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
   const [coverZoom, setCoverZoom] = useState(1);
   const [coverOffsetX, setCoverOffsetX] = useState(0);
   const [coverOffsetY, setCoverOffsetY] = useState(0);
+  const [digitalPrice, setDigitalPrice] = useState("");
   const [tracks, setTracks] = useState<TrackEditRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,14 +75,22 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       setLoading(true);
       setError("");
 
-      const [{ data: artistRows }, { data, error: fetchError }] = await Promise.all([
-        supabase.from("artists").select("id, name").order("name"),
-        supabase
+      const { data: artistRows } = await supabase.from("artists").select("id, name").order("name");
+      let { data, error: fetchError } = await supabase
+        .from("albums")
+        .select("title, artist_id, artist_name, description, cover_url, digital_price_krw, album_tracks(*)")
+        .eq("id", albumId)
+        .single();
+
+      if (fetchError && /digital_price/i.test(fetchError.message)) {
+        const retry = await supabase
           .from("albums")
           .select("title, artist_id, artist_name, description, cover_url, album_tracks(*)")
           .eq("id", albumId)
-          .single(),
-      ]);
+          .single();
+        data = retry.data as typeof data;
+        fetchError = retry.error;
+      }
 
       const artistList = artistRows ?? [];
       setArtists(artistList);
@@ -83,6 +103,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
 
       setTitle(data.title);
       setDescription(data.description ?? "");
+      setDigitalPrice(data.digital_price_krw ? String(data.digital_price_krw) : "");
       setCurrentCoverUrl(data.cover_url);
       setCoverPreview(data.cover_url);
 
@@ -104,6 +125,9 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
           audio_url: track.audio_url,
           duration: track.duration ?? null,
           audioFile: null,
+          wavFile: null,
+          download_wav_url: track.download_wav_url ?? null,
+          digitalPrice: track.digital_price_krw ? String(track.digital_price_krw) : "",
           removed: false,
           isTitleTrack: track.is_title_track ?? false,
         })),
@@ -173,11 +197,13 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
         artist_name: string;
         description: string | null;
         cover_url?: string | null;
+        digital_price_krw: number | null;
       } = {
         title,
         artist_id: selectedArtist.id,
         artist_name: selectedArtist.name,
         description: description.trim() || null,
+        digital_price_krw: parsePrice(digitalPrice),
       };
 
       if (coverFile) {
@@ -223,6 +249,20 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
           duration = await loadDurationFromUrl(audio_url);
         }
 
+        let download_wav_url = row.download_wav_url ?? null;
+        if (row.wavFile) {
+          const wavPath = `tracks/${albumId}/${Date.now()}-${i}-wav.wav`;
+          const { error: wavErr } = await supabase.storage.from("audio").upload(wavPath, row.wavFile);
+          if (wavErr) throw wavErr;
+          download_wav_url = supabase.storage.from("audio").getPublicUrl(wavPath).data.publicUrl;
+        }
+
+        const digitalPayload = {
+          digital_price_krw: parsePrice(row.digitalPrice),
+          download_mp3_url: audio_url ?? null,
+          download_wav_url,
+        };
+
         if (row.id) {
           const { error: updateErr } = await supabase
             .from("album_tracks")
@@ -233,6 +273,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
               audio_url: audio_url!,
               ...(duration != null ? { duration } : {}),
               is_title_track: row.isTitleTrack,
+              ...digitalPayload,
             })
             .eq("id", row.id);
           if (updateErr) throw updateErr;
@@ -245,6 +286,7 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
             audio_url: audio_url!,
             duration: duration ?? null,
             is_title_track: row.isTitleTrack,
+            ...digitalPayload,
           });
           if (insertErr) throw insertErr;
         }
@@ -254,7 +296,11 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "수정 중 오류가 발생했습니다.";
-      if (/artist_id|column/i.test(message)) {
+      if (/digital_price|download_wav|download_mp3/i.test(message)) {
+        setError(
+          "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 을 실행해주세요.",
+        );
+      } else if (/artist_id|column/i.test(message)) {
         setError(
           "DB에 artist_id 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_albums_artist_id.sql 을 실행해주세요.",
         );
@@ -338,6 +384,20 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+            디지털 앨범 판매가 (KRW)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={digitalPrice}
+            onChange={(e) => setDigitalPrice(e.target.value)}
+            placeholder="비워두면 판매 안 함 · 스트리밍은 무료"
             className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
           />
         </div>
@@ -441,6 +501,24 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
               />
               {row.audio_url && !row.audioFile && (
                 <p className="text-xs text-muted">현재 음원이 등록되어 있습니다. 변경 시에만 파일을 선택하세요.</p>
+              )}
+              <input
+                type="number"
+                min={0}
+                placeholder="트랙 디지털 판매가 (비워두면 미판매)"
+                value={row.digitalPrice}
+                onChange={(e) => updateTrack(row.key, { digitalPrice: e.target.value })}
+                className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+              />
+              <label className="block text-[10px] uppercase tracking-widest text-muted">WAV 원본 (구매 다운로드용)</label>
+              <input
+                type="file"
+                accept="audio/wav,audio/x-wav,.wav"
+                onChange={(e) => updateTrack(row.key, { wavFile: e.target.files?.[0] ?? null })}
+                className="w-full border border-border px-4 py-3 text-sm"
+              />
+              {row.download_wav_url && !row.wavFile && (
+                <p className="text-xs text-muted">WAV가 등록되어 있습니다. 교체 시에만 선택하세요.</p>
               )}
               <textarea
                 placeholder="곡 설명 (선택)"

@@ -18,11 +18,11 @@ export const navLinks: NavItem[] = [
           { label: "Accessory", href: "/sale?category=merch&sub=accessory" },
         ],
       },
-      { label: "CD", href: "/sale?category=cd" },
+      { label: "CD & VINYL", href: "/sale?category=cd" },
       { label: "Ticket", href: "/sale?category=ticket" },
     ],
   },
-  { label: "Music", href: "/artists" },
+  { label: "Music", href: "/music" },
   { label: "Think", href: "/think" },
   {
     label: "Magazine",
@@ -39,11 +39,14 @@ export const footerStoreLinks = [
   { label: "Merch · Tops", href: "/sale?category=merch&sub=tops" },
   { label: "Merch · Bottoms", href: "/sale?category=merch&sub=bottoms" },
   { label: "Merch · Accessory", href: "/sale?category=merch&sub=accessory" },
-  { label: "CD", href: "/sale?category=cd" },
+  { label: "CD & VINYL", href: "/sale?category=cd" },
   { label: "Ticket", href: "/sale?category=ticket" },
 ];
 
-export const footerMusicLinks = [{ label: "Artists", href: "/artists" }];
+export const footerMusicLinks = [
+  { label: "Music", href: "/music" },
+  { label: "Artists", href: "/artists" },
+];
 
 export const footerMagazineLinks = [
   { label: "Culture", href: "/magazine/culture" },

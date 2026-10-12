@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useCart } from "@/context/CartContext";
 import { usePlayer } from "@/context/PlayerContext";
 import { useTrackDurations } from "@/hooks/useTrackDurations";
 import type { AlbumWithTracks } from "@/lib/albums";
-import { getAlbumArtistName, mapAlbumToPlayerTracks } from "@/lib/albums";
+import { getAlbumArtistName, isPricedForSale, mapAlbumToPlayerTracks } from "@/lib/albums";
+import { formatKrwPrice } from "@/lib/musicCatalog";
 
 interface AlbumDetailClientProps {
   album: AlbumWithTracks;
@@ -20,6 +22,7 @@ function formatDuration(sec?: number | null) {
 }
 
 export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
+  const { addItem } = useCart();
   const { currentTrack, isPlaying, playQueue, play, pause } = usePlayer();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     album.album_tracks[0]?.id ?? null,
@@ -62,10 +65,10 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
   return (
     <article>
       <Link
-        href="/artists"
+        href={album.artist_id ? `/artists/${album.artist_id}` : "/music"}
         className="mb-8 inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted transition-colors hover:text-foreground"
       >
-        ← 뒤로 가기
+        ← {album.artist_id ? "아티스트" : "Music"}
       </Link>
 
       <div className="grid gap-8 md:grid-cols-[280px_1fr]">
@@ -98,15 +101,35 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
-              if (sortedTracks[0]) handlePlayTrack(sortedTracks[0].id);
-            }}
-            className="mt-6 inline-flex items-center gap-2 border border-border px-6 py-3 text-xs uppercase tracking-widest transition-colors hover:bg-foreground hover:text-background"
-          >
-            ▶ 앨범 재생
-          </button>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (sortedTracks[0]) handlePlayTrack(sortedTracks[0].id);
+              }}
+              className="inline-flex items-center gap-2 border border-border px-6 py-3 text-xs uppercase tracking-widest transition-colors hover:bg-foreground hover:text-background"
+            >
+              ▶ 앨범 재생
+            </button>
+            {isPricedForSale(album.digital_price_krw) && (
+              <button
+                type="button"
+                onClick={() =>
+                  addItem({
+                    productId: album.id,
+                    title: `${album.title} (Digital Album)`,
+                    imageUrl: album.cover_url,
+                    priceKrw: album.digital_price_krw as number,
+                    kind: "digital_album",
+                    albumId: album.id,
+                  })
+                }
+                className="inline-flex items-center gap-2 bg-foreground px-6 py-3 text-xs uppercase tracking-widest text-background"
+              >
+                디지털 앨범 {formatKrwPrice(album.digital_price_krw)}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -120,31 +143,54 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
             const durationLabel = formatDuration(trackDuration);
 
             return (
-              <button
+              <div
                 key={track.id}
-                type="button"
-                onClick={() => handlePlayTrack(track.id)}
-                className={`flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-neutral-50 ${
+                className={`flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-neutral-50 ${
                   isActive ? "bg-neutral-100" : isSelected ? "bg-neutral-50/80" : ""
                 }`}
               >
-                <span className="w-6 text-xs text-muted">{index + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className={`truncate text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
-                      {track.title}
-                    </p>
-                    {track.is_title_track && (
-                      <span className="shrink-0 border border-border px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted">
-                        Title
-                      </span>
-                    )}
+                <button
+                  type="button"
+                  onClick={() => handlePlayTrack(track.id)}
+                  className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                >
+                  <span className="w-6 text-xs text-muted">{index + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className={`truncate text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
+                        {track.title}
+                      </p>
+                      {track.is_title_track && (
+                        <span className="shrink-0 border border-border px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted">
+                          Title
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted">
-                  {durationLabel ?? ""}
-                </span>
-              </button>
+                  <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted">
+                    {durationLabel ?? ""}
+                  </span>
+                </button>
+                {isPricedForSale(track.digital_price_krw) && (
+                  <button
+                    type="button"
+                    className="shrink-0 text-[10px] uppercase tracking-widest hover:underline"
+                    onClick={() =>
+                      addItem({
+                        productId: track.id,
+                        title: `${album.title} — ${track.title}`,
+                        imageUrl: album.cover_url,
+                        priceKrw: track.digital_price_krw as number,
+                        kind: "digital_track",
+                        albumId: album.id,
+                        trackId: track.id,
+                      })
+                    }
+                  >
+                    {formatKrwPrice(track.digital_price_krw)}
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>

@@ -47,7 +47,7 @@ export default async function ArtistDetailPage({
         </Link>
 
         <section className="grid gap-8 md:grid-cols-[220px_1fr] md:items-start">
-          <div className="relative mx-auto aspect-square w-full max-w-[220px] overflow-hidden rounded-full bg-neutral-100">
+          <div className="relative mx-auto aspect-square w-full max-w-[220px] overflow-hidden bg-neutral-100">
             {artist.image_url ? (
               <Image
                 src={artist.image_url}

@@ -22,7 +22,7 @@ export function HomeCollection({ albums }: HomeCollectionProps) {
         <div className="mb-6 flex items-end justify-between gap-4">
           <h2 className="text-lg font-black uppercase tracking-tight sm:text-2xl">Collection</h2>
           <Link
-            href="/artists"
+            href="/music"
             className="text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white"
           >
             More →

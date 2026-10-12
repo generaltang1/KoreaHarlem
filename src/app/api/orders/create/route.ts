@@ -8,7 +8,7 @@ import type { ShippingAddress } from "@/lib/shippingAddress";
 import { stockErrorMessage, validateLinesAgainstStock } from "@/lib/stock";
 
 interface OrderItemInput {
-  productId: string;
+  productId?: string | null;
   title: string;
   size?: string | null;
   quantity: number;
@@ -16,6 +16,9 @@ interface OrderItemInput {
   currency: string;
   imageUrl?: string | null;
   priceKrw: number;
+  kind?: string | null;
+  albumId?: string | null;
+  trackId?: string | null;
 }
 
 export async function POST(request: Request) {
@@ -53,7 +56,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "필수 값이 없습니다." }, { status: 400 });
     }
 
-    if (!shipping?.postcode?.trim() || !shipping?.address?.trim()) {
+    const hasDigital = items.some(
+      (item) => item.kind === "digital_album" || item.kind === "digital_track",
+    );
+    const digitalOnly =
+      items.length > 0 &&
+      items.every((item) => item.kind === "digital_album" || item.kind === "digital_track");
+
+    if (!digitalOnly && (!shipping?.postcode?.trim() || !shipping?.address?.trim())) {
       return NextResponse.json({ message: "배송지(우편번호·주소)를 입력해주세요." }, { status: 400 });
     }
 
@@ -62,9 +72,9 @@ export async function POST(request: Request) {
     }
 
     const stockLines = items
-      .filter((item) => item.productId)
+      .filter((item) => (item.kind ?? "product") === "product" && item.productId)
       .map((item) => ({
-        productId: item.productId,
+        productId: item.productId as string,
         size: item.size,
         quantity: item.quantity,
       }));
@@ -111,6 +121,10 @@ export async function POST(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    if (hasDigital && !user) {
+      return NextResponse.json({ message: "디지털 음원은 로그인 후 구매할 수 있습니다." }, { status: 401 });
+    }
+
     const isGuest = !user;
     let guestPasswordHash: string | null = null;
     if (isGuest) {
@@ -134,13 +148,21 @@ export async function POST(request: Request) {
     const tossOrderId = `kh_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const customerKey = user?.id ?? `guest_${Buffer.from(email).toString("base64url").slice(0, 40)}`;
 
-    const shippingAddress = {
-      postcode: shipping.postcode.trim(),
-      address: shipping.address.trim(),
-      addressDetail: shipping.addressDetail?.trim() ?? "",
-      phone: phone.trim(),
-      message: shippingMessage?.trim() || shipping.message?.trim() || "",
-    };
+    const shippingAddress = digitalOnly
+      ? {
+          postcode: shipping?.postcode?.trim() || "00000",
+          address: shipping?.address?.trim() || "디지털 음원 (배송 없음)",
+          addressDetail: shipping?.addressDetail?.trim() ?? "",
+          phone: phone.trim(),
+          message: shippingMessage?.trim() || shipping?.message?.trim() || "",
+        }
+      : {
+          postcode: shipping!.postcode.trim(),
+          address: shipping!.address.trim(),
+          addressDetail: shipping?.addressDetail?.trim() ?? "",
+          phone: phone.trim(),
+          message: shippingMessage?.trim() || shipping?.message?.trim() || "",
+        };
 
     const orderPayload: Record<string, unknown> = {
       user_id: user?.id ?? null,
@@ -191,13 +213,16 @@ export async function POST(request: Request) {
     const { error: itemsError } = await admin.from("order_items").insert(
       items.map((item) => ({
         order_id: order.id,
-        product_id: item.productId,
+        product_id: (item.kind ?? "product") === "product" ? item.productId : null,
         title: item.title,
         size: item.size ?? null,
         quantity: item.quantity,
         unit_price: item.unitPrice,
         currency: item.currency,
         image_url: item.imageUrl ?? null,
+        item_kind: item.kind ?? "product",
+        album_id: item.albumId ?? null,
+        track_id: item.trackId ?? null,
       })),
     );
 
@@ -206,16 +231,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: itemsError.message }, { status: 500 });
     }
 
-    const { error: reserveError } = await admin.rpc("reserve_stock_for_order", {
-      p_order_id: order.id,
-    });
+    if (stockLines.length > 0) {
+      const { error: reserveError } = await admin.rpc("reserve_stock_for_order", {
+        p_order_id: order.id,
+      });
 
-    if (reserveError) {
-      await admin.from("orders").delete().eq("id", order.id);
-      return NextResponse.json(
-        { message: stockErrorMessage(reserveError) },
-        { status: 409 },
-      );
+      if (reserveError) {
+        await admin.from("orders").delete().eq("id", order.id);
+        return NextResponse.json(
+          { message: stockErrorMessage(reserveError) },
+          { status: 409 },
+        );
+      }
     }
 
     return NextResponse.json({

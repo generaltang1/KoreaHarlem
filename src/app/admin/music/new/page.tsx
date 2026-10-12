@@ -17,6 +17,8 @@ interface TrackFormRow {
   title: string;
   description: string;
   audioFile: File | null;
+  wavFile: File | null;
+  digitalPrice: string;
   isTitleTrack: boolean;
 }
 
@@ -26,8 +28,16 @@ function newTrackRow(): TrackFormRow {
     title: "",
     description: "",
     audioFile: null,
+    wavFile: null,
+    digitalPrice: "",
     isTitleTrack: false,
   };
+}
+
+function parsePrice(value: string): number | null {
+  const n = Number(value.replace(/,/g, "").trim());
+  if (!value.trim() || !Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n);
 }
 
 export default function NewAlbumPage() {
@@ -44,6 +54,7 @@ export default function NewAlbumPage() {
   const [coverZoom, setCoverZoom] = useState(1);
   const [coverOffsetX, setCoverOffsetX] = useState(0);
   const [coverOffsetY, setCoverOffsetY] = useState(0);
+  const [digitalPrice, setDigitalPrice] = useState("");
   const [tracks, setTracks] = useState<TrackFormRow[]>([newTrackRow()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -124,6 +135,7 @@ export default function NewAlbumPage() {
           artist_name: selectedArtist.name,
           description: description.trim() || null,
           cover_url,
+          digital_price_krw: parsePrice(digitalPrice),
         })
         .select("id")
         .single();
@@ -139,6 +151,14 @@ export default function NewAlbumPage() {
         const { data: audioUrlData } = supabase.storage.from("audio").getPublicUrl(audioPath);
         const duration = await loadDurationFromFile(audioFile);
 
+        let download_wav_url: string | null = null;
+        if (row.wavFile) {
+          const wavPath = `tracks/${album.id}/${Date.now()}-${i}-wav.wav`;
+          const { error: wavErr } = await supabase.storage.from("audio").upload(wavPath, row.wavFile);
+          if (wavErr) throw wavErr;
+          download_wav_url = supabase.storage.from("audio").getPublicUrl(wavPath).data.publicUrl;
+        }
+
         const { error: trackErr } = await supabase.from("album_tracks").insert({
           album_id: album.id,
           track_order: i + 1,
@@ -147,6 +167,9 @@ export default function NewAlbumPage() {
           audio_url: audioUrlData.publicUrl,
           duration,
           is_title_track: row.isTitleTrack,
+          digital_price_krw: parsePrice(row.digitalPrice),
+          download_mp3_url: audioUrlData.publicUrl,
+          download_wav_url,
         });
         if (trackErr) throw trackErr;
       }
@@ -155,7 +178,11 @@ export default function NewAlbumPage() {
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "등록 중 오류가 발생했습니다.";
-      if (/artist_id|column/i.test(message)) {
+      if (/digital_price|download_wav|download_mp3/i.test(message)) {
+        setError(
+          "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 을 실행해주세요.",
+        );
+      } else if (/artist_id|column/i.test(message)) {
         setError(
           "DB에 artist_id 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_albums_artist_id.sql 을 실행해주세요.",
         );
@@ -219,6 +246,20 @@ export default function NewAlbumPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+            디지털 앨범 판매가 (KRW)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={digitalPrice}
+            onChange={(e) => setDigitalPrice(e.target.value)}
+            placeholder="비워두면 판매 안 함 · 스트리밍은 무료"
             className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
           />
         </div>
@@ -303,10 +344,26 @@ export default function NewAlbumPage() {
                 onChange={(e) => updateTrack(row.key, { title: e.target.value })}
                 className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
               />
+              <label className="block text-[10px] uppercase tracking-widest text-muted">스트리밍/MP3 *</label>
               <input
                 type="file"
                 accept="audio/*"
                 onChange={(e) => updateTrack(row.key, { audioFile: e.target.files?.[0] ?? null })}
+                className="w-full border border-border px-4 py-3 text-sm"
+              />
+              <input
+                type="number"
+                min={0}
+                placeholder="트랙 디지털 판매가 (비워두면 미판매)"
+                value={row.digitalPrice}
+                onChange={(e) => updateTrack(row.key, { digitalPrice: e.target.value })}
+                className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+              />
+              <label className="block text-[10px] uppercase tracking-widest text-muted">WAV 원본 (구매 다운로드용, 선택)</label>
+              <input
+                type="file"
+                accept="audio/wav,audio/x-wav,.wav"
+                onChange={(e) => updateTrack(row.key, { wavFile: e.target.files?.[0] ?? null })}
                 className="w-full border border-border px-4 py-3 text-sm"
               />
               <textarea

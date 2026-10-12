@@ -24,9 +24,11 @@ export default async function AlbumDetailPage({ params }: PageProps) {
   const albumData: AlbumWithTracks = {
     id: album.id,
     title: album.title,
+    artist_id: album.artist_id,
     artist_name: album.artist_name,
     description: album.description,
     cover_url: album.cover_url,
+    digital_price_krw: album.digital_price_krw ?? null,
     created_at: album.created_at,
     album_tracks: album.album_tracks,
   };

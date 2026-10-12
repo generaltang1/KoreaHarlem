@@ -7,7 +7,7 @@ export const PRODUCT_CATEGORIES: {
   label: string;
 }[] = [
   { value: "merch", label: "Merch" },
-  { value: "cd", label: "CD" },
+  { value: "cd", label: "CD & VINYL" },
   { value: "ticket", label: "Ticket" },
 ];
 

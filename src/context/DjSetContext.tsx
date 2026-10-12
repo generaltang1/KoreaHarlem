@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import type { DjSetTrack } from "@/lib/djSet";
-import { notifyDjTakeover, onMusicTakeover } from "@/lib/playbackFocus";
+import { notifyCollectionPause, notifyDjTakeover, onMusicTakeover } from "@/lib/playbackFocus";
 import { usePlayer } from "@/context/PlayerContext";
 
 type DjSetContextValue = {
@@ -97,6 +97,7 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
     }
     if (autoplay) {
       notifyDjTakeover();
+      notifyCollectionPause();
       pauseMusic();
       setIsPlaying(true);
       void audio.play().catch(() => setIsPlaying(false));
@@ -142,6 +143,7 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
   const play = useCallback(() => {
     if (tracksRef.current.length === 0) return;
     notifyDjTakeover();
+    notifyCollectionPause();
     pauseMusic();
     setIsPlaying(true);
     void audioRef.current?.play().catch(() => setIsPlaying(false));

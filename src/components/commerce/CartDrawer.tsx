@@ -21,7 +21,10 @@ export function CartDrawer() {
   } = useCart();
   const { currency } = useCurrency();
 
-  const productIds = useMemo(() => items.map((item) => item.productId), [items]);
+  const productIds = useMemo(
+    () => items.filter((item) => (item.kind ?? "product") === "product").map((item) => item.productId),
+    [items],
+  );
   const { availability, loading: availabilityLoading } = useCartProductAvailability(productIds, isOpen);
 
   if (!isOpen) return null;
@@ -54,7 +57,8 @@ export function CartDrawer() {
           ) : (
             <ul className="space-y-5">
               {items.map((item) => {
-                const purchasable = isProductPurchasable(availability.get(item.productId));
+                const digital = item.kind === "digital_album" || item.kind === "digital_track";
+                const purchasable = digital || isProductPurchasable(availability.get(item.productId));
                 const showUnavailable = !availabilityLoading && !purchasable;
                 return (
                 <li
@@ -80,11 +84,18 @@ export function CartDrawer() {
                         </span>
                       )}
                     </div>
-                    {item.size && <p className="mt-0.5 text-xs text-muted">Size {item.size}</p>}
+                    {digital && (
+                      <p className="mt-0.5 text-xs text-muted">
+                        {item.kind === "digital_album" ? "디지털 앨범" : "디지털 음원"}
+                      </p>
+                    )}
+                    {item.size && !digital && <p className="mt-0.5 text-xs text-muted">Size {item.size}</p>}
                     <p className="mt-1 text-sm">
                       {formatMinorAmount(item.unitPriceMinor, currency)}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
+                      {!digital && (
+                        <>
                       <button
                         type="button"
                         className="h-7 w-7 border border-border text-xs"
@@ -100,6 +111,8 @@ export function CartDrawer() {
                       >
                         +
                       </button>
+                        </>
+                      )}
                       <button
                         type="button"
                         className="ml-auto text-[10px] uppercase tracking-widest text-rose-500"

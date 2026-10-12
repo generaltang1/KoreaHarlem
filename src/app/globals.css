@@ -66,6 +66,25 @@ html {
   animation-play-state: paused;
 }
 
+@keyframes bandcamp-ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.bandcamp-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: bandcamp-ticker 36s linear infinite;
+}
+
+.bandcamp-ticker-wrap:hover .bandcamp-ticker-track {
+  animation-play-state: paused;
+}
+
 .wheel-mask {
   -webkit-mask-image: linear-gradient(
     to bottom,

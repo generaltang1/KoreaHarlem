@@ -32,6 +32,16 @@ export default async function MyPage() {
 
             <nav className="divide-y divide-border border border-border">
               <Link
+                href="/mypage/music"
+                className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-neutral-50"
+              >
+                <div>
+                  <p className="text-sm font-medium">My Music</p>
+                  <p className="mt-0.5 text-xs text-muted">구매한 음원 MP3 · WAV 다운로드</p>
+                </div>
+                <span className="text-xs text-muted">→</span>
+              </Link>
+              <Link
                 href="/mypage/orders"
                 className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-neutral-50"
               >

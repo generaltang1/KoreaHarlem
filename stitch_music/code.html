@@ -1,0 +1,524 @@
+<!DOCTYPE html><html class="dark" lang="ko" style=""><head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>코할뮤직 - 메인 (Bandcamp 릴리즈 티커 &amp; 아티스트)</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;family=Vollkorn:ital,wght@0,500;0,600;1,500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "signal-crimson": "#FF3322",
+            "accent-amber": "#F59E0B"
+          },
+          fontFamily: {
+            serif: ["Vollkorn", "serif"],
+            mono: ["Space Mono", "monospace"],
+            sans: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #000000;
+        color: #f5f5f5;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    @keyframes bandcampTicker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .bandcamp-ticker-track {
+      display: flex;
+      width: max-content;
+      animation: bandcampTicker 36s linear infinite;
+    }
+    .bandcamp-ticker-wrap:hover .bandcamp-ticker-track {
+      animation-play-state: paused;
+    }
+  </style>
+</head>
+<body class="bg-black text-[#f5f5f5] antialiased selection:bg-signal-crimson selection:text-white min-h-screen flex flex-col font-sans">
+
+  <!-- Top Sticky Header (NTS style) -->
+  <header class="fixed top-0 left-0 w-full z-50 bg-black/95 backdrop-blur-md border-b border-[#1f1f1f]">
+    <div class="h-14 w-full px-4 md:px-8 flex items-center justify-between gap-4"><div class="flex items-center gap-4 sm:gap-6"><a class="group flex items-center shrink-0" href="#"><img alt="koreaharlem" class="h-6 sm:h-7 w-auto object-contain transition-opacity group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHHQjKWqd2bUbxVSEm64d88cPHUSciT90qkEw_GfWxnH_TBNzIFIAwzNqTAmRdaf7MG0uWArWCMLugQATTJcmQSRP1VmUsQLrmrNUjHbpPDxuiblPXlsyDfzKRVqk08jVtj3nKjufo8OvYNNoXsMVn3CExCAnL4bmdTWMBYqGRs9S8aXcKNF9sT0tLz4mJh3x9qMAi6bF2WQtnj1dqBKKP6bD4M2Lu8S9fI-kxPw0p2tWdPK2q_XQfQtPumThvvEFn"></a></div><div class="flex items-center space-x-6 sm:space-x-8 ml-auto"><nav class="hidden md:flex items-center space-x-6 lg:space-x-8 text-sm font-medium tracking-tight text-neutral-300 mr-2 sm:mr-4"><a class="hover:text-white transition-colors uppercase font-mono text-xs sm:text-sm tracking-wider text-neutral-300" href="#merch">STORE</a><a class="hover:text-white transition-colors uppercase font-mono text-xs sm:text-sm tracking-wider text-neutral-300" href="#new-releases">MUSIC</a><a class="hover:text-white transition-colors uppercase font-mono text-xs sm:text-sm tracking-wider text-neutral-300" href="#magazine">MAGAZINE</a><a class="hover:text-white transition-colors uppercase font-mono text-xs sm:text-sm tracking-wider text-neutral-300" href="#collection">HELP</a></nav><div class="flex items-center space-x-4 sm:space-x-6"><div class="relative hidden sm:flex items-center space-x-2 border-b border-neutral-500 pb-1 w-36 lg:w-44 focus-within:border-white transition-colors"><span class="material-symbols-outlined text-[14px] text-neutral-400">search</span><input class="bg-transparent border-0 p-0 text-xs text-neutral-200 placeholder:text-neutral-500 focus:outline-none focus:ring-0 w-full" placeholder="koreaharlem 전체검색" type="text"></div><button class="w-8 h-8 rounded-full bg-[#ff9e99] hover:opacity-90 transition-opacity shrink-0" title="User Profile"></button></div></div></div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="w-full pt-14 pb-28 bg-black flex-1">
+    <div class="flex flex-col w-full">
+      <!-- NTS Live Ticker Bar -->
+      <div class="w-full bg-[#0a0a0a] border-b border-[#222222] py-2 px-4 md:px-8 text-[11px] font-mono tracking-wider flex items-center justify-between text-neutral-400"><div class="flex items-center space-x-6 overflow-hidden truncate"><div class="flex items-center space-x-2"><span class="inline-block w-2 h-2 rounded-full bg-white animate-pulse"></span><span class="text-white font-bold tracking-widest text-[10px]">NOW PLAYING :</span></div><span class="text-neutral-500">/</span><div class="text-neutral-300"><span class="text-neutral-500">NEXT SET :</span> DJ OHSHYTTTT — HYPER RESONANCE CLUB MIX</div></div><div class="flex items-center space-x-2 text-neutral-400 border border-neutral-800 px-2 py-0.5 text-[10px]"><svg class="w-3 h-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg><span class="">VOL 85%</span></div></div>
+
+      <!-- Section 1: New Releases (Bandcamp Style Smooth 1-Row Animated Ticker/Carousel) -->
+      <section class="w-full py-8 md:py-12 border-b border-[#1c1c1c] overflow-hidden" id="new-releases">
+        <div class="px-4 md:px-8 flex flex-col sm:flex-row sm:items-baseline justify-between mb-6 pb-3 border-b border-[#1c1c1c] gap-3"><div class="flex flex-wrap items-baseline gap-3"><h1 class="font-bold text-[22px] md:text-[28px] text-white tracking-tight uppercase font-sans">NEW RELEASES</h1><span class="font-mono text-[11px] text-neutral-500 tracking-widest uppercase">신규 발매 앨범<br></span></div><div class="flex items-center gap-4 font-mono text-[11px] tracking-wider uppercase"><span class="text-neutral-700 hidden sm:inline">/</span><a class="text-white hover:text-signal-crimson transition-colors" href="#">VIEW ALL (48) →</a></div></div>
+
+        <!-- Continuous Smooth Infinite Scrolling Track -->
+        <div class="relative w-full bandcamp-ticker-wrap overflow-hidden group/track">
+          <div class="bandcamp-ticker-track gap-5 px-4 md:px-8">
+            <!-- Item 1 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI6vuuqqvZ7HmqdXg7f32cCAuNbGJ-oWzIHvisVZvOd7j85inK1gWVlTlwVn1LV4rBiB9EnfN-EufCTg2Vq1cgppaZDz49eb64icL1CjLwagx0xYanb-rpfJwhVlZ48k8Vl4OitY_BhMJTVOBeHTaJMy0p53W5hgK6Gz7mZYKPEBVWq_V51fDkulagsXERd1I2fefLQI5Ch8hRsMX4EK7sifBIKeEuInskpyMj-l7aCNCAhnGF-Xg">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">FLAC 24b</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">14 FEB 2025</span>
+                  <span class="">SEOUL</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">《두 앵커》를 위한 음악</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">김남윤 (Kim Namyoon)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">AMBIENT / TAPE</span>
+                  <span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Item 2 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVcjdBVYwNT2ZWTaZvU3u3w7-5EKjXP1ZgQMbbexEE1XbPwyo3b1g5blfyyeDMbIAvALfw8oy0euX5OC8OFTC8Ax2PDixT5MGnWRtnP7VuFWztWKg3o6LBZ-Bu2pNJVZVFxWHIQUmXD4ZsZMzEQcWwpXgxM2THB7n2J_oY_uHaUBGHKdWKEXHvkq4eoA0lzL3c-UmhuAIGW0BWMLfCEvYNdsXHVa42E8lU23HNw09ZLnWbzRumv5Q">
+                <span class="absolute top-2 left-2 bg-black/85 text-accent-amber font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">STAFF CHOICE</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">09 FEB 2025</span>
+                  <span class="">SEOUL</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">《파라클레토스》를 위한 음악</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">김남윤 (Kim Namyoon)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">SOUNDSCAPE</span>
+                  <span class="text-white font-bold">₩12,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Item 3 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrDnqNqC4aXwiY-6n41f_0xeKXfEnD-7WXqNsPIu98cTZxgq4f4ETHmQyVD8vFlMmGIX6s9ParKtdJzwR8OtQlPPTedUuAKLUvFNJKhpDmU02kPDO6NzksQcmcJqSTwmaITrPdcBq9mkq061EAfUgHnoukyoi-z-ehGJTJMUC1Qu9dQD4URbfSmxyGM6x_UaeKXaKR1tUP-aZ3XlEiwjnEtc-hUYVvID3Gz6rbkyF3UG_htfJp36I">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">CASSETTE+DIG</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">02 FEB 2025</span>
+                  <span class="">BUSAN</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">비가역 (Irreversible)</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">이성훈 (Lee Seonghoon)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">NOISE / DRONE</span>
+                  <span class="text-white font-bold">₩10,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Item 4 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFULSHXbAuv3dN6IjIvtDwNk96pIr3e2OyL5hRBiP5DcwUfy3Hg8dNlKqvgQwIqiHVDpq0mpiEoA1J0c-8gz0IwD_ektldUp8r7zoA96oqOh4Pm04NiTJdjapmDXakZGZ5S3CwUopjGNdO3nm3kGB0horL3s1p59oh0jYENAcz0ktArG6Ocinl18ap3EP_ZTQcghrMZYEBd2kse13MpcOFsUoG37RlwKPMVcP9nEO9QohGAgqhooM">
+                <span class="absolute top-2 left-2 bg-signal-crimson text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase">REMASTER</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">28 JAN 2025</span>
+                  <span class="">SEOUL</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">Burning</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">Kuang Program (쾅프로그램)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">POST-PUNK</span>
+                  <span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Item 5 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB13Gx4K9RfKlgRztYKYpw00NNC2YurtklJBuP7qiHcAP17LWkDk-XYNcUOms0uQqk32aM7LbkWOO7oVmleUJdTy2pFxmdJdKUZQVWc2ln6TxqLuvCESsDNbJjsnVFc-njrSvSxGCtOtJN64B18Rhk0BfNbFSK0p89tJgi6KvOsFnweaPvsExVYYQEUX4D5_3vmuZHhP9Gu3vu0kFmZt9dRbz8nDCW8UZvItxS_KQZYGddh2imDHFQ">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">DIGITAL LP</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">21 JAN 2025</span>
+                  <span class="">INCHEON</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">1 2 3</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">nuhrokenteeth</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">LO-FI / INDIE</span>
+                  <span class="text-white font-bold">₩9,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Item 6 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6j9nyrFreIuZaFrO72kJ8eZL8WIAml6nsVydd6QZkt206sLs-mPIBBzXzJ8ICa11seE4eDjIoZcC1fE6B6QPl1kXGg2j5srv0hWz94IWhOpGMtxEoSTprdgP-iYbg8e2-sy9ECzB5_Cj7dXzikvNuZqh0lSaLjYlh1s8-y497MY7aX2urgqxGRwMCrJy3kiSiVjcz0hLmaTcKkm_7F0hAOWyTHUZzCF8fAyUR894moPNmWMc85AA">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">FLAC 24b</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">15 JAN 2025</span>
+                  <span class="">DAEGU</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">침묵의 나날 (Days of Silence)</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">야생화 (Wild Flowers)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">ELECTRONIC</span>
+                  <span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- DUPLICATED CLONES FOR SEAMLESS BANDCAMP LOOP -->
+            <!-- Clone 1 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI6vuuqqvZ7HmqdXg7f32cCAuNbGJ-oWzIHvisVZvOd7j85inK1gWVlTlwVn1LV4rBiB9EnfN-EufCTg2Vq1cgppaZDz49eb64icL1CjLwagx0xYanb-rpfJwhVlZ48k8Vl4OitY_BhMJTVOBeHTaJMy0p53W5hgK6Gz7mZYKPEBVWq_V51fDkulagsXERd1I2fefLQI5Ch8hRsMX4EK7sifBIKeEuInskpyMj-l7aCNCAhnGF-Xg">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">FLAC 24b</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">14 FEB 2025</span>
+                  <span class="">SEOUL</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">《두 앵커》를 위한 음악</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">김남윤 (Kim Namyoon)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">AMBIENT / TAPE</span>
+                  <span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Clone 2 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVcjdBVYwNT2ZWTaZvU3u3w7-5EKjXP1ZgQMbbexEE1XbPwyo3b1g5blfyyeDMbIAvALfw8oy0euX5OC8OFTC8Ax2PDixT5MGnWRtnP7VuFWztWKg3o6LBZ-Bu2pNJVZVFxWHIQUmXD4ZsZMzEQcWwpXgxM2THB7n2J_oY_uHaUBGHKdWKEXHvkq4eoA0lzL3c-UmhuAIGW0BWMLfCEvYNdsXHVa42E8lU23HNw09ZLnWbzRumv5Q">
+                <span class="absolute top-2 left-2 bg-black/85 text-accent-amber font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">STAFF CHOICE</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">09 FEB 2025</span>
+                  <span class="">SEOUL</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">《파라클레토스》를 위한 음악</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">김남윤 (Kim Namyoon)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">SOUNDSCAPE</span>
+                  <span class="text-white font-bold">₩12,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Clone 3 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrDnqNqC4aXwiY-6n41f_0xeKXfEnD-7WXqNsPIu98cTZxgq4f4ETHmQyVD8vFlMmGIX6s9ParKtdJzwR8OtQlPPTedUuAKLUvFNJKhpDmU02kPDO6NzksQcmcJqSTwmaITrPdcBq9mkq061EAfUgHnoukyoi-z-ehGJTJMUC1Qu9dQD4URbfSmxyGM6x_UaeKXaKR1tUP-aZ3XlEiwjnEtc-hUYVvID3Gz6rbkyF3UG_htfJp36I">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">CASSETTE+DIG</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">02 FEB 2025</span>
+                  <span class="">BUSAN</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">비가역 (Irreversible)</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">이성훈 (Lee Seonghoon)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">NOISE / DRONE</span>
+                  <span class="text-white font-bold">₩10,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Clone 4 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFULSHXbAuv3dN6IjIvtDwNk96pIr3e2OyL5hRBiP5DcwUfy3Hg8dNlKqvgQwIqiHVDpq0mpiEoA1J0c-8gz0IwD_ektldUp8r7zoA96oqOh4Pm04NiTJdjapmDXakZGZ5S3CwUopjGNdO3nm3kGB0horL3s1p59oh0jYENAcz0ktArG6Ocinl18ap3EP_ZTQcghrMZYEBd2kse13MpcOFsUoG37RlwKPMVcP9nEO9QohGAgqhooM">
+                <span class="absolute top-2 left-2 bg-signal-crimson text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase">REMASTER</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">28 JAN 2025</span>
+                  <span class="">SEOUL</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">Burning</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">Kuang Program (쾅프로그램)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">POST-PUNK</span>
+                  <span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Clone 5 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB13Gx4K9RfKlgRztYKYpw00NNC2YurtklJBuP7qiHcAP17LWkDk-XYNcUOms0uQqk32aM7LbkWOO7oVmleUJdTy2pFxmdJdKUZQVWc2ln6TxqLuvCESsDNbJjsnVFc-njrSvSxGCtOtJN64B18Rhk0BfNbFSK0p89tJgi6KvOsFnweaPvsExVYYQEUX4D5_3vmuZHhP9Gu3vu0kFmZt9dRbz8nDCW8UZvItxS_KQZYGddh2imDHFQ">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">DIGITAL LP</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">21 JAN 2025</span>
+                  <span class="">INCHEON</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">1 2 3</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">nuhrokenteeth</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">LO-FI / INDIE</span>
+                  <span class="text-white font-bold">₩9,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Clone 6 -->
+            <article class="flex flex-col w-56 sm:w-60 md:w-64 shrink-0 group select-none">
+              <div class="relative aspect-square w-full bg-[#0a0a0a] overflow-hidden border border-[#1a1a1a]">
+                <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-hover:opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6j9nyrFreIuZaFrO72kJ8eZL8WIAml6nsVydd6QZkt206sLs-mPIBBzXzJ8ICa11seE4eDjIoZcC1fE6B6QPl1kXGg2j5srv0hWz94IWhOpGMtxEoSTprdgP-iYbg8e2-sy9ECzB5_Cj7dXzikvNuZqh0lSaLjYlh1s8-y497MY7aX2urgqxGRwMCrJy3kiSiVjcz0hLmaTcKkm_7F0hAOWyTHUZzCF8fAyUR894moPNmWMc85AA">
+                <span class="absolute top-2 left-2 bg-black/85 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-widest uppercase border border-neutral-800">FLAC 24b</span>
+                <button aria-label="Play Album" class="absolute bottom-3 right-3 w-10 h-10 bg-white hover:bg-signal-crimson text-black hover:text-white rounded-full flex items-center justify-center shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-10" type="button">
+                  <span class="material-symbols-outlined text-[20px] ml-0.5">play_arrow</span>
+                </button>
+              </div>
+              <div class="flex flex-col mt-2.5">
+                <div class="flex items-center justify-between text-neutral-500 font-mono text-[10px] tracking-wider uppercase mb-1">
+                  <span class="">15 JAN 2025</span>
+                  <span class="">DAEGU</span>
+                </div>
+                <a class="font-bold text-white text-[14px] leading-tight hover:text-signal-crimson transition-colors truncate mb-1" href="#">침묵의 나날 (Days of Silence)</a>
+                <a class="text-neutral-400 text-[13px] hover:text-white transition-colors truncate mb-2" href="#">야생화 (Wild Flowers)</a>
+                <div class="flex items-center justify-between font-mono text-[11px] pt-1.5 border-t border-[#1a1a1a]">
+                  <span class="text-neutral-400">ELECTRONIC</span>
+                  <span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: ARTISTS SECTION (Matching Attached Image https://lh3.googleusercontent.com/aida-public/AB6AXuAZ1MdHw43A6cX4rvtNHELeWGA_cacmh5L7lxGK6-OdjTedPcJOzHq8ZgIh1RmAWs-mxYnHlJsh7NW7yWzB0kvNOK3nc8Yh6sP1MSLu5iu8Lv1nCYqkZ3vrMzsW5qmLwf0vz5ofc1oz0UK4OYdrTXUTgs1rYhP2oOEe2nImBgICGls2zTiAIhGv3f_DGQ6RneCUKl3RLonGVYn_p6XRA4Jkn8M7jrWt6nRdH1t7qgtMulqRB07hhkKnLC2xvhi5bEFZ Exactly) -->
+      
+
+      <!-- Section 3: Discover Music By Genre -->
+      <section class="w-full px-4 md:px-8 py-10 md:py-14 border-b border-[#1c1c1c]" id="collection"><div class="flex flex-col lg:flex-row lg:items-end justify-between mb-8 pb-4 border-b border-[#1c1c1c] gap-4"><div><h2 class="font-bold text-[22px] md:text-[28px] text-white tracking-tight uppercase font-sans">COLLECTION</h2><div class="relative flex items-center mt-2.5 max-w-md w-full border border-[#262626] bg-[#0c0c0c] px-2.5 py-1.5 focus-within:border-white transition-colors"><span class="material-symbols-outlined text-[16px] text-neutral-500 mr-2 shrink-0">search</span><input type="text" placeholder="아티스트, 앨범, 트랙 검색..." class="bg-transparent border-0 p-0 text-xs font-mono text-neutral-200 placeholder:text-neutral-500 focus:outline-none focus:ring-0 w-full"><button type="button" class="text-neutral-500 hover:text-white transition-colors ml-1.5 shrink-0" title="검색"><span class="material-symbols-outlined text-[14px]">arrow_forward</span></button></div></div><div class="flex flex-wrap items-center gap-3 relative"><div class="flex items-center space-x-1.5 font-mono text-[11px]"><button id="collection-tab-all" class="px-3 py-1.5 bg-white text-black font-bold uppercase transition-colors" onclick="document.getElementById('genre-dropdown-menu').classList.add('hidden'); this.className='px-3 py-1.5 bg-white text-black font-bold uppercase transition-colors'; document.getElementById('collection-genre-btn').className='px-3 py-1.5 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white uppercase transition-colors flex items-center gap-1';">ALL</button><div class="relative inline-block"><button id="collection-genre-btn" type="button" onclick="document.getElementById('genre-dropdown-menu').classList.toggle('hidden')" class="px-3 py-1.5 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white uppercase transition-colors flex items-center gap-1"><span id="selected-genre-label" class="">GENRE</span><span class="material-symbols-outlined text-[14px]">expand_more</span></button><div id="genre-dropdown-menu" class="hidden absolute right-0 top-full mt-1.5 w-56 bg-[#0a0a0a] border border-[#2a2a2a] shadow-2xl p-2 z-50 grid grid-cols-2 gap-1 font-mono text-[11px]"><button type="button" onclick="selectGenre('Ambient')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Ambient</button><button type="button" onclick="selectGenre('Drone')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Drone</button><button type="button" onclick="selectGenre('Experimental')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Experimental</button><button type="button" onclick="selectGenre('Noise')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Noise</button><button type="button" onclick="selectGenre('Post-Punk')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Post-Punk</button><button type="button" onclick="selectGenre('Lo-Fi')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Lo-Fi</button><button type="button" onclick="selectGenre('Electronic')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Electronic</button><button type="button" onclick="selectGenre('Avant-Rock')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Avant-Rock</button><button type="button" onclick="selectGenre('Techno')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Techno</button><button type="button" onclick="selectGenre('Hyperpop')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Hyperpop</button><button type="button" onclick="selectGenre('Indie Folk')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Indie Folk</button><button type="button" onclick="selectGenre('Field Rec')" class="text-left px-2 py-1 text-neutral-400 hover:text-white hover:bg-[#161616] transition-colors truncate">Field Rec</button></div></div></div><div class="flex items-center border border-[#262626] font-mono text-[11px] divide-x divide-[#262626]"><button class="px-2.5 py-1 text-white bg-[#141414]">최신순</button><button class="px-2.5 py-1 text-neutral-500 hover:text-white">인기순</button></div></div></div><div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"><div class="lg:col-span-7"><div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="collection-grid"><article class="flex flex-col bg-[#080808] border border-white p-2.5 cursor-pointer group transition-all duration-200" onclick="updateCollectionShowcase(this)" data-artist="김남윤 (Kim Namyoon)" data-catalog="KOHAR-042 // SEOUL" data-date="2025.02.09" data-desc="앰비언트 사운드스케이프와 공간의 반향을 기록한 김남윤의 마스터피스. 필드 마이크와 빈티지 릴투릴 테이프를 통과한 따뜻하고 아련한 잔향." data-format="12&quot; Vinyl / Cassette / Digital FLAC" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuDVcjdBVYwNT2ZWTaZvU3u3w7-5EKjXP1ZgQMbbexEE1XbPwyo3b1g5blfyyeDMbIAvALfw8oy0euX5OC8OFTC8Ax2PDixT5MGnWRtnP7VuFWztWKg3o6LBZ-Bu2pNJVZVFxWHIQUmXD4ZsZMzEQcWwpXgxM2THB7n2J_oY_uHaUBGHKdWKEXHvkq4eoA0lzL3c-UmhuAIGW0BWMLfCEvYNdsXHVa42E8lU23HNw09ZLnWbzRumv5Q" data-price="₩12,000" data-title="《파라클레토스》를 위한 음악" data-tracks="1. 프롤로그 (Prologue)·02:44|2. 파라클레토스 (Who Stands Beside)·06:12|3. 침묵의 진폭 (Amplitude of Silence)·04:38|4. 에필로그 (Epilogue)·03:15"><div class="relative aspect-square w-full bg-black overflow-hidden mb-2"><img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVcjdBVYwNT2ZWTaZvU3u3w7-5EKjXP1ZgQMbbexEE1XbPwyo3b1g5blfyyeDMbIAvALfw8oy0euX5OC8OFTC8Ax2PDixT5MGnWRtnP7VuFWztWKg3o6LBZ-Bu2pNJVZVFxWHIQUmXD4ZsZMzEQcWwpXgxM2THB7n2J_oY_uHaUBGHKdWKEXHvkq4eoA0lzL3c-UmhuAIGW0BWMLfCEvYNdsXHVa42E8lU23HNw09ZLnWbzRumv5Q"><span class="absolute top-1.5 left-1.5 bg-black/90 text-accent-amber font-mono text-[9px] px-1 py-0.5 uppercase tracking-wider border border-neutral-800">STAFF CHOICE</span><span class="absolute bottom-2 right-2 w-7 h-7 bg-white group-hover:bg-signal-crimson text-black group-hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">play_arrow</span></span></div><h4 class="text-white font-bold text-[13px] leading-tight truncate group-hover:text-signal-crimson">《파라클레토스》를 위한 음악</h4><span class="text-neutral-400 text-[12px] truncate">김남윤</span><div class="flex items-center justify-between font-mono text-[11px] mt-1.5 pt-1.5 border-t border-[#1a1a1a]"><span class="text-neutral-500 text-[10px]">VINYL / DIG</span><span class="text-white font-bold">₩12,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span></div></article><article class="flex flex-col bg-[#080808] border border-[#1a1a1a] hover:border-neutral-500 p-2.5 cursor-pointer group transition-all duration-200" onclick="updateCollectionShowcase(this)" data-artist="김남윤 (Kim Namyoon)" data-catalog="KOHAR-041 // SEOUL" data-date="2025.02.14" data-desc="한강 다리 위를 오가는 도시의 야경과 새벽녘의 차가운 공기를 담은 미니멀 앰비언트 사운드스케이프 앨범." data-format="Cassette Tape + Lossless Digital" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuBI6vuuqqvZ7HmqdXg7f32cCAuNbGJ-oWzIHvisVZvOd7j85inK1gWVlTlwVn1LV4rBiB9EnfN-EufCTg2Vq1cgppaZDz49eb64icL1CjLwagx0xYanb-rpfJwhVlZ48k8Vl4OitY_BhMJTVOBeHTaJMy0p53W5hgK6Gz7mZYKPEBVWq_V51fDkulagsXERd1I2fefLQI5Ch8hRsMX4EK7sifBIKeEuInskpyMj-l7aCNCAhnGF-Xg" data-price="₩11,000" data-title="《두 앵커》를 위한 음악" data-tracks="1. 두 앵커 (Two Anchors)·04:20|2. 강변의 새벽 (Riverside Dawn)·05:15|3. 네온과 물결 (Neon Reflection)·03:52|4. 잔향 (Remains)·02:40"><div class="relative aspect-square w-full bg-black overflow-hidden mb-2"><img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBI6vuuqqvZ7HmqdXg7f32cCAuNbGJ-oWzIHvisVZvOd7j85inK1gWVlTlwVn1LV4rBiB9EnfN-EufCTg2Vq1cgppaZDz49eb64icL1CjLwagx0xYanb-rpfJwhVlZ48k8Vl4OitY_BhMJTVOBeHTaJMy0p53W5hgK6Gz7mZYKPEBVWq_V51fDkulagsXERd1I2fefLQI5Ch8hRsMX4EK7sifBIKeEuInskpyMj-l7aCNCAhnGF-Xg"><span class="absolute top-1.5 left-1.5 bg-black/90 text-white font-mono text-[9px] px-1 py-0.5 uppercase tracking-wider border border-neutral-800">CASSETTE</span><span class="absolute bottom-2 right-2 w-7 h-7 bg-white group-hover:bg-signal-crimson text-black group-hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">play_arrow</span></span></div><h4 class="text-white font-bold text-[13px] leading-tight truncate group-hover:text-signal-crimson">《두 앵커》를 위한 음악</h4><span class="text-neutral-400 text-[12px] truncate">김남윤</span><div class="flex items-center justify-between font-mono text-[11px] mt-1.5 pt-1.5 border-t border-[#1a1a1a]"><span class="text-neutral-500 text-[10px]">TAPE / DIG</span><span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span></div></article><article class="flex flex-col bg-[#080808] border border-[#1a1a1a] hover:border-neutral-500 p-2.5 cursor-pointer group transition-all duration-200" onclick="updateCollectionShowcase(this)" data-artist="이성훈 (Lee Seonghoon)" data-catalog="KOHAR-039 // BUSAN" data-date="2025.02.02" data-desc="부산을 거점으로 활동하는 노이즈 아티스트 이성훈의 비가역적 시간성과 질감을 포착한 인더스트리얼 드론 프로젝트." data-format="Cassette + Digital WAV/FLAC" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuCrDnqNqC4aXwiY-6n41f_0xeKXfEnD-7WXqNsPIu98cTZxgq4f4ETHmQyVD8vFlMmGIX6s9ParKtdJzwR8OtQlPPTedUuAKLUvFNJKhpDmU02kPDO6NzksQcmcJqSTwmaITrPdcBq9mkq061EAfUgHnoukyoi-z-ehGJTJMUC1Qu9dQD4URbfSmxyGM6x_UaeKXaKR1tUP-aZ3XlEiwjnEtc-hUYVvID3Gz6rbkyF3UG_htfJp36I" data-price="₩10,000" data-title="비가역 (Irreversible)" data-tracks="1. 빙벽의 균열 (Glacial Rift)·05:12|2. 비가역성 (Irreversibility)·07:44|3. 표류하는 얼음 (Drifting Ice)·04:10"><div class="relative aspect-square w-full bg-black overflow-hidden mb-2"><img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrDnqNqC4aXwiY-6n41f_0xeKXfEnD-7WXqNsPIu98cTZxgq4f4ETHmQyVD8vFlMmGIX6s9ParKtdJzwR8OtQlPPTedUuAKLUvFNJKhpDmU02kPDO6NzksQcmcJqSTwmaITrPdcBq9mkq061EAfUgHnoukyoi-z-ehGJTJMUC1Qu9dQD4URbfSmxyGM6x_UaeKXaKR1tUP-aZ3XlEiwjnEtc-hUYVvID3Gz6rbkyF3UG_htfJp36I"><span class="absolute top-1.5 left-1.5 bg-black/90 text-white font-mono text-[9px] px-1 py-0.5 uppercase tracking-wider border border-neutral-800">NOISE</span><span class="absolute bottom-2 right-2 w-7 h-7 bg-white group-hover:bg-signal-crimson text-black group-hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">play_arrow</span></span></div><h4 class="text-white font-bold text-[13px] leading-tight truncate group-hover:text-signal-crimson">비가역 (Irreversible)</h4><span class="text-neutral-400 text-[12px] truncate">이성훈</span><div class="flex items-center justify-between font-mono text-[11px] mt-1.5 pt-1.5 border-t border-[#1a1a1a]"><span class="text-neutral-500 text-[10px]">DRONE / TAPE</span><span class="text-white font-bold">₩10,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span></div></article><article class="flex flex-col bg-[#080808] border border-[#1a1a1a] hover:border-neutral-500 p-2.5 cursor-pointer group transition-all duration-200" onclick="updateCollectionShowcase(this)" data-artist="Kuang Program (쾅프로그램)" data-catalog="KOHAR-035 // SEOUL" data-date="2025.01.28" data-desc="한국 인디 펑크 씬을 뒤흔든 쾅프로그램의 2025 리마스터 에디션. 분노와 긴장감이 교차하는 날카로운 베이스와 드럼의 격돌." data-format="12&quot; Vinyl Remaster / Digital" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuBFULSHXbAuv3dN6IjIvtDwNk96pIr3e2OyL5hRBiP5DcwUfy3Hg8dNlKqvgQwIqiHVDpq0mpiEoA1J0c-8gz0IwD_ektldUp8r7zoA96oqOh4Pm04NiTJdjapmDXakZGZ5S3CwUopjGNdO3nm3kGB0horL3s1p59oh0jYENAcz0ktArG6Ocinl18ap3EP_ZTQcghrMZYEBd2kse13MpcOFsUoG37RlwKPMVcP9nEO9QohGAgqhooM" data-price="₩11,000" data-title="Burning" data-tracks="1. 불꽃 속에서 (Inside Fire)·03:12|2. Burning·04:45|3. 잿더미 (Ashes)·03:50|4. 탈출 (Breakout)·02:58"><div class="relative aspect-square w-full bg-black overflow-hidden mb-2"><img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFULSHXbAuv3dN6IjIvtDwNk96pIr3e2OyL5hRBiP5DcwUfy3Hg8dNlKqvgQwIqiHVDpq0mpiEoA1J0c-8gz0IwD_ektldUp8r7zoA96oqOh4Pm04NiTJdjapmDXakZGZ5S3CwUopjGNdO3nm3kGB0horL3s1p59oh0jYENAcz0ktArG6Ocinl18ap3EP_ZTQcghrMZYEBd2kse13MpcOFsUoG37RlwKPMVcP9nEO9QohGAgqhooM"><span class="absolute top-1.5 left-1.5 bg-signal-crimson text-white font-mono text-[9px] px-1 py-0.5 uppercase tracking-wider font-bold">REMASTER</span><span class="absolute bottom-2 right-2 w-7 h-7 bg-white group-hover:bg-signal-crimson text-black group-hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">play_arrow</span></span></div><h4 class="text-white font-bold text-[13px] leading-tight truncate group-hover:text-signal-crimson">Burning</h4><span class="text-neutral-400 text-[12px] truncate">Kuang Program</span><div class="flex items-center justify-between font-mono text-[11px] mt-1.5 pt-1.5 border-t border-[#1a1a1a]"><span class="text-neutral-500 text-[10px]">POST-PUNK</span><span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span></div></article><article class="flex flex-col bg-[#080808] border border-[#1a1a1a] hover:border-neutral-500 p-2.5 cursor-pointer group transition-all duration-200" onclick="updateCollectionShowcase(this)" data-artist="nuhrokenteeth" data-catalog="KOHAR-032 // INCHEON" data-date="2025.01.21" data-desc="카세트테이프 특유의 히스 노이즈와 서정적인 멜로디가 녹아든 로우파이 인디 사운드." data-format="Limited CD + Digital Album" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuB13Gx4K9RfKlgRztYKYpw00NNC2YurtklJBuP7qiHcAP17LWkDk-XYNcUOms0uQqk32aM7LbkWOO7oVmleUJdTy2pFxmdJdKUZQVWc2ln6TxqLuvCESsDNbJjsnVFc-njrSvSxGCtOtJN64B18Rhk0BfNbFSK0p89tJgi6KvOsFnweaPvsExVYYQEUX4D5_3vmuZHhP9Gu3vu0kFmZt9dRbz8nDCW8UZvItxS_KQZYGddh2imDHFQ" data-price="₩9,000" data-title="1 2 3" data-tracks="1. 전신주 위의 새 (Wire Birds)·02:18|2. 1 2 3·03:40|3. 잊혀진 약속 (Forgotten)·04:02"><div class="relative aspect-square w-full bg-black overflow-hidden mb-2"><img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB13Gx4K9RfKlgRztYKYpw00NNC2YurtklJBuP7qiHcAP17LWkDk-XYNcUOms0uQqk32aM7LbkWOO7oVmleUJdTy2pFxmdJdKUZQVWc2ln6TxqLuvCESsDNbJjsnVFc-njrSvSxGCtOtJN64B18Rhk0BfNbFSK0p89tJgi6KvOsFnweaPvsExVYYQEUX4D5_3vmuZHhP9Gu3vu0kFmZt9dRbz8nDCW8UZvItxS_KQZYGddh2imDHFQ"><span class="absolute top-1.5 left-1.5 bg-black/90 text-white font-mono text-[9px] px-1 py-0.5 uppercase tracking-wider border border-neutral-800">LO-FI</span><span class="absolute bottom-2 right-2 w-7 h-7 bg-white group-hover:bg-signal-crimson text-black group-hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">play_arrow</span></span></div><h4 class="text-white font-bold text-[13px] leading-tight truncate group-hover:text-signal-crimson">1 2 3</h4><span class="text-neutral-400 text-[12px] truncate">nuhrokenteeth</span><div class="flex items-center justify-between font-mono text-[11px] mt-1.5 pt-1.5 border-t border-[#1a1a1a]"><span class="text-neutral-500 text-[10px]">LO-FI / INDIE</span><span class="text-white font-bold">₩9,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span></div></article><article class="flex flex-col bg-[#080808] border border-[#1a1a1a] hover:border-neutral-500 p-2.5 cursor-pointer group transition-all duration-200" onclick="updateCollectionShowcase(this)" data-artist="야생화 (Wild Flowers)" data-catalog="KOHAR-030 // DAEGU" data-date="2025.01.15" data-desc="신스 팝과 모듈러 신서사이저의 즉흥 연주로 빚어낸 실험적 전자음악 사운드 아카이브." data-format="Digital Audio FLAC 24b" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuB6j9nyrFreIuZaFrO72kJ8eZL8WIAml6nsVydd6QZkt206sLs-mPIBBzXzJ8ICa11seE4eDjIoZcC1fE6B6QPl1kXGg2j5srv0hWz94IWhOpGMtxEoSTprdgP-iYbg8e2-sy9ECzB5_Cj7dXzikvNuZqh0lSaLjYlh1s8-y497MY7aX2urgqxGRwMCrJy3kiSiVjcz0hLmaTcKkm_7F0hAOWyTHUZzCF8fAyUR894moPNmWMc85AA" data-price="₩11,000" data-title="침묵의 나날 (Days of Silence)" data-tracks="1. 미지의 정원 (Garden)·03:45|2. 침묵의 나날 (Silence Days)·05:20|3. 메아리 (Resonance)·04:12"><div class="relative aspect-square w-full bg-black overflow-hidden mb-2"><img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6j9nyrFreIuZaFrO72kJ8eZL8WIAml6nsVydd6QZkt206sLs-mPIBBzXzJ8ICa11seE4eDjIoZcC1fE6B6QPl1kXGg2j5srv0hWz94IWhOpGMtxEoSTprdgP-iYbg8e2-sy9ECzB5_Cj7dXzikvNuZqh0lSaLjYlh1s8-y497MY7aX2urgqxGRwMCrJy3kiSiVjcz0hLmaTcKkm_7F0hAOWyTHUZzCF8fAyUR894moPNmWMc85AA"><span class="absolute top-1.5 left-1.5 bg-black/90 text-white font-mono text-[9px] px-1 py-0.5 uppercase tracking-wider border border-neutral-800">ELECTRONIC</span><span class="absolute bottom-2 right-2 w-7 h-7 bg-white group-hover:bg-signal-crimson text-black group-hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">play_arrow</span></span></div><h4 class="text-white font-bold text-[13px] leading-tight truncate group-hover:text-signal-crimson">침묵의 나날 (Days of Silence)</h4><span class="text-neutral-400 text-[12px] truncate">야생화 (Wild Flowers)</span><div class="flex items-center justify-between font-mono text-[11px] mt-1.5 pt-1.5 border-t border-[#1a1a1a]"><span class="text-neutral-500 text-[10px]">ELECTRONIC</span><span class="text-white font-bold">₩11,000 <span class="text-[10px] text-neutral-400 font-normal lowercase">or more</span></span></div></article></div></div><div class="lg:col-span-5"><div class="bg-[#080808] border border-[#222222] p-5 sticky top-20 flex flex-col gap-4"><div class="flex flex-col sm:flex-row gap-5"><div class="relative w-36 sm:w-44 aspect-square bg-black shrink-0 overflow-hidden border border-[#262626]"><img id="showcase-img" class="w-full h-full object-cover transition-opacity duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVcjdBVYwNT2ZWTaZvU3u3w7-5EKjXP1ZgQMbbexEE1XbPwyo3b1g5blfyyeDMbIAvALfw8oy0euX5OC8OFTC8Ax2PDixT5MGnWRtnP7VuFWztWKg3o6LBZ-Bu2pNJVZVFxWHIQUmXD4ZsZMzEQcWwpXgxM2THB7n2J_oY_uHaUBGHKdWKEXHvkq4eoA0lzL3c-UmhuAIGW0BWMLfCEvYNdsXHVa42E8lU23HNw09ZLnWbzRumv5Q"><span class="absolute top-2 left-2 bg-black/85 text-accent-amber font-mono text-[9px] px-1.5 py-0.5 tracking-widest border border-neutral-800 uppercase">CURATOR PICK</span></div><div class="flex flex-col justify-between min-w-0 flex-1"><div><div class="flex items-center gap-2 font-mono text-[10px] text-neutral-500 uppercase mb-1"><span id="showcase-catalog" class="">KOHAR-042 // SEOUL</span><span class="">•</span><span id="showcase-date" class="">2025.02.09</span></div><h3 id="showcase-title" class="text-white font-bold text-[18px] md:text-[20px] leading-tight mb-1 font-sans">《파라클레토스》를 위한 음악</h3><a id="showcase-artist" href="#" class="text-neutral-400 hover:text-white text-[13px] block mb-2 transition-colors">김남윤 (Kim Namyoon)</a><div id="showcase-format" class="inline-block font-mono text-[10px] text-neutral-400 border border-[#262626] bg-black px-2 py-0.5 uppercase tracking-wider mb-2">12" Vinyl / Cassette / Digital</div></div><div class="flex items-baseline gap-2"><span class="text-neutral-500 font-mono text-[11px]">BUY PRICE:</span><span id="showcase-price" class="text-white font-bold font-mono text-[18px]">₩12,000 <span class="text-[12px] text-neutral-400 font-normal lowercase">or more</span></span></div></div></div><div class="bg-[#0c0c0c] border border-[#1a1a1a] p-3 flex flex-col gap-2.5"><div class="flex items-center justify-between text-neutral-400 text-[11px] font-mono"><span class="text-white font-bold flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-signal-crimson animate-pulse"></span>PREVIEWING AUDIO</span><div class="flex items-center gap-2 text-neutral-400"><span class="material-symbols-outlined text-[14px]">volume_up</span><div class="w-12 h-1 bg-[#222222] rounded-full overflow-hidden"><div class="h-full w-[70%] bg-neutral-400"></div></div></div></div><div class="flex items-center gap-2 font-mono text-[10px] text-neutral-500 w-full"><span class="w-8 text-left text-neutral-400">02:44</span><div class="relative flex-1 h-1.5 bg-[#222222] rounded-full overflow-hidden cursor-pointer group"><div class="absolute left-0 top-0 h-full w-[44%] bg-signal-crimson group-hover:bg-white transition-colors"></div></div><span class="w-8 text-right text-neutral-500">06:12</span></div><div class="flex items-center justify-center pt-1 border-t border-[#141414]"><div class="flex items-center gap-4 text-neutral-400"><button class="hover:text-white transition-colors p-1 flex items-center justify-center" title="이전 트랙" type="button"><span class="material-symbols-outlined text-[16px]">skip_previous</span></button><button aria-label="Play or pause preview" class="w-7 h-7 rounded-full bg-white hover:bg-signal-crimson text-black hover:text-white flex items-center justify-center transition-colors" type="button"><span class="material-symbols-outlined text-[16px] ml-0.5">play_arrow</span></button><button class="hover:text-white transition-colors p-1 flex items-center justify-center" title="다음 트랙" type="button"><span class="material-symbols-outlined text-[16px]">skip_next</span></button></div></div></div><div><div class="flex items-center justify-between font-mono text-[11px] text-neutral-400 uppercase tracking-wider pb-1.5 border-b border-[#1c1c1c] mb-2"><span class="text-white font-medium">Tracklist</span><span class="text-neutral-500 text-[10px]">FULL STREAMING ARCHIVE</span></div><div id="showcase-tracklist" class="flex flex-col divide-y divide-[#141414] text-[12px]"><div class="py-1.5 flex items-center justify-between hover:bg-[#121212] px-1 group cursor-pointer"><div class="flex items-center gap-2"><span class="font-mono text-signal-crimson text-[10px]">01</span><span class="text-white font-medium">프롤로그 (Prologue)</span></div><div class="flex items-center gap-2 font-mono text-neutral-500 text-[10px]"><span class="">02:44</span><span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-white">play_arrow</span></div></div><div class="py-1.5 flex items-center justify-between hover:bg-[#121212] px-1 group cursor-pointer"><div class="flex items-center gap-2"><span class="font-mono text-neutral-500 text-[10px]">02</span><span class="text-neutral-300">파라클레토스 (Who Stands Beside)</span></div><div class="flex items-center gap-2 font-mono text-neutral-500 text-[10px]"><span class="">06:12</span><span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-white">play_arrow</span></div></div><div class="py-1.5 flex items-center justify-between hover:bg-[#121212] px-1 group cursor-pointer"><div class="flex items-center gap-2"><span class="font-mono text-neutral-500 text-[10px]">03</span><span class="text-neutral-300">침묵의 진폭 (Amplitude of Silence)</span></div><div class="flex items-center gap-2 font-mono text-neutral-500 text-[10px]"><span class="">04:38</span><span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-white">play_arrow</span></div></div><div class="py-1.5 flex items-center justify-between hover:bg-[#121212] px-1 group cursor-pointer"><div class="flex items-center gap-2"><span class="font-mono text-neutral-500 text-[10px]">04</span><span class="text-neutral-300">에필로그 (Epilogue)</span></div><div class="flex items-center gap-2 font-mono text-neutral-500 text-[10px]"><span class="">03:15</span><span class="material-symbols-outlined text-[14px] text-neutral-400 group-hover:text-white">play_arrow</span></div></div></div></div><div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-[#1c1c1c]"><button class="flex-1 py-2.5 bg-white hover:bg-signal-crimson text-black hover:text-white font-mono text-[11px] font-bold uppercase tracking-wider transition-colors text-center" type="button">장바구니 담기</button><button class="py-2.5 px-4 bg-[#141414] hover:bg-neutral-800 text-neutral-200 border border-[#262626] font-mono text-[11px] uppercase tracking-wider transition-colors text-center" type="button">BUY DIGITAL</button></div></div></div></div></section><section class="w-full px-4 md:px-8 py-10 md:py-14 border-b border-[#1c1c1c]" id="artists"><div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-8 pb-3 border-b border-[#1c1c1c] gap-2"><div class="flex flex-wrap items-baseline gap-3"><h2 class="font-bold text-[22px] md:text-[28px] text-white tracking-tight uppercase font-sans">ARTISTS</h2></div><div class="flex items-center gap-3 font-mono text-[11px] text-neutral-500 tracking-wider uppercase"><span class="text-neutral-400">A - Z (가나다순 정렬)</span><span class="text-neutral-700">/</span><span class="text-white">10 ARTISTS </span></div></div><div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-10"><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-white mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300 flex items-center justify-center p-2"><div class="flex flex-col items-center justify-center font-black tracking-tighter text-black leading-[0.8] select-none font-sans" style="transform: scaleY(1.4);"><span class="text-[26px] sm:text-[30px] tracking-[-0.05em]">WALL</span><span class="text-[26px] sm:text-[30px] tracking-[-0.05em]">WALL</span></div></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">월월</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">WALL WALL</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-white mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300 flex items-center justify-center p-2"><svg class="w-3/5 h-3/5 text-black" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 100 100"><path d="M42 28 C42 20, 58 20, 58 28 C58 35, 42 35, 42 42 C40 50, 48 55, 48 68 L42 85 M58 42 C60 50, 52 55, 52 68 L58 85 M35 48 C45 42, 55 42, 65 48 M40 38 C32 45, 30 52, 34 60 M60 38 C68 45, 70 52, 66 60"></path><circle cx="46" cy="24" r="2.5" fill="black"></circle><circle cx="54" cy="24" r="2.5" fill="black"></circle></svg></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">모리벳</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">khc/moribet</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300"><img alt="헬리비젼 (Hellivision)" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6j9nyrFreIuZaFrO72kJ8eZL8WIAml6nsVydd6QZkt206sLs-mPIBBzXzJ8ICa11seE4eDjIoZcC1fE6B6QPl1kXGg2j5srv0hWz94IWhOpGMtxEoSTprdgP-iYbg8e2-sy9ECzB5_Cj7dXzikvNuZqh0lSaLjYlh1s8-y497MY7aX2urgqxGRwMCrJy3kiSiVjcz0hLmaTcKkm_7F0hAOWyTHUZzCF8fAyUR894moPNmWMc85AA"></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">헬리비젼</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">Hellivision</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300"><img alt="애리 (AIRY)" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABwFMfwBp9CGCRBeSHLuby8YcHzXFBhWCMJQz-DtDA87Mk4cAdxEVfYjpCXpisBLcYXKCGZ8ocxa4JWEIh0zeub4EomOvGNTlqevKSanoEWrRHcfqmjFD-8k-OiN3QgDoBClxBLif-aNdqdGrmVCg_poKx9nuQreEhh2Hid9FkmOWdCvTvTz_4TnKLSBGRgQzJxp57WB5s_NgucZ5OXZIO5YPsTy-T3F0RZbrPA9wcRJe9p8BJIqs"></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">애리</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">AIRY</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300"><img alt="한상철 (Han Sangchol)" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCbPmHEa8F-BmdkCuLHKV9GCDclmiyKbZujHQTLrR_gRMJ_M6kBMDwNwj5mASrccaVBXDqHn1LZXJ3n1JyaWVPnlhP9ygwsPvCwAv0UHpsPWouHTvOUXqjkohK6ezIMCQpZ9Qkxf_f_X5u0qn0nhqAU4r1MUX_xY1Sr1ZUdPS3nqAnULfMCOYAzhvOpc88igGtzi-jjAPks4UxjyOzFVnBIMEVfKq4lmkMeQYfx-47UfW05xZH6hk"></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">한상철</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">Han Sangchol</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300"><img alt="박다함 (Park Daham)" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrDnqNqC4aXwiY-6n41f_0xeKXfEnD-7WXqNsPIu98cTZxgq4f4ETHmQyVD8vFlMmGIX6s9ParKtdJzwR8OtQlPPTedUuAKLUvFNJKhpDmU02kPDO6NzksQcmcJqSTwmaITrPdcBq9mkq061EAfUgHnoukyoi-z-ehGJTJMUC1Qu9dQD4URbfSmxyGM6x_UaeKXaKR1tUP-aZ3XlEiwjnEtc-hUYVvID3Gz6rbkyF3UG_htfJp36I"></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">박다함</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">Park Daham</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300 flex items-center justify-center p-3"><svg class="w-3/4 h-3/4" viewBox="0 0 100 100"><polygon points="50,15 68,26 68,48 50,58 32,48 32,26" fill="#3B82F6"></polygon><rect x="20" y="52" width="24" height="24" rx="2" transform="rotate(-10 32 64)" fill="#EF4444"></rect><path d="M58,52 C65,48 76,52 82,60 C88,68 84,78 74,80 C64,82 56,72 58,52 Z" fill="#10B981"></path></svg></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">야생화</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">Wild Flowers</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300"><img alt="씨피카 (CIFIKA)" class="w-full h-full object-cover grayscale contrast-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5qd2pOIVpx9qb5qFMxZBguxuybLZDie9_GZbHoiuxe6lI3o-nrf3t32PFrCa8LAgkvZHrbWGfeZoWYFsB2wvAkOjBH_djPpmg_6y_bdL4Wh1yDR1jAfzfz7_qoEbLoK7zZ0nDZo5yvYpY_c6buFv911RCooCgMoLJfo_KMBtsbbO8692SXFV35_6eH95nmMpGY55t7ZEJdaepRGAQzY5uTul7DVGSJCIE2AMBjPnLv99fPVwYE3Q"></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">씨피카</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">CIFIKA</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300"><img alt="이성훈 (Lee Seonghoon)" class="w-full h-full object-cover grayscale contrast-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpOZlKpE6jGd-eRYc9-DrjedRVTRPxot7FcfBaAUqwmcDsy-1kDpY3a-JC0lP62_R6s3LPEIzxW6_qByLmYdyz98SFvSXCDxai0mxZlWFiJ-0vLX2EBCAjAMbZmtbjDfwcSB8CqGMWQ74z5OoeFeu0LjROU6WIUQ6sF-h-THr66dv2OKAX9oYfXAZZY5SiiSLDRMUX7K-xSCM1saFflo8wJ_SfoeMcNXwtUW13iv3jEwLy8k8nzIE"></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">이성훈</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">Lee Seonghoon</span></a><a class="flex flex-col items-center text-center group cursor-pointer" href="#"><div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 overflow-hidden border border-[#2e2e2e] bg-[#0c0c0c] mb-3 shadow-lg group-hover:border-white group-hover:scale-105 transition-all duration-300"><img alt="실리카겔 (Silica Gel)" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7_pUCNw-83x6SND95ns6SraVvPU5pahE750Uk3MIbSCsUCdj7GYzIsv6B-tyxFM3vUJTqJwFrlUtbAucE1BVtFtBhKaKUCZcpTnlNeO9ly3O5DqlWcz7o35Db9O8KkXPdrD8qYNYsik2AIWQ6QF5YqSfLM_r0o-7f1q_NITZoM5aj0Jgh4GB9DxXPOFOfExbGQjWpcfz6GJ-VZT5qSkZ1_htQlakQPl6rH21dYrNOe1BaOahS2JM"></div><span class="text-white font-bold text-[14px] group-hover:text-signal-crimson transition-colors">실리카겔</span><span class="text-neutral-400 font-mono text-[11px] tracking-wider mt-0.5">Silica Gel</span></a></div></section>
+
+      <!-- Section 4: Staff Pick of the Week -->
+      
+
+      <!-- Section 5: Related Magazine -->
+      <section class="w-full px-4 md:px-8 py-10 md:py-14 border-b border-[#1c1c1c]" id="magazine">
+        <div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-8 pb-3 border-b border-[#1c1c1c] gap-2"><div class="flex flex-col md:flex-row md:items-end justify-between w-full gap-4"><div><div class="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-1">KOREAHARLEM CULTURE</div><h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase font-sans">The Magazine</h2></div><div class="flex flex-wrap items-center gap-3"><div class="flex items-center space-x-1.5 text-xs font-mono"><button class="px-3 py-1 bg-white text-black font-bold">ALL</button><button class="px-3 py-1 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white">Music</button><button class="px-3 py-1 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white">Art</button><button class="px-3 py-1 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white">Movie</button></div><a class="font-mono text-[11px] uppercase tracking-wider text-neutral-400 hover:text-white transition-colors ml-2" href="#">VIEW ALL ARTICLES →</a></div></div></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <article class="bg-[#080808] border border-[#1a1a1a] flex flex-col group overflow-hidden">
+            <div class="relative w-full aspect-[16/10] overflow-hidden bg-black">
+              <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqBl8W_sIZcta420Kmef-O07zt3jsvvsNTxP8tu5Xx2clFpLo8hFKCoHKd-71tAHeVe6XkKLFNqtJlY1jxPGzbDkT4Wlh_AW2hhdfOIc525gYBOjwutKDfpl4ChsfKkscNhV49zz8t8g4C09UThpTxcyZwQFPImpf5IU8lgivsRGAVKy9eZLoSiyKkWbmhMomiqrxHLHJEd0jlcyyW953CKdeKN9UYGLQQhfTzR83O4wfg5XfnoY4">
+              <span class="absolute top-2.5 left-2.5 bg-black/90 text-white font-mono text-[10px] px-2 py-0.5 uppercase tracking-widest border border-neutral-800">INTERVIEW</span>
+            </div>
+            <div class="p-5 flex flex-col flex-1 justify-between">
+              <div>
+                <div class="flex items-center gap-2 mb-2 text-neutral-500 font-mono text-[10px] tracking-wider uppercase">
+                  <span class="">정우진</span><span class="">•</span><span class="">14 FEB 2025</span>
+                </div>
+                <h3 class="font-bold text-[16px] text-white group-hover:text-signal-crimson transition-colors leading-snug mb-2 font-sans">한국 언더그라운드 앰비언트의 최전선: 김남윤과의 대화</h3>
+                <p class="text-[13px] text-neutral-400 line-clamp-3 leading-relaxed">사운드 디자이너이자 프로듀서 김남윤이 고백하는 테이프 레코딩의 우연성과 백색 소음에 대하여.</p>
+              </div>
+              <div class="pt-4 mt-4 border-t border-[#141414] flex items-center justify-between text-neutral-400 group-hover:text-white font-mono text-[11px] tracking-wider uppercase">
+                <span class="">인터뷰 전문 읽기</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="bg-[#080808] border border-[#1a1a1a] flex flex-col group overflow-hidden">
+            <div class="relative w-full aspect-[16/10] overflow-hidden bg-black">
+              <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCeTaM0bi3NWqhktf2TXR0uu0CkVOXFNvIW_I4qmYocEW8-VhiP47bD1G1BiAjUuFn5qofjmXSS-bGAjQobKLGUrx6EmuSJjDdWBjegplLPL1Z0gtZgkvdL9AEhSkxX2jEYZieFmhbx1QIOGx-Veq0DVBESRN15bbnOoHo3iOW3_81PTjfYn5YyNsGgb192GzemFNY007SPbhCUEtWB20O9xOPEQlW7EmqMLL9U59F-5rZ9UmSbjA">
+              <span class="absolute top-2.5 left-2.5 bg-signal-crimson text-white font-mono text-[10px] px-2 py-0.5 uppercase tracking-widest font-bold">SCENE ESSAY</span>
+            </div>
+            <div class="p-5 flex flex-col flex-1 justify-between">
+              <div>
+                <div class="flex items-center gap-2 mb-2 text-neutral-500 font-mono text-[10px] tracking-wider uppercase">
+                  <span class="">한소희</span><span class="">•</span><span class="">08 FEB 2025</span>
+                </div>
+                <h3 class="font-bold text-[16px] text-white group-hover:text-signal-crimson transition-colors leading-snug mb-2 font-sans">노이즈와 서정의 충돌, 2025년 인디 씬의 단면</h3>
+                <p class="text-[13px] text-neutral-400 line-clamp-3 leading-relaxed">디지털 스트리밍의 말끔한 파형 속에서 갈증을 느끼는 세대들이 왜 다시 카세트테이프를 선택하는가.</p>
+              </div>
+              <div class="pt-4 mt-4 border-t border-[#141414] flex items-center justify-between text-neutral-400 group-hover:text-white font-mono text-[11px] tracking-wider uppercase">
+                <span class="">에세이 전문 읽기</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="bg-[#080808] border border-[#1a1a1a] flex flex-col group overflow-hidden">
+            <div class="relative w-full aspect-[16/10] overflow-hidden bg-black">
+              <img class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpOZlKpE6jGd-eRYc9-DrjedRVTRPxot7FcfBaAUqwmcDsy-1kDpY3a-JC0lP62_R6s3LPEIzxW6_qByLmYdyz98SFvSXCDxai0mxZlWFiJ-0vLX2EBCAjAMbZmtbjDfwcSB8CqGMWQ74z5OoeFeu0LjROU6WIUQ6sF-h-THr66dv2OKAX9oYfXAZZY5SiiSLDRMUX7K-xSCM1saFflo8wJ_SfoeMcNXwtUW13iv3jEwLy8k8nzIE">
+              <span class="absolute top-2.5 left-2.5 bg-black/90 text-white font-mono text-[10px] px-2 py-0.5 uppercase tracking-widest border border-neutral-800">CRITIQUE</span>
+            </div>
+            <div class="p-5 flex flex-col flex-1 justify-between">
+              <div>
+                <div class="flex items-center gap-2 mb-2 text-neutral-500 font-mono text-[10px] tracking-wider uppercase">
+                  <span class="">김도헌</span><span class="">•</span><span class="">29 JAN 2025</span>
+                </div>
+                <h3 class="font-bold text-[16px] text-white group-hover:text-signal-crimson transition-colors leading-snug mb-2 font-sans">쾅프로그램 《Burning》: 무감각을 태우는 음파의 저항</h3>
+                <p class="text-[13px] text-neutral-400 line-clamp-3 leading-relaxed">비타협적인 2인조 포스트펑크 밴드가 건네는 분노의 질감과 기념비적 사운드트랙.</p>
+              </div>
+              <div class="pt-4 mt-4 border-t border-[#141414] flex items-center justify-between text-neutral-400 group-hover:text-white font-mono text-[11px] tracking-wider uppercase">
+                <span class="">비평 전문 읽기</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Section 6: Merch & Physical Editions -->
+      <section class="w-full px-4 md:px-8 py-10 md:py-14 bg-black" id="merch">
+        <div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-8 pb-3 border-b border-[#1c1c1c] gap-2"><div class="flex flex-col md:flex-row md:items-end justify-between w-full gap-4"><div><h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase font-sans">music merch</h2></div><div class="flex flex-wrap items-center gap-3"><div class="flex items-center space-x-1.5 text-xs font-mono"><button class="px-3 py-1 bg-white text-black font-bold">ALL (5)</button><button class="px-3 py-1 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white">APPAREL</button><button class="px-3 py-1 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white">VINYL &amp; TAPE</button><button class="px-3 py-1 bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white">ZINE</button></div><span class="font-mono text-[10px] text-neutral-500 uppercase tracking-widest hidden sm:inline ml-2">LIMITED RUN</span></div></div></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-[#080808] border border-[#1a1a1a] p-4 flex flex-col justify-between group">
+            <div class="relative aspect-square w-full bg-black overflow-hidden mb-3">
+              <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvMW4Z3OyJHnYaKIj_Mp6JkHzc8Aj8oZX7SkZ56sWAjckcyWKc0LO-4TeanqDTvC2IhQDDNI5r9t0RPodQ43zZeq0EOpKODA4Ls_68UUjs6uA84C5FxYpy_07kXb8jxcq1IfGwiHq1YL7ODOSgK3DnmcqMPG9rGwuwZhifEgPvypeEQ-qXUp4kZTIrmJLJQHHp19mqceSnaXkZ-qziBBz8hB_jmmIJa5B3eN5ryuKgShzWjplDll8">
+              <span class="absolute top-2 left-2 bg-signal-crimson text-white font-mono text-[10px] px-1.5 py-0.5 tracking-wider uppercase font-bold">LIMITED 100 COPIES</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-mono text-[10px] text-neutral-500 mb-1 tracking-wider uppercase">K-CASSETTE-019 · TAPE</span>
+              <h4 class="font-bold text-[14px] text-white group-hover:text-signal-crimson transition-colors line-clamp-1 mb-1 font-sans">김남윤 《두 앵커》 C-46 카세트</h4>
+              <span class="text-[12px] text-neutral-400 mb-3">친필 넘버링 및 다운로드 코드 동봉</span>
+              <div class="flex items-center justify-between pt-2 border-t border-[#141414]">
+                <span class="font-mono text-[13px] font-bold text-white">₩22,000</span>
+                <button class="px-3 py-1.5 bg-white hover:bg-signal-crimson text-black hover:text-white font-mono text-[11px] uppercase tracking-wider font-bold transition-colors" type="button">담기</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[#080808] border border-[#1a1a1a] p-4 flex flex-col justify-between group">
+            <div class="relative aspect-square w-full bg-black overflow-hidden mb-3">
+              <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCT7PcOhkA6vVfHxQC1As0aLtibhVT4tZ7g5Uc9SWizIZwdqaHh7ZT9MTsGoRYFL6VZNE9KcWmmAFWSu_gsWA-CgENbkGOBINrq1BT8WNaW2wWBOqgwVY2B3jawXcjH-RqIRB0q9p2CXlaaNmdCZeiDWVUUq4XaTMDULAPSjv832nzs9B22_Ukb8FXWAG6NDUrjFZFhWYNRXhuWiguKeNeIMtuUfzOylSU8j2LUpKVwmGj-WrjIOxE">
+              <span class="absolute top-2 left-2 bg-black/90 border border-neutral-800 text-accent-amber font-mono text-[10px] px-1.5 py-0.5 tracking-wider uppercase">PRE-ORDER</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-mono text-[10px] text-neutral-500 mb-1 tracking-wider uppercase">KOHAR-LP-008 · 180G VINYL</span>
+              <h4 class="font-bold text-[14px] text-white group-hover:text-signal-crimson transition-colors line-clamp-1 mb-1 font-sans">쾅프로그램 《Burning》 12인치 LP</h4>
+              <span class="text-[12px] text-neutral-400 mb-3">아날로그 마스터링 게이트폴드 자켓</span>
+              <div class="flex items-center justify-between pt-2 border-t border-[#141414]">
+                <span class="font-mono text-[13px] font-bold text-white">₩42,000</span>
+                <button class="px-3 py-1.5 bg-white hover:bg-signal-crimson text-black hover:text-white font-mono text-[11px] uppercase tracking-wider font-bold transition-colors" type="button">예약구매</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[#080808] border border-[#1a1a1a] p-4 flex flex-col justify-between group">
+            <div class="relative aspect-square w-full bg-black overflow-hidden mb-3">
+              <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9wR8K79FtdNfNjhlhq0XjAyf3Vq-RZJ4jjBtYqH_3b4oAnsx7Bqt_WDuGxAz4tKNJExOcEV7sN0jwvrQvPXkEdSRvEYTh34lyT3gV69pCeRifeSHEXeahcsxQkA3KqxRZXRkrGtd9E0DdAZERV74xETqPEA7KoAlTTUdo3cKSzOtN_6CPVPjXBCICHeTghnQ8fOWp5X8Hgfgl80jvBy47f_tORVebBHzFLkwSDnkjxBKm5KVYyRs">
+              <span class="absolute top-2 left-2 bg-black/90 border border-neutral-800 text-white font-mono text-[10px] px-1.5 py-0.5 tracking-wider uppercase">RESTOCKED</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-mono text-[10px] text-neutral-500 mb-1 tracking-wider uppercase">APPAREL · COTTON 260G</span>
+              <h4 class="font-bold text-[14px] text-white group-hover:text-signal-crimson transition-colors line-clamp-1 mb-1 font-sans">Kohar 헤비웨이트 로고 티</h4>
+              <span class="text-[12px] text-neutral-400 mb-3">실크스크린 프린트 피그먼트 워싱</span>
+              <div class="flex items-center justify-between pt-2 border-t border-[#141414]">
+                <span class="font-mono text-[13px] font-bold text-white">₩38,000</span>
+                <button class="px-3 py-1.5 bg-white hover:bg-signal-crimson text-black hover:text-white font-mono text-[11px] uppercase tracking-wider font-bold transition-colors" type="button">담기</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[#080808] border border-[#1a1a1a] p-4 flex flex-col justify-between group">
+            <div class="relative aspect-square w-full bg-black overflow-hidden mb-3">
+              <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF0c6sE4h_f2n0m-YVf4W2Lq2p2sK3l3K8z9lK1m2N3b4V5c6X7z8A9s0D1f2G3h4J5k6L7m8N9b0V1c2X3z4A5s6D7f8G9h0J1k2L3m4N5b6V7c8X9z0A">
+              <span class="absolute top-2 left-2 bg-black/90 border border-neutral-800 text-signal-crimson font-mono text-[10px] px-1.5 py-0.5 tracking-wider uppercase">EDITION OF 50</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-mono text-[10px] text-neutral-500 mb-1 tracking-wider uppercase">PRINT · B2 POSTER</span>
+              <h4 class="font-bold text-[14px] text-white group-hover:text-signal-crimson transition-colors line-clamp-1 mb-1 font-sans">2025 을지로 라이브 실크스크린 포스터</h4>
+              <span class="text-[12px] text-neutral-400 mb-3">작가 직인 및 아티스트 친필 서명본</span>
+              <div class="flex items-center justify-between pt-2 border-t border-[#141414]">
+                <span class="font-mono text-[13px] font-bold text-white">₩28,000</span>
+                <button class="px-3 py-1.5 bg-white hover:bg-signal-crimson text-black hover:text-white font-mono text-[11px] uppercase tracking-wider font-bold transition-colors" type="button">담기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <section class="w-full px-4 md:px-8 py-10 md:py-14 border-t border-[#1c1c1c] bg-[#0a0a0a]" id="archive-submission"><div class="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-3 border-b border-[#1c1c1c] gap-4"><div><div class="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-1">SCENE DISPATCH &amp; ARCHIVE</div><h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase font-sans">ARCHIVE SUBMISSION</h2></div><span class="font-mono text-[11px] text-neutral-400 uppercase tracking-wider">언더그라운드 음원 / 공연 / 피지컬 릴리즈 제보</span></div><form id="archive-form" class="max-w-xl flex flex-col gap-4" onsubmit="event.preventDefault();"><div class="flex flex-col gap-1.5"><label class="font-mono text-[11px] uppercase tracking-wider text-neutral-400">아티스트 / 레이블명 (ARTIST / LABEL)</label><input id="input-artist" type="text" placeholder="예: 김남윤 / 오르카 사운드" class="bg-black border border-[#262626] p-2.5 text-xs text-neutral-200 placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors"></div><div class="flex flex-col gap-1.5"><label class="font-mono text-[11px] uppercase tracking-wider text-neutral-400">릴리즈 정보 / 스트리밍 링크 (RELEASE URL)</label><input id="input-link" type="text" placeholder="https://bandcamp.com/... 또는 Soundcloud" class="bg-black border border-[#262626] p-2.5 text-xs text-neutral-200 placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors"></div><div class="flex flex-col gap-1.5"><label class="font-mono text-[11px] uppercase tracking-wider text-neutral-400">소개 및 제보 내용 (DESCRIPTION)</label><textarea id="input-desc" rows="3" placeholder="음반 및 프로젝트에 대한 간략한 설명과 발매일을 입력해주세요." class="bg-black border border-[#262626] p-2.5 text-xs text-neutral-200 placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors"></textarea></div><button id="submit-archive-btn" type="button" onclick="openSubmissionModal(event)" class="w-full sm:w-auto self-start px-6 py-3 bg-white hover:bg-signal-crimson text-black hover:text-white font-mono text-[11px] font-bold uppercase tracking-wider transition-colors">제보 제출하기</button></form></section><footer class="w-full px-4 md:px-8 py-10 bg-[#050505] border-t border-[#1a1a1a] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-neutral-500 font-mono text-[11px]"><div class="flex flex-col items-start space-y-2"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBroidwfPKE1gHrB9QoMK7eUspoNHCeOtmG3_22yOlmISdd4vOIXQ1tlKjGGBfDL3ajK0RH-GQfIa_w79smxbcSXGL7RT-fx3d8cr-7Hy1tbKTw5vYHUyoQUNiGfgziu0i6xTtWRE976pZ9gP5cmEKV74DI7FxuAo3AE7OgXuLPeKrgNTxA6Hrz2_eB2YZ4E7JjcOADghRSa7PfHT49DdlMuUu7YWdQx1V6kgM19fveRu4nHunoXFVFeg0C1CPfV-MU" alt="koreaharlem" class="h-6 sm:h-7 w-auto object-contain"><p class="text-xs text-neutral-400 font-mono uppercase tracking-wider"><span class="text-white font-bold">RECORDING KOREAN CULTURE</span> AND.. ITS PHENOMENA: OUR LIVES</p><p class="text-[11px] text-neutral-500 max-w-lg font-sans pt-1">대한민국 서울 마포구 / 용산구 이태원 중심 언더그라운드 서브컬처 &amp; 피지컬 마스터 사운드 아카이브 플랫폼 koreaharlem.</p></div><div class="flex flex-col md:items-end space-y-2 pt-4 md:pt-0 border-t md:border-t-0 border-[#1a1a1a] w-full md:w-auto"><div class="flex items-center space-x-4 text-neutral-400 font-mono text-[11px]"><a href="#" class="hover:text-white transition-colors">Privacy Policy</a><span class="text-neutral-700">/</span><a href="#" class="hover:text-white transition-colors">Terms and Conditions</a><span class="text-neutral-700">/</span><a href="#" class="hover:text-white transition-colors">Contact</a></div><span class="text-[10px] text-neutral-500 font-mono">STUDIO: EULJIRO &amp; ITAEWON // LIVE STREAM FLAC 24/96</span><p class="text-[10px] text-neutral-600 font-mono">© 2026 KOREAHARLEM®. ALL RIGHTS RESERVED.</p></div></footer>
+    </div>
+  </main>
+
+  <!-- Bottom Fixed Persistent Audio Player Bar -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="submission-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4"><div class="relative bg-[#0c0c0c] border border-[#2e2e2e] max-w-md w-full p-6 text-white font-sans shadow-2xl flex flex-col gap-4"><div class="flex items-start justify-between border-b border-[#222222] pb-3"><div><span class="font-mono text-[10px] text-signal-crimson font-bold uppercase tracking-widest">ARCHIVE SUBMITTED</span><h3 class="text-[18px] font-bold text-white mt-0.5">제보 접수 완료</h3></div><button type="button" onclick="closeModal()" class="text-neutral-400 hover:text-white font-mono text-[18px] p-1 leading-none">×</button></div><p class="text-[13px] text-neutral-300 leading-relaxed">코리아할렘 아카이브 팀에 소중한 문화 제보가 정상적으로 접수되었습니다. 담당 에디터 검토 후 공식 씬 아카이브 및 매거진 피처에 반영됩니다.</p><div class="bg-black border border-[#1f1f1f] p-3 font-mono text-[11px] text-neutral-400 flex flex-col gap-1"><div class="flex justify-between items-center"><span class="text-neutral-500">SUBMISSION ID:</span><span class="text-white font-bold">#KH-2025-ARCHIVE</span></div><div class="flex justify-between items-center"><span class="text-neutral-500">TIMESTAMP:</span><span class="text-neutral-300">SEOUL (KST) LIVE</span></div></div><div class="pt-2 flex justify-end"><button type="button" onclick="closeModal()" class="w-full py-2.5 bg-white hover:bg-signal-crimson text-black hover:text-white font-mono text-[11px] font-bold uppercase tracking-wider transition-colors text-center">확인 (CONFIRM)</button></div></div></div></body></html>

@@ -35,7 +35,7 @@ import {
 export function CheckoutClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { items, clearCart } = useCart();
+  const { items, clearCart, closeCart } = useCart();
   const { currency, toMinor, formatKrw, ratesSource } = useCurrency();
 
   const [buyLines, setBuyLines] = useState<CartLine[] | null>(null);
@@ -64,6 +64,10 @@ export function CheckoutClient() {
   const [userReady, setUserReady] = useState(false);
   const [autoTriggered, setAutoTriggered] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    closeCart();
+  }, [closeCart]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -182,7 +186,19 @@ export function CheckoutClient() {
   }, [buyId, buySize, buyQty, addonsParam, currency.code, currency.rateToKrw, toMinor]);
 
   const lines = buyLines ?? items;
-  const lineProductIds = useMemo(() => lines.map((line) => line.productId), [lines]);
+  const digitalOnly = lines.length > 0 && lines.every(
+    (line) => line.kind === "digital_album" || line.kind === "digital_track",
+  );
+  const hasDigital = lines.some(
+    (line) => line.kind === "digital_album" || line.kind === "digital_track",
+  );
+  const lineProductIds = useMemo(
+    () =>
+      lines
+        .filter((line) => (line.kind ?? "product") === "product")
+        .map((line) => line.productId),
+    [lines],
+  );
   const { availability, loading: availabilityLoading } = useCartProductAvailability(lineProductIds, lines.length > 0);
   const settlementCode = resolveSettlementCurrency(payMethod, currency.code);
   const settlement = useMemo(
@@ -228,8 +244,11 @@ export function CheckoutClient() {
   ]);
 
   const validate = (): string | null => {
+    if (hasDigital && !isLoggedIn) return "디지털 음원은 로그인 후 구매할 수 있습니다.";
     if (!name.trim()) return "받는사람 이름을 입력해주세요.";
-    if (!postcode.trim() || !address.trim()) return "주소검색으로 배송지를 입력해주세요.";
+    if (!digitalOnly && (!postcode.trim() || !address.trim())) {
+      return "주소검색으로 배송지를 입력해주세요.";
+    }
     if (!phone.trim()) return "휴대전화 번호를 입력해주세요.";
     if (!email.trim()) return "이메일을 입력해주세요.";
     if (!isLoggedIn) {
@@ -250,10 +269,14 @@ export function CheckoutClient() {
     }
 
     const supabase = createClient();
-    const freshAvailability = await fetchProductAvailability(
-      supabase,
-      [...new Set(lines.map((line) => line.productId))],
-    );
+    const physicalIds = [
+      ...new Set(
+        lines
+          .filter((line) => (line.kind ?? "product") === "product")
+          .map((line) => line.productId),
+      ),
+    ];
+    const freshAvailability = await fetchProductAvailability(supabase, physicalIds);
     const unavailable = findUnavailableLines(lines, freshAvailability);
     if (unavailable.length > 0) {
       alert(buildUnavailableAlertMessage(unavailable));
@@ -283,7 +306,7 @@ export function CheckoutClient() {
     setLoading(true);
     try {
       const orderItems = lines.map((line) => ({
-        productId: line.productId,
+        productId: line.kind && line.kind !== "product" ? null : line.productId,
         title: line.title,
         size: line.size,
         quantity: line.quantity,
@@ -291,6 +314,9 @@ export function CheckoutClient() {
         currency: settlement.code,
         imageUrl: line.imageUrl,
         priceKrw: line.priceKrw,
+        kind: line.kind ?? "product",
+        albumId: line.albumId ?? null,
+        trackId: line.trackId ?? null,
       }));
 
       const orderRes = await fetch("/api/orders/create", {
@@ -301,18 +327,25 @@ export function CheckoutClient() {
           name: name.trim(),
           phone: phone.trim(),
           shippingMessage: shippingMessage.trim(),
-          shipping: {
-            postcode: postcode.trim(),
-            address: address.trim(),
-            addressDetail: addressDetail.trim(),
-            phone: phone.trim(),
-          },
+          shipping: digitalOnly
+            ? {
+                postcode: "00000",
+                address: "디지털 음원 (배송 없음)",
+                addressDetail: "",
+                phone: phone.trim(),
+              }
+            : {
+                postcode: postcode.trim(),
+                address: address.trim(),
+                addressDetail: addressDetail.trim(),
+                phone: phone.trim(),
+              },
           currency: settlement.code,
           exchangeRate: settlement.rateToKrw,
           paymentMethod: payMethod,
           items: orderItems,
           total: settleMinor,
-          shippingFee: shippingKrw,
+          shippingFee: digitalOnly ? 0 : shippingKrw,
           guestPassword: isLoggedIn ? undefined : guestPassword,
         }),
       });
@@ -416,12 +449,26 @@ export function CheckoutClient() {
               className={inputClass}
             />
           </Field>
+          {hasDigital && !isLoggedIn && (
+            <p className="text-xs text-rose-500">
+              디지털 음원은{" "}
+              <Link href="/login?next=/checkout" className="underline">
+                로그인
+              </Link>
+              후 구매할 수 있습니다. 구입한 파일은 My Page → My Music에서 받습니다.
+            </p>
+          )}
+          {digitalOnly && (
+            <p className="text-xs text-muted">디지털 음원만 담겨 있어 배송지는 필요하지 않습니다.</p>
+          )}
+          {!digitalOnly && (
+            <>
           <Field label="우편번호 *">
             <div className="flex gap-2">
               <input
                 value={postcode}
                 readOnly
-                required
+                required={!digitalOnly}
                 placeholder="주소검색을 이용해주세요"
                 className={inputClass}
               />
@@ -434,7 +481,7 @@ export function CheckoutClient() {
             </div>
           </Field>
           <Field label="기본주소 *">
-            <input value={address} readOnly required className={inputClass} />
+            <input value={address} readOnly required={!digitalOnly} className={inputClass} />
           </Field>
           <Field label="상세주소">
             <input
@@ -444,6 +491,8 @@ export function CheckoutClient() {
               className={inputClass}
             />
           </Field>
+            </>
+          )}
           <Field label="휴대전화 *">
             <input
               type="tel"
@@ -507,7 +556,8 @@ export function CheckoutClient() {
         <h2 className="text-sm font-medium uppercase tracking-wider">주문상품</h2>
         <ul className="mt-4 divide-y divide-border">
           {lines.map((line) => {
-            const purchasable = isProductPurchasable(availability.get(line.productId));
+            const digital = line.kind === "digital_album" || line.kind === "digital_track";
+            const purchasable = digital || isProductPurchasable(availability.get(line.productId));
             const showUnavailable = !availabilityLoading && !purchasable;
             return (
             <li

@@ -41,13 +41,14 @@ export async function fetchProductAvailability(
 }
 
 export function findUnavailableLines(
-  lines: { productId: string; title: string }[],
+  lines: { productId: string; title: string; kind?: string | null }[],
   availability: Map<string, ProductAvailability>,
 ): { productId: string; title: string; reason: string }[] {
   const seen = new Set<string>();
   const result: { productId: string; title: string; reason: string }[] = [];
 
   for (const line of lines) {
+    if (line.kind === "digital_album" || line.kind === "digital_track") continue;
     if (seen.has(line.productId)) continue;
     const status = availability.get(line.productId);
     const reason = unavailableReason(status);

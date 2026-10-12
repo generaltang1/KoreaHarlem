@@ -84,7 +84,7 @@ export const collections: Collection[] = [
     id: "music",
     title: "음악",
     subtitle: "MUSIC",
-    href: "/artists",
+    href: "/music",
     image: "from-violet-950 to-black",
   },
   {

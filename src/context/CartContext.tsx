@@ -12,6 +12,8 @@ import {
 import { convertKrwToMinor, getCurrency, type CurrencyCode } from "@/lib/currency";
 import { useCurrency } from "@/context/CurrencyContext";
 
+export type CartItemKind = "product" | "digital_album" | "digital_track";
+
 export interface CartLine {
   key: string;
   productId: string;
@@ -25,6 +27,9 @@ export interface CartLine {
   priceKrw: number;
   currency: CurrencyCode;
   exchangeRate: number;
+  kind?: CartItemKind;
+  albumId?: string | null;
+  trackId?: string | null;
 }
 
 interface CartContextValue {
@@ -40,6 +45,9 @@ interface CartContextValue {
     size?: string | null;
     priceKrw: number;
     quantity?: number;
+    kind?: CartItemKind;
+    albumId?: string | null;
+    trackId?: string | null;
   }) => void;
   removeItem: (key: string) => void;
   updateQuantity: (key: string, quantity: number) => void;
@@ -51,8 +59,12 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "kh-cart-v1";
 
-function lineKey(productId: string, size?: string | null) {
-  return `${productId}::${size ?? ""}`;
+function lineKey(
+  productId: string,
+  size?: string | null,
+  kind: CartItemKind = "product",
+) {
+  return `${kind}::${productId}::${size ?? ""}`;
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -98,14 +110,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
       size?: string | null;
       priceKrw: number;
       quantity?: number;
+      kind?: CartItemKind;
+      albumId?: string | null;
+      trackId?: string | null;
     }) => {
-      const qty = input.quantity ?? 1;
-      const key = lineKey(input.productId, input.size);
+      const kind = input.kind ?? "product";
+      const qty = kind === "product" ? (input.quantity ?? 1) : 1;
+      const key = lineKey(input.productId, input.size, kind);
       const unitPriceMinor = convertKrwToMinor(input.priceKrw, currency);
 
       setItems((prev) => {
         const existing = prev.find((item) => item.key === key);
         if (existing) {
+          if (kind !== "product") return prev;
           return prev.map((item) =>
             item.key === key
               ? { ...item, quantity: item.quantity + qty }
@@ -125,6 +142,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             priceKrw: input.priceKrw,
             currency: currency.code,
             exchangeRate: currency.rateToKrw,
+            kind,
+            albumId: input.albumId ?? null,
+            trackId: input.trackId ?? null,
           },
         ];
       });

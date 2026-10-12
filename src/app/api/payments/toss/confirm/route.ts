@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { grantMusicEntitlementsForOrder } from "@/lib/musicEntitlements";
 import { getTossSecretKey } from "@/lib/toss";
 
 export async function POST(request: Request) {
@@ -54,6 +55,11 @@ export async function POST(request: Request) {
         toss_payment_key: paymentKey,
       })
       .eq("toss_order_id", orderId);
+
+    const grantClient = createServiceClient();
+    if (grantClient && order?.id) {
+      await grantMusicEntitlementsForOrder(grantClient, order.id);
+    }
 
     let items: { title: string; size: string | null; quantity: number; unit_price: number; currency: string; image_url: string | null }[] = [];
     if (order?.id) {

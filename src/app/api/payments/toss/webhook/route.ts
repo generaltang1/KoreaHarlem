@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { grantMusicEntitlementsForOrder } from "@/lib/musicEntitlements";
 import { fetchTossPayment } from "@/lib/toss";
 import { stockErrorMessage } from "@/lib/stock";
 
@@ -131,6 +132,7 @@ export async function POST(request: Request) {
             to_status: "paid",
             reason: `토스 웹훅: ${eventType} DONE`,
           });
+          await grantMusicEntitlementsForOrder(admin, order.id);
         }
       }
       return NextResponse.json({ ok: true, synced: "DONE", orderId: order.id });
