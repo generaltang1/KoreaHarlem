@@ -5,22 +5,36 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage, signInWithGoogle, signInWithKakao } from "@/lib/auth/oauth";
-import { ConsentModal } from "@/components/auth/ConsentModal";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { TermsModal } from "@/components/ui/TermsModal";
+import { PrivacyModal } from "@/components/ui/PrivacyModal";
+import { MarketingConsentModal } from "@/components/auth/MarketingConsentModal";
+import {
+  AuthCard,
+  AuthDarkShell,
+  authInputClass,
+  authPrimaryBtnClass,
+  authSecondaryBtnClass,
+} from "@/components/auth/AuthDarkShell";
+import { GoogleMark, KakaoMark } from "@/components/auth/OAuthIcons";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [showConsent, setShowConsent] = useState(true);
-  const [consentDone, setConsentDone] = useState(false);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "kakao" | null>(null);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+
+  const [allChecked, setAllChecked] = useState(false);
+  const [ageOk, setAgeOk] = useState(false);
+  const [termsOk, setTermsOk] = useState(false);
+  const [privacyOk, setPrivacyOk] = useState(false);
+  const [marketingOk, setMarketingOk] = useState(false);
+
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [marketingOpen, setMarketingOpen] = useState(false);
 
   const supabase = createClient();
 
@@ -28,22 +42,31 @@ export default function SignupPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) router.replace("/");
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleConsentConfirm = () => {
-    setShowConsent(false);
-    setConsentDone(true);
+  const syncAll = (age: boolean, terms: boolean, privacy: boolean, marketing: boolean) => {
+    setAllChecked(age && terms && privacy && marketing);
   };
 
-  const handleConsentCancel = () => {
-    router.push("/");
+  const handleAll = (checked: boolean) => {
+    setAllChecked(checked);
+    setAgeOk(checked);
+    setTermsOk(checked);
+    setPrivacyOk(checked);
+    setMarketingOk(checked);
   };
+
+  const requiredOk = ageOk && termsOk && privacyOk;
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
+    if (!requiredOk) {
+      setError("필수 약관에 동의해 주세요.");
+      return;
+    }
     if (password !== passwordConfirm) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
@@ -54,170 +77,263 @@ export default function SignupPage() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error: signError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          marketing_consent: marketingOk,
+          agreed_terms_at: new Date().toISOString(),
+        },
       },
     });
     setLoading(false);
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess(true);
+    if (signError) {
+      setError(signError.message);
+      return;
     }
+
+    // profiles 컬럼은 SQL 적용 후 반영. 실패해도 가입 완료로 이동 (메타데이터에는 이미 저장됨).
+    if (data.user && marketingOk) {
+      void supabase
+        .from("profiles")
+        .update({
+          marketing_consent: true,
+          marketing_consent_at: new Date().toISOString(),
+        })
+        .eq("id", data.user.id);
+    }
+
+    router.push(`/signup/complete?email=${encodeURIComponent(email)}`);
   };
 
   const handleGoogle = async () => {
+    if (!requiredOk) {
+      setError("필수 약관에 동의한 뒤 소셜 가입을 진행해 주세요.");
+      return;
+    }
     setError("");
     setOauthLoading("google");
-    const { error } = await signInWithGoogle(supabase);
-    if (error) {
-      setError(getAuthErrorMessage(error.message));
+    const { error: authError } = await signInWithGoogle(supabase);
+    if (authError) {
+      setError(getAuthErrorMessage(authError.message));
       setOauthLoading(null);
     }
   };
 
   const handleKakao = async () => {
+    if (!requiredOk) {
+      setError("필수 약관에 동의한 뒤 소셜 가입을 진행해 주세요.");
+      return;
+    }
     setError("");
     setOauthLoading("kakao");
-    const { error } = await signInWithKakao(supabase);
-    if (error) {
-      setError(getAuthErrorMessage(error.message));
+    const { error: authError } = await signInWithKakao(supabase);
+    if (authError) {
+      setError(getAuthErrorMessage(authError.message));
       setOauthLoading(null);
     }
   };
 
   return (
     <>
-      <Header />
-      <main className="flex min-h-[80vh] items-center justify-center px-4 py-10 md:py-16">
-        {showConsent && !consentDone && (
-          <ConsentModal
-            onConfirm={handleConsentConfirm}
-            onCancel={handleConsentCancel}
-          />
-        )}
+      <AuthDarkShell>
+        <AuthCard>
+          <p className="text-[11px] font-medium tracking-wide text-[#FEE500]">
+            WELCOME TO KOREAHARLEM SPACE
+          </p>
+          <h1 className="mt-2 text-xl font-bold tracking-tight">회원가입</h1>
 
-        {consentDone && (
-          <div className="w-full max-w-sm">
-            <div className="mb-8 text-center">
-              <p className="text-[10px] uppercase tracking-widest text-muted">Join</p>
-              <h1 className="mt-1 text-xl font-medium uppercase tracking-wider">
-                회원가입
-              </h1>
+          <div className="mt-6 space-y-3">
+            <button
+              type="button"
+              onClick={handleKakao}
+              disabled={!!oauthLoading}
+              className={`${authPrimaryBtnClass} inline-flex items-center justify-center gap-2`}
+            >
+              <KakaoMark />
+              {oauthLoading === "kakao" ? "연결 중..." : "카카오 계정으로 가입하기"}
+            </button>
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={!!oauthLoading}
+              className={`${authSecondaryBtnClass} inline-flex items-center justify-center gap-2`}
+            >
+              <GoogleMark />
+              {oauthLoading === "google" ? "연결 중..." : "Google 계정으로 가입하기"}
+            </button>
+          </div>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#2a2a2a]" />
+            <span className="text-[11px] text-neutral-500">또는 이메일로 가입</span>
+            <div className="h-px flex-1 bg-[#2a2a2a]" />
+          </div>
+
+          <form onSubmit={handleSignup} className="space-y-3">
+            <div>
+              <label className="mb-1.5 block text-xs text-neutral-400">이메일 주소</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="name@domain.com"
+                className={authInputClass}
+              />
+            </div>
+            <div>
+              <div className="mb-1.5 flex items-center justify-between text-xs text-neutral-400">
+                <label>비밀번호</label>
+                <span className="text-neutral-600">(8자 이상)</span>
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="8자 이상의 비밀번호를 입력해주세요"
+                className={authInputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs text-neutral-400">비밀번호 확인</label>
+              <input
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                required
+                placeholder="비밀번호를 한번 더 입력해주세요"
+                className={authInputClass}
+              />
             </div>
 
-            {success ? (
-              <div className="border border-border p-6 text-center">
-                <p className="text-sm">이메일을 확인해 주세요.</p>
-                <p className="mt-2 text-xs text-muted">
-                  {email}로 인증 메일을 발송했습니다.
-                  <br />
-                  메일의 링크를 클릭하면 가입이 완료됩니다.
-                </p>
-                <Link
-                  href="/login"
-                  className="mt-6 inline-block text-xs uppercase tracking-widest underline"
+            <div className="mt-2 space-y-2.5 border-t border-[#2a2a2a] pt-4 text-sm text-neutral-300">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={allChecked}
+                  onChange={(e) => handleAll(e.target.checked)}
+                  className="accent-[#FEE500]"
+                />
+                <span className="font-medium text-white">약관 전체 동의</span>
+              </label>
+
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={ageOk}
+                  onChange={(e) => {
+                    const v = e.target.checked;
+                    setAgeOk(v);
+                    syncAll(v, termsOk, privacyOk, marketingOk);
+                  }}
+                  className="accent-[#FEE500]"
+                />
+                <span>
+                  만 14세 이상입니다 <span className="text-rose-400">(필수)</span>
+                </span>
+              </label>
+
+              <div className="flex items-center gap-2">
+                <label className="flex flex-1 cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={termsOk}
+                    onChange={(e) => {
+                      const v = e.target.checked;
+                      setTermsOk(v);
+                      syncAll(ageOk, v, privacyOk, marketingOk);
+                    }}
+                    className="accent-[#FEE500]"
+                  />
+                  <span>
+                    이용약관 동의 <span className="text-rose-400">(필수)</span>
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setTermsOpen(true)}
+                  className="shrink-0 text-xs text-neutral-400 underline hover:text-white"
                 >
-                  로그인으로 이동
-                </Link>
+                  보기
+                </button>
               </div>
-            ) : (
-              <>
-                {/* 소셜 로그인 */}
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={handleGoogle}
-                    disabled={!!oauthLoading}
-                    className="flex w-full items-center justify-center gap-3 border border-border py-4 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-50 md:py-3 md:text-xs"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 18 18">
-                      <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
-                      <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
-                      <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
-                      <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-                    </svg>
-                    {oauthLoading === "google" ? "연결 중..." : "Google로 가입"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleKakao}
-                    disabled={!!oauthLoading}
-                    className="flex w-full items-center justify-center gap-3 border border-[#FEE500] bg-[#FEE500] py-4 text-sm transition-opacity hover:opacity-90 disabled:opacity-50 md:py-3 md:text-xs"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 18 18">
-                      <path fill="#3C1E1E" d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.38c0 2.07 1.299 3.888 3.267 4.953l-.833 3.104 3.618-2.382A9.3 9.3 0 009 13.26c4.142 0 7.5-2.634 7.5-5.88S13.142 1.5 9 1.5z"/>
-                    </svg>
-                    {oauthLoading === "kakao" ? "연결 중..." : "Kakao로 가입"}
-                  </button>
-                </div>
 
-                {error && (
-                  <p className="mt-3 text-xs text-rose-500">{error}</p>
-                )}
-
-                <div className="my-6 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-[10px] uppercase tracking-widest text-muted">또는</span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-
-                {/* 이메일 가입 폼 */}
-                <form onSubmit={handleSignup} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <label className="flex flex-1 cursor-pointer items-center gap-2">
                   <input
-                    type="email"
-                    placeholder="이메일"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
+                    type="checkbox"
+                    checked={privacyOk}
+                    onChange={(e) => {
+                      const v = e.target.checked;
+                      setPrivacyOk(v);
+                      syncAll(ageOk, termsOk, v, marketingOk);
+                    }}
+                    className="accent-[#FEE500]"
                   />
+                  <span>
+                    개인정보 수집·이용 동의 <span className="text-rose-400">(필수)</span>
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setPrivacyOpen(true)}
+                  className="shrink-0 text-xs text-neutral-400 underline hover:text-white"
+                >
+                  보기
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="flex flex-1 cursor-pointer items-center gap-2">
                   <input
-                    type="password"
-                    placeholder="비밀번호 (8자 이상)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
+                    type="checkbox"
+                    checked={marketingOk}
+                    onChange={(e) => {
+                      const v = e.target.checked;
+                      setMarketingOk(v);
+                      syncAll(ageOk, termsOk, privacyOk, v);
+                    }}
+                    className="accent-[#FEE500]"
                   />
-                  <input
-                    type="password"
-                    placeholder="비밀번호 확인"
-                    value={passwordConfirm}
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
-                    required
-                    className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
-                  />
+                  <span>
+                    마케팅 정보 수신 동의 (이벤트·파티 소식){" "}
+                    <span className="text-neutral-500">(선택)</span>
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setMarketingOpen(true)}
+                  className="shrink-0 text-xs text-neutral-400 underline hover:text-white"
+                >
+                  보기
+                </button>
+              </div>
+            </div>
 
-                  {error && (
-                    <p className="text-xs text-rose-500">{error}</p>
-                  )}
+            {error && <p className="text-xs text-rose-400">{error}</p>}
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-foreground py-4 text-sm uppercase tracking-widest text-background transition-opacity disabled:opacity-50 md:py-3 md:text-xs"
-                  >
-                    {loading ? "처리 중..." : "가입하기"}
-                  </button>
-                </form>
+            <button type="submit" disabled={loading} className={authPrimaryBtnClass}>
+              {loading ? "처리 중..." : "가입하기"}
+            </button>
+          </form>
 
-                <p className="mt-6 text-center text-xs text-muted">
-                  이미 계정이 있으신가요?{" "}
-                  <Link href="/login" className="text-foreground underline">
-                    로그인
-                  </Link>
-                </p>
-              </>
-            )}
-          </div>
-        )}
-      </main>
-      <Footer />
+          <p className="mt-5 text-center text-xs text-neutral-400">
+            이미 계정이 있으신가요?{" "}
+            <Link href="/login" className="font-medium text-[#FEE500] hover:underline">
+              로그인하기
+            </Link>
+          </p>
+        </AuthCard>
+      </AuthDarkShell>
+
+      {termsOpen && <TermsModal onClose={() => setTermsOpen(false)} />}
+      {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
+      {marketingOpen && <MarketingConsentModal onClose={() => setMarketingOpen(false)} />}
     </>
   );
 }

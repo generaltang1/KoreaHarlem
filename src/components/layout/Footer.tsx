@@ -18,8 +18,8 @@ const footerLinks = {
   music: footerMusicLinks,
   magazine: footerMagazineLinks,
   help: [
-    { label: "문의하기", href: "/contact" },
-    { label: "FAQ", href: "/faq" },
+    { label: "고객센터", href: "/contact" },
+    { label: "FAQ", href: "/contact#faq" },
     { label: "배송 안내", href: "/guide#shipping" },
   ],
   info: [{ label: "소개", href: "/about" }],

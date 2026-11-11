@@ -4,10 +4,10 @@ export interface NavItem {
   children?: NavItem[];
 }
 
-/** 공개 헤더 메뉴 — 순서: In Store → Music → Think → Magazine */
+/** 공개 헤더 메뉴 — 시안 라벨(STORE/MUSIC/…) · 기존 기능 경로 유지 */
 export const navLinks: NavItem[] = [
   {
-    label: "In Store",
+    label: "STORE",
     children: [
       { label: "Shop All", href: "/sale" },
       {
@@ -22,13 +22,28 @@ export const navLinks: NavItem[] = [
       { label: "Ticket", href: "/sale?category=ticket" },
     ],
   },
-  { label: "Music", href: "/music" },
-  { label: "Think", href: "/think" },
   {
-    label: "Magazine",
+    label: "MUSIC",
+    children: [
+      { label: "Music Home", href: "/music" },
+      { label: "Artists", href: "/artists" },
+    ],
+  },
+  { label: "THINK", href: "/think" },
+  {
+    label: "MAGAZINE",
     children: [
       { label: "Culture", href: "/magazine/culture" },
       { label: "News", href: "/magazine/news" },
+    ],
+  },
+  {
+    label: "HELP",
+    children: [
+      { label: "고객센터", href: "/contact" },
+      { label: "이용안내", href: "/guide" },
+      { label: "주문조회", href: "/order-inquiry" },
+      { label: "About", href: "/about" },
     ],
   },
 ];

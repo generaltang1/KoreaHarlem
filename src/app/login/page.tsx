@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage, signInWithGoogle, signInWithKakao } from "@/lib/auth/oauth";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import {
+  AuthCard,
+  AuthDarkShell,
+  authInputClass,
+  authPrimaryBtnClass,
+  authSecondaryBtnClass,
+} from "@/components/auth/AuthDarkShell";
+import { GoogleMark, KakaoMark } from "@/components/auth/OAuthIcons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +21,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "kakao" | null>(null);
   const [error, setError] = useState("");
+  const [persist, setPersist] = useState(true);
 
   const supabase = createClient();
 
@@ -31,7 +38,7 @@ export default function LoginPage() {
     if (params.get("error") === "auth") {
       setError(getAuthErrorMessage(params.get("message")));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -39,12 +46,20 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
 
-    if (error) {
+    if (authError) {
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");
     } else {
+      if (!persist) {
+        // 세션 유지 해제 요청은 클라이언트 persist 플래그로만 기록 (Supabase는 기본 세션 유지)
+        try {
+          sessionStorage.setItem("kh_session_temp", "1");
+        } catch {
+          /* ignore */
+        }
+      }
       const params = new URLSearchParams(window.location.search);
       const next = params.get("next");
       router.push(next && next.startsWith("/") ? next : "/");
@@ -55,9 +70,9 @@ export default function LoginPage() {
   const handleGoogle = async () => {
     setError("");
     setOauthLoading("google");
-    const { error } = await signInWithGoogle(supabase);
-    if (error) {
-      setError(getAuthErrorMessage(error.message));
+    const { error: authError } = await signInWithGoogle(supabase);
+    if (authError) {
+      setError(getAuthErrorMessage(authError.message));
       setOauthLoading(null);
     }
   };
@@ -65,108 +80,104 @@ export default function LoginPage() {
   const handleKakao = async () => {
     setError("");
     setOauthLoading("kakao");
-    const { error } = await signInWithKakao(supabase);
-    if (error) {
-      setError(getAuthErrorMessage(error.message));
+    const { error: authError } = await signInWithKakao(supabase);
+    if (authError) {
+      setError(getAuthErrorMessage(authError.message));
       setOauthLoading(null);
     }
   };
 
   return (
-    <>
-      <Header />
-      <main className="flex min-h-[80vh] items-center justify-center px-4 py-10 md:py-16">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 text-center">
-            <p className="text-[10px] uppercase tracking-widest text-muted">Welcome</p>
-            <h1 className="mt-1 text-xl font-medium uppercase tracking-wider">
-              로그인
-            </h1>
-          </div>
+    <AuthDarkShell>
+      <AuthCard>
+        <h1 className="text-xl font-bold tracking-tight">로그인</h1>
 
-          {/* 소셜 로그인 */}
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={handleGoogle}
-              disabled={!!oauthLoading}
-              className="flex w-full items-center justify-center gap-3 border border-border py-4 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-50 md:py-3 md:text-xs"
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18">
-                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
-                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
-                <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
-                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-              </svg>
-              {oauthLoading === "google" ? "연결 중..." : "Google로 로그인"}
-            </button>
-            <button
-              type="button"
-              onClick={handleKakao}
-              disabled={!!oauthLoading}
-              className="flex w-full items-center justify-center gap-3 border border-[#FEE500] bg-[#FEE500] py-4 text-sm transition-opacity hover:opacity-90 disabled:opacity-50 md:py-3 md:text-xs"
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18">
-                <path fill="#3C1E1E" d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.38c0 2.07 1.299 3.888 3.267 4.953l-.833 3.104 3.618-2.382A9.3 9.3 0 009 13.26c4.142 0 7.5-2.634 7.5-5.88S13.142 1.5 9 1.5z"/>
-              </svg>
-              {oauthLoading === "kakao" ? "연결 중..." : "Kakao로 로그인"}
-            </button>
-          </div>
+        <div className="mt-6 space-y-3">
+          <button
+            type="button"
+            onClick={handleKakao}
+            disabled={!!oauthLoading}
+            className={`${authPrimaryBtnClass} inline-flex items-center justify-center gap-2`}
+          >
+            <KakaoMark />
+            {oauthLoading === "kakao" ? "연결 중..." : "카카오로 3초 만에 시작하기"}
+          </button>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={!!oauthLoading}
+            className={`${authSecondaryBtnClass} inline-flex items-center justify-center gap-2`}
+          >
+            <GoogleMark />
+            {oauthLoading === "google" ? "연결 중..." : "Google 계정으로 계속하기"}
+          </button>
+        </div>
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-[10px] uppercase tracking-widest text-muted">또는</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-[#2a2a2a]" />
+          <span className="text-[11px] text-neutral-500">또는 이메일 로그인</span>
+          <div className="h-px flex-1 bg-[#2a2a2a]" />
+        </div>
 
-          {/* 이메일 로그인 */}
-          <form onSubmit={handleLogin} className="space-y-3">
+        <form onSubmit={handleLogin} className="space-y-3">
+          <div>
+            <label className="mb-1.5 block text-xs text-neutral-400">이메일 주소</label>
             <input
               type="email"
-              placeholder="이메일"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
+              placeholder="name@domain.com"
+              className={authInputClass}
             />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs text-neutral-400">비밀번호</label>
             <input
               type="password"
-              placeholder="비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full border border-border bg-transparent px-4 py-4 text-base outline-none placeholder:text-muted focus:border-foreground md:py-3 md:text-sm"
+              placeholder="비밀번호를 입력해주세요"
+              className={authInputClass}
             />
+          </div>
 
-            <div className="flex justify-end gap-3 text-[11px] text-muted">
-              <Link href="/find-id" className="hover:text-foreground">
-                아이디 찾기
-              </Link>
-              <Link href="/forgot-password" className="hover:text-foreground">
-                비밀번호 찾기
-              </Link>
-            </div>
-
-            {error && <p className="text-xs text-rose-500">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-foreground py-4 text-sm uppercase tracking-widest text-background transition-opacity disabled:opacity-50 md:py-3 md:text-xs"
-            >
-              {loading ? "처리 중..." : "로그인"}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-xs text-muted">
-            계정이 없으신가요?{" "}
-            <Link href="/signup" className="text-foreground underline">
-              회원가입
+          <div className="flex items-center justify-between gap-3 pt-1 text-xs text-neutral-400">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={persist}
+                onChange={(e) => setPersist(e.target.checked)}
+                className="accent-[#FEE500]"
+              />
+              로그인 상태 유지
+            </label>
+            <Link href="/find-id" className="hover:text-white">
+              아이디 및 비밀번호 찾기
             </Link>
-          </p>
-        </div>
-      </main>
-      <Footer />
-    </>
+          </div>
+
+          {error && <p className="text-xs text-rose-400">{error}</p>}
+
+          <button type="submit" disabled={loading} className={authPrimaryBtnClass}>
+            {loading ? "처리 중..." : "로그인하기"}
+          </button>
+        </form>
+
+        <p className="mt-5 text-center text-xs text-neutral-400">
+          아직 코할 계정이 없으신가요?{" "}
+          <Link href="/signup" className="font-medium text-[#FEE500] hover:underline">
+            회원가입하기
+          </Link>
+        </p>
+        <p className="mt-3 text-center text-xs text-neutral-500">
+          비회원으로 주문하셨나요?{" "}
+          <Link href="/order-inquiry" className="hover:text-white">
+            비회원 주문 조회 →
+          </Link>
+        </p>
+      </AuthCard>
+    </AuthDarkShell>
   );
 }

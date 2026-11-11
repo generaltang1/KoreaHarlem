@@ -10,6 +10,7 @@ import type { User } from "@supabase/supabase-js";
 import { useCart } from "@/context/CartContext";
 import { CurrencySelector } from "@/components/commerce/CurrencySelector";
 import { DjSetBar } from "@/components/player/DjSetBar";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,6 +20,7 @@ export function Header() {
   const router = useRouter();
   const supabase = createClient();
   const { openCart, itemCount } = useCart();
+  const { openLoginModal } = useLoginModal();
 
   useEffect(() => {
     const auth = supabase.auth;
@@ -65,11 +67,11 @@ export function Header() {
   };
 
   const iconBtn =
-    "flex h-10 w-10 items-center justify-center text-neutral-300 transition-colors hover:text-white";
+    "flex h-9 w-9 items-center justify-center text-neutral-300 transition-colors hover:text-white";
 
   return (
     <div className="sticky top-0 z-50">
-      <header className="select-none border-b border-neutral-800 bg-[#0a0a0c]/95 text-neutral-100 backdrop-blur-md">
+      <header className="select-none border-b border-neutral-800 bg-black/95 text-neutral-100 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1720px] items-center justify-between gap-4 px-4 sm:px-8 md:h-16">
           <div className="flex min-w-0 items-center gap-3 sm:gap-6">
             <button
@@ -92,18 +94,18 @@ export function Header() {
               <img
                 src="/logo-wordmark.png"
                 alt="koreaharlem"
-                className="h-8 w-auto object-contain transition-opacity group-hover:opacity-90 sm:h-10 md:h-11"
+                className="h-7 w-auto object-contain transition-opacity group-hover:opacity-90 sm:h-8 md:h-9"
               />
             </Link>
 
-            <nav className="hidden items-center gap-6 md:flex lg:gap-8">
+            <nav className="hidden items-center gap-5 md:flex lg:gap-7">
               <DesktopNavMenu items={navLinks} variant="dark" />
               {isAdmin && (
                 <div className="group relative">
                   <button className="font-mono text-xs uppercase tracking-wider text-rose-400 transition-colors hover:text-rose-300">
                     Admin
                   </button>
-                  <div className="invisible absolute left-0 top-full z-50 min-w-[160px] border border-neutral-800 bg-[#0a0a0c]/95 py-2 opacity-0 backdrop-blur-md transition-all group-hover:visible group-hover:opacity-100">
+                  <div className="invisible absolute left-0 top-full z-50 min-w-[160px] border border-neutral-800 bg-black/95 py-2 opacity-0 backdrop-blur-md transition-all group-hover:visible group-hover:opacity-100">
                     <Link
                       href="/admin"
                       className="block px-4 py-2 font-mono text-xs text-neutral-300 hover:bg-neutral-800/50 hover:text-white"
@@ -152,12 +154,6 @@ export function Header() {
                     >
                       THINK 관리
                     </Link>
-                    <Link
-                      href="/admin/events/new"
-                      className="block px-4 py-2 font-mono text-xs text-neutral-300 hover:bg-neutral-800/50 hover:text-white"
-                    >
-                      이벤트 등록
-                    </Link>
                   </div>
                 </div>
               )}
@@ -165,13 +161,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-1 text-neutral-300">
-            <Link
-              href="/order-inquiry"
-              className="hidden h-10 items-center px-2 font-mono text-[10px] uppercase tracking-wider transition-colors hover:text-white sm:flex"
-            >
-              주문조회
-            </Link>
-            <div className="hidden text-neutral-300 sm:block [&_select]:text-neutral-300 [&_select]:bg-[#0a0a0c]">
+            <div className="hidden text-neutral-300 sm:block [&_select]:bg-black [&_select]:text-neutral-300">
               <CurrencySelector />
             </div>
             <button
@@ -185,37 +175,41 @@ export function Header() {
                 <path d="M13 13l3 3" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             </button>
-            <Link href="/mypage" className={iconBtn} aria-label="My Page">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M5 19c0-3.5 3-6 7-6s7 2.5 7 6" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </Link>
             <button type="button" onClick={openCart} className={`relative ${iconBtn}`} aria-label="장바구니">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M6 8h12l-1 12H7L6 8z" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M9 8V7a3 3 0 016 0v1" stroke="currentColor" strokeWidth="1.5" />
               </svg>
               {itemCount > 0 && (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[9px] text-black">
+                <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FEE500] px-1 text-[9px] font-bold text-black">
                   {itemCount}
                 </span>
               )}
             </button>
             {user ? (
+              <Link
+                href="/mypage"
+                className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE500] text-[11px] font-bold text-black"
+                aria-label="My Page"
+              >
+                {(user.email?.[0] ?? "U").toUpperCase()}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={openLoginModal}
+                className="ml-1 h-8 w-8 rounded-full bg-[#FEE500] transition-opacity hover:opacity-90"
+                aria-label="로그인"
+                title="로그인"
+              />
+            )}
+            {user && (
               <button
                 onClick={handleLogout}
-                className="hidden h-10 items-center px-2 font-mono text-[10px] uppercase tracking-wider transition-colors hover:text-white sm:flex"
+                className="hidden h-9 items-center px-2 font-mono text-[10px] uppercase tracking-wider transition-colors hover:text-white sm:flex"
               >
                 Logout
               </button>
-            ) : (
-              <Link
-                href="/login"
-                className="hidden h-10 items-center px-2 font-mono text-[10px] uppercase tracking-wider transition-colors hover:text-white sm:flex"
-              >
-                Sign In
-              </Link>
             )}
           </div>
         </div>
@@ -235,13 +229,6 @@ export function Header() {
           <nav className="border-t border-neutral-800 px-4 py-4 md:hidden">
             <MobileNavMenu items={navLinks} onNavigate={() => setMenuOpen(false)} variant="dark" />
             <div className="mt-4 border-t border-neutral-800 pt-4">
-              <Link
-                href="/order-inquiry"
-                onClick={() => setMenuOpen(false)}
-                className="block py-3 text-sm uppercase tracking-widest text-neutral-200"
-              >
-                주문조회
-              </Link>
               {isAdmin && (
                 <Link
                   href="/admin"
@@ -251,31 +238,36 @@ export function Header() {
                   Admin
                 </Link>
               )}
-              <Link
-                href="/mypage"
-                onClick={() => setMenuOpen(false)}
-                className="block py-3 text-sm uppercase tracking-widest text-neutral-200"
-              >
-                My Page
-              </Link>
               {user ? (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMenuOpen(false);
-                  }}
-                  className="block w-full py-3 text-left text-sm uppercase tracking-widest text-neutral-500"
-                >
-                  Logout
-                </button>
+                <>
+                  <Link
+                    href="/mypage"
+                    onClick={() => setMenuOpen(false)}
+                    className="block py-3 text-sm uppercase tracking-widest text-neutral-200"
+                  >
+                    My Page
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMenuOpen(false);
+                    }}
+                    className="block w-full py-3 text-left text-sm uppercase tracking-widest text-neutral-500"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="block py-3 text-sm uppercase tracking-widest text-neutral-200"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    openLoginModal();
+                  }}
+                  className="block w-full py-3 text-left text-sm uppercase tracking-widest text-[#FEE500]"
                 >
                   Sign In
-                </Link>
+                </button>
               )}
             </div>
           </nav>

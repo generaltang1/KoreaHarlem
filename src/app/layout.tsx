@@ -5,8 +5,10 @@ import { PlayerProvider } from "@/context/PlayerContext";
 import { DjSetProvider } from "@/context/DjSetContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { CartProvider } from "@/context/CartContext";
+import { LoginModalProvider } from "@/context/LoginModalContext";
 import { MusicPlayer } from "@/components/player/MusicPlayer";
 import { CartDrawer } from "@/components/commerce/CartDrawer";
+import { LoginModal } from "@/components/auth/LoginModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,13 +36,16 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <CurrencyProvider>
           <CartProvider>
-            <PlayerProvider>
-              <DjSetProvider>
-                {children}
-                <MusicPlayer />
-                <CartDrawer />
-              </DjSetProvider>
-            </PlayerProvider>
+            <LoginModalProvider>
+              <PlayerProvider>
+                <DjSetProvider>
+                  {children}
+                  <MusicPlayer />
+                  <CartDrawer />
+                  <LoginModal />
+                </DjSetProvider>
+              </PlayerProvider>
+            </LoginModalProvider>
           </CartProvider>
         </CurrencyProvider>
       </body>

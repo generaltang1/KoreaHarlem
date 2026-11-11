@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/client";
 import { signInWithGoogle, signInWithKakao } from "@/lib/auth/oauth";
+import { GoogleMark, KakaoMark } from "@/components/auth/OAuthIcons";
 
 function CheckoutAuthInner() {
   const router = useRouter();
@@ -52,6 +53,7 @@ function CheckoutAuthInner() {
           }}
           className="flex w-full items-center justify-center gap-3 border border-border py-3 text-xs"
         >
+          <GoogleMark />
           Google로 로그인
         </button>
         <button
@@ -61,6 +63,7 @@ function CheckoutAuthInner() {
           }}
           className="flex w-full items-center justify-center gap-3 border border-[#FEE500] bg-[#FEE500] py-3 text-xs"
         >
+          <KakaoMark />
           Kakao로 로그인
         </button>
       </div>
