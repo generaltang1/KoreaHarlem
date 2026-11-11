@@ -4,11 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { writeAdminAudit } from "@/lib/adminAudit";
 import { createClient } from "@/lib/supabase/client";
 
 export interface AdminArtistItem {
   id: string;
   name: string;
+  name_en: string | null;
+  genre: string | null;
   bio: string | null;
   image_url: string | null;
   created_at: string;
@@ -31,12 +34,22 @@ export function AdminArtistsList({ artists }: { artists: AdminArtistItem[] }) {
 
     if (deleteError) {
       if (/foreign key|violates|restrict/i.test(deleteError.message)) {
-        setError("이 아티스트에 연결된 앨범이 있어 삭제할 수 없습니다. 앨범을 먼저 삭제하거나 다른 아티스트로 변경해주세요.");
+        setError(
+          "이 아티스트에 연결된 앨범이 있어 삭제할 수 없습니다. 앨범을 먼저 삭제하거나 다른 아티스트로 변경해주세요.",
+        );
       } else {
         setError(deleteError.message);
       }
       return;
     }
+
+    await writeAdminAudit({
+      module: "artists",
+      action: "delete",
+      targetType: "artist",
+      targetId: id,
+      summary: `아티스트 삭제: ${name}`,
+    });
 
     router.refresh();
   };
@@ -71,14 +84,25 @@ export function AdminArtistsList({ artists }: { artists: AdminArtistItem[] }) {
                 <div className="flex h-full items-center justify-center text-muted">
                   <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
                     <circle cx="16" cy="12" r="6" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M4 28c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="currentColor" strokeWidth="1.5" />
+                    <path
+                      d="M4 28c0-6.627 5.373-12 12-12s12 5.373 12 12"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
                   </svg>
                 </div>
               )}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{artist.name}</p>
-              {artist.bio ? (
+              {artist.name_en ? (
+                <p className="mt-0.5 truncate text-xs text-muted">{artist.name_en}</p>
+              ) : null}
+              {artist.genre ? (
+                <p className="mt-0.5 text-[10px] uppercase tracking-widest text-muted">
+                  {artist.genre}
+                </p>
+              ) : artist.bio ? (
                 <p className="mt-0.5 line-clamp-1 text-xs text-muted">{artist.bio}</p>
               ) : (
                 <p className="mt-0.5 text-xs text-muted">소개 없음</p>
@@ -97,7 +121,7 @@ export function AdminArtistsList({ artists }: { artists: AdminArtistItem[] }) {
             </Link>
             <button
               type="button"
-              onClick={() => handleDelete(artist.id, artist.name)}
+              onClick={() => void handleDelete(artist.id, artist.name)}
               disabled={deletingId === artist.id}
               className="border border-rose-200 px-4 py-2 text-[10px] uppercase tracking-widest text-rose-500 transition-colors hover:border-rose-500 disabled:opacity-50"
             >

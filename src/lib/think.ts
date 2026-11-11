@@ -13,12 +13,37 @@ export type ThinkPost = {
   author_nickname: string;
   author_ip: string;
   is_notice: boolean;
+  is_hidden?: boolean;
+  hidden_at?: string | null;
+  hidden_reason?: string | null;
   recommend_count: number;
   view_count: number;
   comment_count?: number;
   created_at: string;
   updated_at: string;
 };
+
+export type ThinkReportStatus = "open" | "reviewed" | "dismissed" | "actioned";
+
+export type ThinkPostReport = {
+  id: string;
+  post_id: string;
+  reporter_user_id: string | null;
+  reporter_ip: string;
+  reason: string;
+  status: ThinkReportStatus;
+  admin_note: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+};
+
+export const THINK_REPORT_REASONS = [
+  "스팸/광고",
+  "욕설/비방",
+  "음란/혐오",
+  "개인정보 노출",
+  "기타",
+] as const;
 
 export type ThinkComment = {
   id: string;

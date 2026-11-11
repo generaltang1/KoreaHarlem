@@ -60,6 +60,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const supabase = createClient();
 
   const [title, setTitle] = useState("");
+  const [titleEn, setTitleEn] = useState("");
   const [description, setDescription] = useState("");
   const [priceKrw, setPriceKrw] = useState("");
   const [compareAt, setCompareAt] = useState("");
@@ -93,6 +94,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const sizeList = useMemo(
     () =>
@@ -166,6 +168,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       }
 
       setTitle(data.title);
+      setTitleEn(data.title_en ?? "");
       setDescription(data.description ?? "");
       setPriceKrw(String(data.price_krw));
       setCompareAt(data.compare_at_price_krw != null ? String(data.compare_at_price_krw) : "");
@@ -284,6 +287,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       // 아래 StockAdjustPanel의 수기 조정(±·이력)만으로 재고를 변경한다.
       const payload: Record<string, unknown> = {
         title: title.trim(),
+        title_en: titleEn.trim() || null,
         description: description.trim() || null,
         price_krw: price,
         compare_at_price_krw: compareAt ? Number.parseInt(compareAt, 10) : null,
@@ -411,6 +415,17 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+        />
+      </div>
+      <div>
+        <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+          영문 상품명
+        </label>
+        <input
+          value={titleEn}
+          onChange={(e) => setTitleEn(e.target.value)}
+          placeholder="English product title"
           className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
         />
       </div>
@@ -841,21 +856,101 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
 
       {error && <p className="text-xs text-rose-500">{error}</p>}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 bg-foreground py-3 text-xs uppercase tracking-widest text-background disabled:opacity-50"
+          className="flex-1 bg-foreground py-3 text-xs uppercase tracking-widest text-background disabled:opacity-50 sm:min-w-[10rem]"
         >
           {saving ? "저장 중..." : mode === "create" ? "상품 등록" : "변경 저장"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          className="border border-border px-6 py-3 text-xs uppercase tracking-widest transition-colors hover:border-foreground"
+        >
+          미리보기
         </button>
         <Link
           href="/admin/products"
           className="flex items-center justify-center border border-border px-6 py-3 text-xs uppercase tracking-widest text-muted"
         >
-          취소
+          목록
         </Link>
       </div>
+
+      {previewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="상품 미리보기"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-border bg-background p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted">상품 상세 미리보기</p>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className="text-xs uppercase tracking-widest text-muted hover:text-foreground"
+              >
+                닫기
+              </button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                {[...keptExisting.map((img) => img.url), ...newPreviews].length === 0 ? (
+                  <div className="flex aspect-square items-center justify-center border border-border bg-neutral-50 text-xs text-muted">
+                    이미지 없음
+                  </div>
+                ) : (
+                  [...keptExisting.map((img) => img.url), ...newPreviews].map((url) => (
+                    <div key={url} className="relative aspect-square border border-border bg-neutral-50">
+                      <Image src={url} alt="" fill className="object-cover" />
+                    </div>
+                  ))
+                )}
+              </div>
+              <div>
+                <h2 className="text-lg font-medium">{title.trim() || "상품명"}</h2>
+                {titleEn.trim() && <p className="mt-1 text-sm text-muted">{titleEn.trim()}</p>}
+                <p className="mt-3 text-base font-medium">
+                  ₩{(Number.parseInt(priceKrw, 10) || 0).toLocaleString("ko-KR")}
+                </p>
+                {compareAt && (
+                  <p className="text-xs text-muted line-through">
+                    ₩{(Number.parseInt(compareAt, 10) || 0).toLocaleString("ko-KR")}
+                  </p>
+                )}
+                {sizeList.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-[10px] uppercase tracking-widest text-muted">Size</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {sizeList.map((s) => (
+                        <span key={s} className="border border-border px-3 py-1.5 text-xs">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {description.trim() && (
+                  <div className="mt-6 border-t border-border pt-4">
+                    <p className="text-[10px] uppercase tracking-widest text-muted">Detail</p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
+                      {description.trim()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

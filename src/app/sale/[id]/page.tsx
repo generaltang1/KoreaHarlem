@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductDetailClient } from "@/components/commerce/ProductDetailClient";
 import { fetchProductDetail } from "@/lib/fetchProductDetail";
+import { isCurrentUserAdmin } from "@/lib/auth/session";
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -31,11 +32,18 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     wishlisted = !!wish;
   }
 
+  const isAdmin = user ? await isCurrentUserAdmin() : false;
+
   return (
     <>
       <Header />
       <main className="mx-auto max-w-7xl px-4 py-10 pb-24 md:px-6">
-        <ProductDetailClient product={product} initialWishlisted={wishlisted} isLoggedIn={!!user} />
+        <ProductDetailClient
+          product={product}
+          initialWishlisted={wishlisted}
+          isLoggedIn={!!user}
+          isAdmin={isAdmin}
+        />
       </main>
       <Footer />
     </>

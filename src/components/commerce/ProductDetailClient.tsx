@@ -14,6 +14,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { createClient } from "@/lib/supabase/client";
 import { ProductImageZoom } from "@/components/commerce/ProductImageZoom";
 import { ProductPolicyNotice } from "@/components/commerce/ProductPolicyNotice";
+import { ProductReviewsAndQna } from "@/components/commerce/ProductReviewsAndQna";
 import { SizeGuideModal } from "@/components/commerce/SizeGuideModal";
 import { TicketEventInfo } from "@/components/commerce/TicketEventInfo";
 
@@ -26,12 +27,14 @@ interface ProductDetailClientProps {
   product: ProductDetail;
   initialWishlisted: boolean;
   isLoggedIn: boolean;
+  isAdmin?: boolean;
 }
 
 export function ProductDetailClient({
   product,
   initialWishlisted,
   isLoggedIn,
+  isAdmin = false,
 }: ProductDetailClientProps) {
   const router = useRouter();
   const supabase = createClient();
@@ -256,6 +259,9 @@ export function ProductDetailClient({
             <p className="text-[10px] text-muted">(해외배송 가능상품)</p>
           )}
           <h1 className="mt-1 text-2xl font-semibold leading-snug">{product.title}</h1>
+          {product.title_en?.trim() && (
+            <p className="mt-1 text-sm text-muted">{product.title_en.trim()}</p>
+          )}
 
           <table className="mt-6 w-full text-sm">
             <tbody>
@@ -496,6 +502,12 @@ export function ProductDetailClient({
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{product.description}</p>
         </div>
       )}
+
+      <ProductReviewsAndQna
+        productId={product.id}
+        isLoggedIn={isLoggedIn}
+        isAdmin={isAdmin}
+      />
 
       <ProductPolicyNotice />
 

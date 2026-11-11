@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser, isCurrentUserBlocked } from "@/lib/auth/session";
 import { getClientIp } from "@/lib/requestIp";
 import { THINK_CONCEPT_THRESHOLD } from "@/lib/think";
 
@@ -16,13 +16,17 @@ export async function POST(request: Request, context: RouteContext) {
   const voterIp = getClientIp(request);
   const user = await getCurrentUser();
 
+  if (await isCurrentUserBlocked()) {
+    return NextResponse.json({ message: "이용이 제한된 계정입니다." }, { status: 403 });
+  }
+
   const { data: post } = await admin
     .from("think_posts")
-    .select("id, recommend_count, is_notice")
+    .select("id, recommend_count, is_notice, is_hidden")
     .eq("id", postId)
     .maybeSingle();
 
-  if (!post) {
+  if (!post || post.is_hidden) {
     return NextResponse.json({ message: "게시글을 찾을 수 없습니다." }, { status: 404 });
   }
 

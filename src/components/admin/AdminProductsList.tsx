@@ -10,6 +10,7 @@ import { productCategoryLabel } from "@/lib/productCategories";
 export interface AdminProductItem {
   id: string;
   title: string;
+  title_en?: string | null;
   price_krw: number;
   stock: number;
   category: string;
@@ -123,6 +124,9 @@ export function AdminProductsList({ products }: { products: AdminProductItem[] }
                 <SaleStatusBadge onSale={product.is_sale} />
                 <StockDisplayBadge show={product.show_stock !== false} />
               </div>
+              {product.title_en?.trim() && (
+                <p className="mt-0.5 truncate text-xs text-muted">{product.title_en.trim()}</p>
+              )}
               <p className="mt-0.5 text-xs text-muted">
                 {productCategoryLabel(product.category, product.subcategory)} · ₩
                 {product.price_krw.toLocaleString("ko-KR")} · 재고 {product.stock}

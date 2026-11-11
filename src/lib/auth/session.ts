@@ -19,3 +19,15 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
     .maybeSingle();
   return profile?.role === "admin";
 }
+
+export async function isCurrentUserBlocked(): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user) return false;
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_blocked")
+    .eq("id", user.id)
+    .maybeSingle();
+  return Boolean(profile?.is_blocked);
+}

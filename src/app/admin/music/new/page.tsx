@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  ALBUM_TYPE_OPTIONS,
+  resolvePublishFields,
+  type AlbumPublishMode,
+  type AlbumType,
+} from "@/lib/albumPublish";
+import { writeAdminAudit } from "@/lib/adminAudit";
 import { createClient } from "@/lib/supabase/client";
 import { loadDurationFromFile } from "@/lib/audioDuration";
 import { buildCroppedCover } from "@/lib/image/cropCover";
@@ -55,6 +62,10 @@ export default function NewAlbumPage() {
   const [coverOffsetX, setCoverOffsetX] = useState(0);
   const [coverOffsetY, setCoverOffsetY] = useState(0);
   const [digitalPrice, setDigitalPrice] = useState("");
+  const [albumType, setAlbumType] = useState<AlbumType | "">("album");
+  const [releaseDate, setReleaseDate] = useState("");
+  const [publishMode, setPublishMode] = useState<AlbumPublishMode>("public");
+  const [scheduledAt, setScheduledAt] = useState("");
   const [tracks, setTracks] = useState<TrackFormRow[]>([newTrackRow()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -114,6 +125,11 @@ export default function NewAlbumPage() {
       return;
     }
 
+    if (publishMode === "scheduled" && !scheduledAt) {
+      setError("예약 공개 일시를 입력해주세요.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -127,6 +143,8 @@ export default function NewAlbumPage() {
         cover_url = coverUrlData.publicUrl;
       }
 
+      const publish = resolvePublishFields(publishMode, scheduledAt);
+
       const { data: album, error: albumErr } = await supabase
         .from("albums")
         .insert({
@@ -136,10 +154,27 @@ export default function NewAlbumPage() {
           description: description.trim() || null,
           cover_url,
           digital_price_krw: parsePrice(digitalPrice),
+          album_type: albumType || null,
+          release_date: releaseDate || null,
+          is_published: publish.is_published,
+          scheduled_publish_at: publish.scheduled_publish_at,
         })
         .select("id")
         .single();
       if (albumErr || !album) throw albumErr ?? new Error("앨범 생성 실패");
+
+      await writeAdminAudit({
+        module: "music",
+        action: "create",
+        targetType: "album",
+        targetId: album.id,
+        summary: `앨범 등록: ${title}`,
+        meta: {
+          album_type: albumType || null,
+          publish_mode: publishMode,
+          is_published: publish.is_published,
+        },
+      });
 
       for (let i = 0; i < validTracks.length; i++) {
         const row = validTracks[i];
@@ -181,6 +216,10 @@ export default function NewAlbumPage() {
       if (/digital_price|download_wav|download_mp3/i.test(message)) {
         setError(
           "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 을 실행해주세요.",
+        );
+      } else if (/album_type|scheduled_publish|is_published|release_date/i.test(message)) {
+        setError(
+          "앨범 공개/유형 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_admin_dashboard_phase2.sql 을 실행해주세요.",
         );
       } else if (/artist_id|column/i.test(message)) {
         setError(
@@ -248,6 +287,64 @@ export default function NewAlbumPage() {
             required
             className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
           />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 유형</label>
+            <select
+              value={albumType}
+              onChange={(e) => setAlbumType(e.target.value as AlbumType | "")}
+              className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground"
+            >
+              {ALBUM_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">발매일</label>
+            <input
+              type="date"
+              value={releaseDate}
+              onChange={(e) => setReleaseDate(e.target.value)}
+              className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">공개 설정</label>
+          <div className="flex flex-wrap gap-4 text-sm">
+            {(
+              [
+                { value: "public", label: "공개 즉시" },
+                { value: "scheduled", label: "예약 공개" },
+                { value: "private", label: "비공개" },
+              ] as const
+            ).map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="publishMode"
+                  checked={publishMode === opt.value}
+                  onChange={() => setPublishMode(opt.value)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+          {publishMode === "scheduled" ? (
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
+              required
+              className="mt-3 w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+            />
+          ) : null}
         </div>
 
         <div>

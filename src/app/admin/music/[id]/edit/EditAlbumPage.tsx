@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  ALBUM_TYPE_OPTIONS,
+  inferPublishMode,
+  resolvePublishFields,
+  toDatetimeLocalValue,
+  type AlbumPublishMode,
+  type AlbumType,
+} from "@/lib/albumPublish";
+import { writeAdminAudit } from "@/lib/adminAudit";
 import { createClient } from "@/lib/supabase/client";
 import { loadDurationFromFile, loadDurationFromUrl } from "@/lib/audioDuration";
 import { buildCroppedCover } from "@/lib/image/cropCover";
@@ -65,6 +74,10 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
   const [coverOffsetX, setCoverOffsetX] = useState(0);
   const [coverOffsetY, setCoverOffsetY] = useState(0);
   const [digitalPrice, setDigitalPrice] = useState("");
+  const [albumType, setAlbumType] = useState<AlbumType | "">("");
+  const [releaseDate, setReleaseDate] = useState("");
+  const [publishMode, setPublishMode] = useState<AlbumPublishMode>("public");
+  const [scheduledAt, setScheduledAt] = useState("");
   const [tracks, setTracks] = useState<TrackEditRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -78,9 +91,21 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       const { data: artistRows } = await supabase.from("artists").select("id, name").order("name");
       let { data, error: fetchError } = await supabase
         .from("albums")
-        .select("title, artist_id, artist_name, description, cover_url, digital_price_krw, album_tracks(*)")
+        .select(
+          "title, artist_id, artist_name, description, cover_url, digital_price_krw, album_type, release_date, is_published, scheduled_publish_at, album_tracks(*)",
+        )
         .eq("id", albumId)
         .single();
+
+      if (fetchError && /album_type|scheduled_publish|is_published|release_date/i.test(fetchError.message)) {
+        const retry = await supabase
+          .from("albums")
+          .select("title, artist_id, artist_name, description, cover_url, digital_price_krw, album_tracks(*)")
+          .eq("id", albumId)
+          .single();
+        data = retry.data as typeof data;
+        fetchError = retry.error;
+      }
 
       if (fetchError && /digital_price/i.test(fetchError.message)) {
         const retry = await supabase
@@ -104,6 +129,15 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       setTitle(data.title);
       setDescription(data.description ?? "");
       setDigitalPrice(data.digital_price_krw ? String(data.digital_price_krw) : "");
+      setAlbumType((data.album_type as AlbumType | null) ?? "");
+      setReleaseDate(data.release_date ? String(data.release_date).slice(0, 10) : "");
+      setPublishMode(
+        inferPublishMode({
+          is_published: data.is_published ?? true,
+          scheduled_publish_at: data.scheduled_publish_at ?? null,
+        }),
+      );
+      setScheduledAt(toDatetimeLocalValue(data.scheduled_publish_at));
       setCurrentCoverUrl(data.cover_url);
       setCoverPreview(data.cover_url);
 
@@ -188,9 +222,15 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       return;
     }
 
+    if (publishMode === "scheduled" && !scheduledAt) {
+      setError("예약 공개 일시를 입력해주세요.");
+      return;
+    }
+
     setSaving(true);
 
     try {
+      const publish = resolvePublishFields(publishMode, scheduledAt);
       const albumUpdate: {
         title: string;
         artist_id: string;
@@ -198,12 +238,20 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
         description: string | null;
         cover_url?: string | null;
         digital_price_krw: number | null;
+        album_type: string | null;
+        release_date: string | null;
+        is_published: boolean;
+        scheduled_publish_at: string | null;
       } = {
         title,
         artist_id: selectedArtist.id,
         artist_name: selectedArtist.name,
         description: description.trim() || null,
         digital_price_krw: parsePrice(digitalPrice),
+        album_type: albumType || null,
+        release_date: releaseDate || null,
+        is_published: publish.is_published,
+        scheduled_publish_at: publish.scheduled_publish_at,
       };
 
       if (coverFile) {
@@ -220,6 +268,19 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
         .update(albumUpdate)
         .eq("id", albumId);
       if (albumErr) throw albumErr;
+
+      await writeAdminAudit({
+        module: "music",
+        action: "update",
+        targetType: "album",
+        targetId: albumId,
+        summary: `앨범 수정: ${title}`,
+        meta: {
+          album_type: albumType || null,
+          publish_mode: publishMode,
+          is_published: publish.is_published,
+        },
+      });
 
       const removedWithId = tracks.filter((row) => row.removed && row.id);
       for (const row of removedWithId) {
@@ -300,6 +361,10 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
         setError(
           "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 을 실행해주세요.",
         );
+      } else if (/album_type|scheduled_publish|is_published|release_date/i.test(message)) {
+        setError(
+          "앨범 공개/유형 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_admin_dashboard_phase2.sql 을 실행해주세요.",
+        );
       } else if (/artist_id|column/i.test(message)) {
         setError(
           "DB에 artist_id 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_albums_artist_id.sql 을 실행해주세요.",
@@ -325,6 +390,14 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       setError(deleteError.message);
       return;
     }
+
+    await writeAdminAudit({
+      module: "music",
+      action: "delete",
+      targetType: "album",
+      targetId: albumId,
+      summary: `앨범 삭제: ${title}`,
+    });
 
     router.push("/admin/music");
     router.refresh();
@@ -386,6 +459,65 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
             required
             className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
           />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 유형</label>
+            <select
+              value={albumType}
+              onChange={(e) => setAlbumType(e.target.value as AlbumType | "")}
+              className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground"
+            >
+              <option value="">선택</option>
+              {ALBUM_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">발매일</label>
+            <input
+              type="date"
+              value={releaseDate}
+              onChange={(e) => setReleaseDate(e.target.value)}
+              className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">공개 설정</label>
+          <div className="flex flex-wrap gap-4 text-sm">
+            {(
+              [
+                { value: "public", label: "공개 즉시" },
+                { value: "scheduled", label: "예약 공개" },
+                { value: "private", label: "비공개" },
+              ] as const
+            ).map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="publishMode"
+                  checked={publishMode === opt.value}
+                  onChange={() => setPublishMode(opt.value)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+          {publishMode === "scheduled" ? (
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
+              required
+              className="mt-3 w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+            />
+          ) : null}
         </div>
 
         <div>

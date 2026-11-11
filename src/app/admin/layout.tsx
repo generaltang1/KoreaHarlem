@@ -1,6 +1,23 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/supabase/admin";
 
+const NAV = [
+  { href: "/admin/dashboard", label: "대시보드" },
+  { href: "/admin/artists/dashboard", label: "아티스트 대시보드" },
+  { href: "/admin/artists", label: "아티스트" },
+  { href: "/admin/music", label: "음악" },
+
+  { href: "/admin/dj-set", label: "DJ SET" },
+  { href: "/admin/products", label: "상품" },
+  { href: "/admin/orders", label: "주문" },
+  { href: "/admin/orders/claims", label: "클레임" },
+  { href: "/admin/tips", label: "제보" },
+  { href: "/admin/think", label: "THINK" },
+  { href: "/admin/magazine", label: "매거진" },
+  { href: "/admin/members", label: "회원" },
+  { href: "/admin/events/new", label: "이벤트" },
+] as const;
+
 export default async function AdminLayout({
   children,
 }: {
@@ -9,51 +26,32 @@ export default async function AdminLayout({
   await requireAdmin();
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-foreground text-background">
-        <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-4 md:px-6">
-          <span className="text-[10px] font-semibold uppercase tracking-widest">
-            Admin
-          </span>
-          <nav className="flex items-center gap-4">
-            <Link href="/admin" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              대시보드
-            </Link>
-            <Link href="/admin/artists" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              아티스트 관리
-            </Link>
-            <Link href="/admin/music" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              음악 관리
-            </Link>
-            <Link href="/admin/dj-set" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              DJ SET
-            </Link>
-            <Link href="/admin/products" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              상품 관리
-            </Link>
-            <Link href="/admin/orders" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              주문 관리
-            </Link>
-            <Link href="/admin/tips" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              제보하기 관리
-            </Link>
-            <Link href="/admin/think" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              THINK 관리
-            </Link>
-            <Link href="/admin/events/new" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              이벤트 등록
-            </Link>
+    <div className="min-h-screen bg-neutral-100 text-neutral-900">
+      <header className="border-b border-neutral-800 bg-[#0a0a0a] text-[#F4F1EA]">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 md:px-6">
+          <Link href="/admin/dashboard" className="text-xs font-black uppercase tracking-[0.2em]">
+            KH Admin
+          </Link>
+          <nav className="flex flex-1 flex-wrap items-center gap-3">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-[10px] uppercase tracking-widest text-neutral-400 transition-colors hover:text-white"
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
-          <div className="ml-auto">
-            <Link href="/" className="text-[10px] uppercase tracking-widest text-background/60 transition-colors hover:text-background">
-              ← 사이트로
-            </Link>
-          </div>
+          <Link
+            href="/"
+            className="text-[10px] uppercase tracking-widest text-neutral-500 transition-colors hover:text-white"
+          >
+            ← 사이트
+          </Link>
         </div>
-      </div>
-      <main className="mx-auto max-w-5xl px-4 py-12 md:px-6">
-        {children}
-      </main>
+      </header>
+      <main className="mx-auto max-w-[1600px] px-4 py-8 md:px-6 md:py-10">{children}</main>
     </div>
   );
 }

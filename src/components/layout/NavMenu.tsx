@@ -36,7 +36,7 @@ function DesktopSubMenu({
 
   return (
     <div
-      className={`absolute left-0 top-full z-50 min-w-[180px] border py-2 transition-all ${panel} ${
+      className={`absolute left-0 top-full z-[100] min-w-[180px] border py-2 transition-all ${panel} ${
         open ? "visible opacity-100" : "invisible pointer-events-none opacity-0"
       }`}
     >
@@ -58,7 +58,7 @@ function DesktopSubMenu({
               </span>
             </button>
             <div
-              className={`absolute left-full top-0 z-50 hidden min-w-[160px] border py-2 transition-all lg:block ${panel} ${
+              className={`absolute left-full top-0 z-[100] hidden min-w-[160px] border py-2 transition-all lg:block ${panel} ${
                 openSub === item.label
                   ? "visible opacity-100"
                   : "invisible pointer-events-none opacity-0"

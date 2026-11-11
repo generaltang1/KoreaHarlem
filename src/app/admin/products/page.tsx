@@ -36,6 +36,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
     return {
       id: product.id,
       title: product.title,
+      title_en: product.title_en ?? null,
       price_krw: product.price_krw,
       stock: product.stock,
       category: product.category ?? "merch",

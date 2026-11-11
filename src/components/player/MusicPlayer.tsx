@@ -49,6 +49,7 @@ export function MusicPlayer() {
 
   const supportsAppVolume = useSupportsAppVolume();
   const prevTrackId = useRef<string | null>(null);
+  const countedPlayIds = useRef<Set<string>>(new Set());
   const displayVolume = isMuted || volume <= 0 ? 0 : volume;
 
   useEffect(() => {
@@ -62,6 +63,12 @@ export function MusicPlayer() {
       audioRef.current.src = currentTrack.audio_url;
       audioRef.current.load();
       if (isPlaying) audioRef.current.play().catch(() => {});
+      if (!countedPlayIds.current.has(currentTrack.id)) {
+        countedPlayIds.current.add(currentTrack.id);
+        void fetch(`/api/music/tracks/${currentTrack.id}/play`, { method: "POST" }).catch(
+          () => {},
+        );
+      }
     }
   }, [currentTrack, audioRef, isPlaying]);
 

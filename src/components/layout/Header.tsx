@@ -71,7 +71,7 @@ export function Header() {
 
   return (
     <div className="sticky top-0 z-50">
-      <header className="select-none border-b border-neutral-800 bg-black/95 text-neutral-100 backdrop-blur-md">
+      <header className="relative z-30 select-none border-b border-neutral-800 bg-black/95 text-neutral-100 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1720px] items-center justify-between gap-4 px-4 sm:px-8 md:h-16">
           <div className="flex min-w-0 items-center gap-3 sm:gap-6">
             <button
@@ -105,9 +105,9 @@ export function Header() {
                   <button className="font-mono text-xs uppercase tracking-wider text-rose-400 transition-colors hover:text-rose-300">
                     Admin
                   </button>
-                  <div className="invisible absolute left-0 top-full z-50 min-w-[160px] border border-neutral-800 bg-black/95 py-2 opacity-0 backdrop-blur-md transition-all group-hover:visible group-hover:opacity-100">
+                  <div className="invisible absolute left-0 top-full z-[100] min-w-[160px] border border-neutral-800 bg-black/95 py-2 opacity-0 backdrop-blur-md transition-all group-hover:visible group-hover:opacity-100">
                     <Link
-                      href="/admin"
+                      href="/admin/dashboard"
                       className="block px-4 py-2 font-mono text-xs text-neutral-300 hover:bg-neutral-800/50 hover:text-white"
                     >
                       대시보드
@@ -231,7 +231,7 @@ export function Header() {
             <div className="mt-4 border-t border-neutral-800 pt-4">
               {isAdmin && (
                 <Link
-                  href="/admin"
+                  href="/admin/dashboard"
                   onClick={() => setMenuOpen(false)}
                   className="block py-3 text-sm uppercase tracking-widest text-rose-400"
                 >

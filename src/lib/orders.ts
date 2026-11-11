@@ -28,6 +28,8 @@ export function orderStatusLabel(status: string): string {
       return "결제대기";
     case "preparing":
       return "배송준비중";
+    case "ready":
+      return "배송준비중";
     case "cancelled":
       return "취소";
     case "refunded":
@@ -70,15 +72,16 @@ export function isMemberCancellableStatus(status: string): boolean {
 /** 관리자 배송 상태 전환 허용 여부 */
 export function canTransitionShipping(from: string, to: string): boolean {
   const allowed: Record<string, string[]> = {
-    paid: ["preparing", "shipped"],
-    preparing: ["shipped"],
+    paid: ["preparing", "ready", "shipped"],
+    preparing: ["ready", "shipped"],
+    ready: ["shipped"],
     shipped: ["delivered"],
   };
   return (allowed[from] ?? []).includes(to);
 }
 
 /** 일괄 배송 상태 변경에 허용하는 목표 상태 */
-export const BULK_SHIPPING_STATUSES = ["preparing", "shipped", "delivered"] as const;
+export const BULK_SHIPPING_STATUSES = ["preparing", "ready", "shipped", "delivered"] as const;
 export type BulkShippingStatus = (typeof BULK_SHIPPING_STATUSES)[number];
 
 export function isBulkShippingStatus(value: string): value is BulkShippingStatus {
@@ -102,6 +105,8 @@ export const MEMBER_ORDER_STATUS_FILTERS: { label: string; value: string }[] = [
   { label: "결제대기", value: "pending" },
   { label: "결제완료", value: "paid" },
   { label: "배송준비중", value: "preparing" },
+  { label: "배송준비중(ready)", value: "ready" },
+  { label: "배송대기(결제완료)", value: "paid" },
   { label: "배송중", value: "shipped" },
   { label: "배송완료", value: "delivered" },
   { label: "취소", value: "cancelled" },

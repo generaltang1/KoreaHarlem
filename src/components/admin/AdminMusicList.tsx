@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { writeAdminAudit } from "@/lib/adminAudit";
+import type { AlbumPublishStatus } from "@/lib/albumPublish";
 import { createClient } from "@/lib/supabase/client";
 
 export interface AdminAlbumItem {
@@ -11,6 +13,32 @@ export interface AdminAlbumItem {
   artist: string;
   track_count: number;
   created_at: string;
+  album_type?: string | null;
+  album_type_label?: string;
+  release_date?: string | null;
+  publish_status?: AlbumPublishStatus;
+  publish_status_label?: string;
+  play_count?: number;
+  download_count?: number;
+  scheduled_publish_at?: string | null;
+}
+
+function PublishBadge({ status }: { status?: AlbumPublishStatus }) {
+  const label =
+    status === "public" ? "공개" : status === "scheduled" ? "예약" : "비공개";
+  const className =
+    status === "public"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      : status === "scheduled"
+        ? "border-amber-200 bg-amber-50 text-amber-900"
+        : "border-neutral-200 bg-neutral-50 text-neutral-600";
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center border px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest ${className}`}
+    >
+      {label}
+    </span>
+  );
 }
 
 export function AdminMusicList({ albums }: { albums: AdminAlbumItem[] }) {
@@ -32,6 +60,14 @@ export function AdminMusicList({ albums }: { albums: AdminAlbumItem[] }) {
       setError(deleteError.message);
       return;
     }
+
+    await writeAdminAudit({
+      module: "music",
+      action: "delete",
+      targetType: "album",
+      targetId: id,
+      summary: `앨범 삭제: ${title}`,
+    });
 
     router.refresh();
   };
@@ -59,10 +95,25 @@ export function AdminMusicList({ albums }: { albums: AdminAlbumItem[] }) {
           className="flex flex-col gap-3 border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{album.title}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate text-sm font-medium">{album.title}</p>
+              <PublishBadge status={album.publish_status} />
+              {album.album_type_label && album.album_type_label !== "—" ? (
+                <span className="text-[10px] uppercase tracking-widest text-muted">
+                  {album.album_type_label}
+                </span>
+              ) : null}
+            </div>
             <p className="truncate text-xs text-muted">{album.artist}</p>
             <p className="mt-1 text-[10px] text-muted">
-              {album.track_count} tracks · {new Date(album.created_at).toLocaleDateString("ko-KR")}
+              {album.track_count} tracks
+              {album.release_date
+                ? ` · 발매 ${new Date(album.release_date).toLocaleDateString("ko-KR")}`
+                : ` · ${new Date(album.created_at).toLocaleDateString("ko-KR")}`}
+              {album.publish_status === "scheduled" && album.scheduled_publish_at
+                ? ` · 예약 ${new Date(album.scheduled_publish_at).toLocaleString("ko-KR")}`
+                : ""}
+              {` · ▶ ${album.play_count ?? 0} · ↓ ${album.download_count ?? 0}`}
             </p>
           </div>
           <div className="flex shrink-0 gap-2">

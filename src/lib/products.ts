@@ -7,6 +7,7 @@ import type { TicketLineupItem } from "@/lib/ticketMeta";
 export interface DbProduct {
   id: string;
   title: string;
+  title_en?: string | null;
   description?: string | null;
   price_krw: number;
   compare_at_price_krw?: number | null;

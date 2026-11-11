@@ -18,6 +18,12 @@ export default async function ThinkPostPage({ params }: PageProps) {
   const { data: post } = await admin.from("think_posts").select("*").eq("id", id).maybeSingle();
   if (!post) notFound();
 
+  // 숨김 글은 관리자만 열람
+  if (post.is_hidden) {
+    const { isCurrentUserAdmin } = await import("@/lib/auth/session");
+    if (!(await isCurrentUserAdmin())) notFound();
+  }
+
   await admin
     .from("think_posts")
     .update({ view_count: (post.view_count ?? 0) + 1 })

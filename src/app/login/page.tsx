@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage, signInWithGoogle, signInWithKakao } from "@/lib/auth/oauth";
+import { enforceNotBlocked } from "@/lib/auth/enforceNotBlocked";
 import {
   AuthCard,
   AuthDarkShell,
@@ -47,24 +48,31 @@ export default function LoginPage() {
     setLoading(true);
 
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
 
     if (authError) {
+      setLoading(false);
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");
-    } else {
-      if (!persist) {
-        // 세션 유지 해제 요청은 클라이언트 persist 플래그로만 기록 (Supabase는 기본 세션 유지)
-        try {
-          sessionStorage.setItem("kh_session_temp", "1");
-        } catch {
-          /* ignore */
-        }
-      }
-      const params = new URLSearchParams(window.location.search);
-      const next = params.get("next");
-      router.push(next && next.startsWith("/") ? next : "/");
-      router.refresh();
+      return;
     }
+
+    const { blocked } = await enforceNotBlocked(supabase);
+    setLoading(false);
+    if (blocked) {
+      setError("이용이 제한된 계정입니다. 고객센터로 문의해 주세요.");
+      return;
+    }
+
+    if (!persist) {
+      try {
+        sessionStorage.setItem("kh_session_temp", "1");
+      } catch {
+        /* ignore */
+      }
+    }
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("next");
+    router.push(next && next.startsWith("/") ? next : "/");
+    router.refresh();
   };
 
   const handleGoogle = async () => {

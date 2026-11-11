@@ -8,7 +8,8 @@ import {
   useRef,
   useState,
 } from "react";
-import type { DjSetTrack } from "@/lib/djSet";
+import type { DjSetLiveSettings, DjSetTrack } from "@/lib/djSet";
+import { extractYoutubeVideoId } from "@/lib/djSet";
 import { notifyCollectionPause, notifyDjTakeover, onMusicTakeover } from "@/lib/playbackFocus";
 import { usePlayer } from "@/context/PlayerContext";
 
@@ -19,11 +20,22 @@ type DjSetContextValue = {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
+  volume: number;
   ready: boolean;
+  liveEnabled: boolean;
+  liveUrl: string | null;
+  liveVideoId: string | null;
+  liveMode: boolean;
+  livePlaying: boolean;
   toggle: () => void;
   play: () => void;
   pause: () => void;
   playNext: () => void;
+  playAt: (nextIndex: number) => void;
+  setVolume: (value: number) => void;
+  enterLive: () => void;
+  exitLive: () => void;
+  toggleLivePlay: () => void;
 };
 
 const DjSetContext = createContext<DjSetContextValue | null>(null);
@@ -39,22 +51,36 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolumeState] = useState(0.8);
   const [ready, setReady] = useState(false);
+  const [liveEnabled, setLiveEnabled] = useState(false);
+  const [liveUrl, setLiveUrl] = useState<string | null>(null);
+  const [liveMode, setLiveMode] = useState(false);
+  const [livePlaying, setLivePlaying] = useState(false);
+
+  const liveVideoId = extractYoutubeVideoId(liveUrl);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/dj-set/tracks");
-        if (!res.ok) {
-          if (!cancelled) setReady(true);
-          return;
-        }
-        const json = (await res.json()) as { tracks?: DjSetTrack[] };
+        const [tracksRes, settingsRes] = await Promise.all([
+          fetch("/api/dj-set/tracks"),
+          fetch("/api/dj-set/settings"),
+        ]);
         if (!cancelled) {
-          const list = json.tracks ?? [];
-          setTracks(list);
-          tracksRef.current = list;
+          if (tracksRes.ok) {
+            const json = (await tracksRes.json()) as { tracks?: DjSetTrack[] };
+            const list = json.tracks ?? [];
+            setTracks(list);
+            tracksRef.current = list;
+          }
+          if (settingsRes.ok) {
+            const json = (await settingsRes.json()) as { settings?: DjSetLiveSettings };
+            const s = json.settings;
+            setLiveEnabled(Boolean(s?.live_enabled && s?.live_url));
+            setLiveUrl(s?.live_url ?? null);
+          }
           setReady(true);
         }
       } catch {
@@ -78,34 +104,38 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
     return onMusicTakeover(() => {
       setIsPlaying(false);
       audioRef.current?.pause();
+      setLivePlaying(false);
     });
   }, []);
 
-  const loadIndex = useCallback((nextIndex: number, autoplay: boolean) => {
-    const list = tracksRef.current;
-    if (list.length === 0) return;
-    const i = ((nextIndex % list.length) + list.length) % list.length;
-    const track = list[i];
-    setIndex(i);
-    indexRef.current = i;
-    setCurrentTime(0);
-    const audio = audioRef.current;
-    if (!audio || !track) return;
-    if (audio.src !== track.audio_url) {
-      audio.src = track.audio_url;
-      audio.load();
-    }
-    if (autoplay) {
-      notifyDjTakeover();
-      notifyCollectionPause();
-      pauseMusic();
-      setIsPlaying(true);
-      void audio.play().catch(() => setIsPlaying(false));
-    } else {
-      setIsPlaying(false);
-      audio.pause();
-    }
-  }, [pauseMusic]);
+  const loadIndex = useCallback(
+    (nextIndex: number, autoplay: boolean) => {
+      const list = tracksRef.current;
+      if (list.length === 0) return;
+      const i = ((nextIndex % list.length) + list.length) % list.length;
+      const track = list[i];
+      setIndex(i);
+      indexRef.current = i;
+      setCurrentTime(0);
+      const audio = audioRef.current;
+      if (!audio || !track) return;
+      if (audio.src !== track.audio_url) {
+        audio.src = track.audio_url;
+        audio.load();
+      }
+      if (autoplay) {
+        notifyDjTakeover();
+        notifyCollectionPause();
+        pauseMusic();
+        setIsPlaying(true);
+        void audio.play().catch(() => setIsPlaying(false));
+      } else {
+        setIsPlaying(false);
+        audio.pause();
+      }
+    },
+    [pauseMusic],
+  );
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -130,7 +160,7 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
   }, [loadIndex]);
 
   useEffect(() => {
-    if (tracks.length === 0) return;
+    if (tracks.length === 0 || liveMode) return;
     const audio = audioRef.current;
     const track = tracks[index];
     if (!audio || !track) return;
@@ -138,10 +168,23 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
       audio.src = track.audio_url;
       audio.load();
     }
-  }, [tracks, index]);
+  }, [tracks, index, liveMode]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = Math.max(0, Math.min(1, volume));
+  }, [volume]);
+
+  const pause = useCallback(() => {
+    setIsPlaying(false);
+    audioRef.current?.pause();
+  }, []);
 
   const play = useCallback(() => {
     if (tracksRef.current.length === 0) return;
+    setLiveMode(false);
+    setLivePlaying(false);
     notifyDjTakeover();
     notifyCollectionPause();
     pauseMusic();
@@ -149,19 +192,55 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
     void audioRef.current?.play().catch(() => setIsPlaying(false));
   }, [pauseMusic]);
 
-  const pause = useCallback(() => {
-    setIsPlaying(false);
-    audioRef.current?.pause();
-  }, []);
-
   const toggle = useCallback(() => {
+    if (liveMode) {
+      setLivePlaying((v) => !v);
+      return;
+    }
     if (isPlaying) pause();
     else play();
-  }, [isPlaying, pause, play]);
+  }, [isPlaying, liveMode, pause, play]);
 
   const playNext = useCallback(() => {
+    if (liveMode) return;
     loadIndex(indexRef.current + 1, true);
-  }, [loadIndex]);
+  }, [loadIndex, liveMode]);
+
+  const playAt = useCallback(
+    (nextIndex: number) => {
+      setLiveMode(false);
+      setLivePlaying(false);
+      loadIndex(nextIndex, true);
+    },
+    [loadIndex],
+  );
+
+  const setVolume = useCallback((value: number) => {
+    setVolumeState(Math.max(0, Math.min(1, value)));
+  }, []);
+
+  const enterLive = useCallback(() => {
+    if (!liveEnabled || !liveVideoId) return;
+    pause();
+    notifyDjTakeover();
+    notifyCollectionPause();
+    pauseMusic();
+    setLiveMode(true);
+    setLivePlaying(true);
+  }, [liveEnabled, liveVideoId, pause, pauseMusic]);
+
+  const exitLive = useCallback(() => {
+    setLiveMode(false);
+    setLivePlaying(false);
+  }, []);
+
+  const toggleLivePlay = useCallback(() => {
+    if (!liveMode) {
+      enterLive();
+      return;
+    }
+    setLivePlaying((v) => !v);
+  }, [enterLive, liveMode]);
 
   const current = tracks[index] ?? null;
 
@@ -169,14 +248,25 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
     tracks,
     current,
     index,
-    isPlaying,
+    isPlaying: liveMode ? livePlaying : isPlaying,
     currentTime,
     duration,
+    volume,
     ready,
+    liveEnabled,
+    liveUrl,
+    liveVideoId,
+    liveMode,
+    livePlaying,
     toggle,
     play,
     pause,
     playNext,
+    playAt,
+    setVolume,
+    enterLive,
+    exitLive,
+    toggleLivePlay,
   };
 
   return (

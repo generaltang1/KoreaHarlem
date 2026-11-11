@@ -8,6 +8,7 @@ import { toIlikePattern } from "@/lib/search";
 export interface AdminProductRow {
   id: string;
   title: string;
+  title_en?: string | null;
   price_krw: number;
   stock: number;
   category: string;
@@ -26,7 +27,7 @@ export async function searchProductsPaged(
   let query = supabase
     .from("products")
     .select(
-      "id, title, price_krw, stock, category, subcategory, is_published, is_sale, show_stock, created_at, product_images(url, sort_order)",
+      "id, title, title_en, price_krw, stock, category, subcategory, is_published, is_sale, show_stock, created_at, product_images(url, sort_order)",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });
@@ -36,7 +37,25 @@ export async function searchProductsPaged(
     query = query.ilike("title", toIlikePattern(q));
   }
 
-  const { data, count, error } = await query.range(options.from, options.to);
+  let { data, count, error } = await query.range(options.from, options.to);
+
+  // title_en 컬럼이 아직 없으면 기존 select로 재시도
+  if (error && /title_en/i.test(error.message)) {
+    let fallback = supabase
+      .from("products")
+      .select(
+        "id, title, price_krw, stock, category, subcategory, is_published, is_sale, show_stock, created_at, product_images(url, sort_order)",
+        { count: "exact" },
+      )
+      .order("created_at", { ascending: false });
+    if (q) {
+      fallback = fallback.ilike("title", toIlikePattern(q));
+    }
+    const retry = await fallback.range(options.from, options.to);
+    data = (retry.data ?? []).map((row) => ({ ...row, title_en: null }));
+    count = retry.count;
+    error = retry.error;
+  }
 
   if (error) {
     console.error("searchProductsPaged:", error.message);
@@ -44,7 +63,10 @@ export async function searchProductsPaged(
   }
 
   return {
-    data: (data ?? []) as AdminProductRow[],
+    data: (data ?? []).map((row) => ({
+      ...row,
+      title_en: "title_en" in row ? (row as { title_en?: string | null }).title_en ?? null : null,
+    })) as AdminProductRow[],
     count: count ?? 0,
   };
 }

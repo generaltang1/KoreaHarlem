@@ -9,11 +9,32 @@ export function AdminDjSetManager() {
   const [tracks, setTracks] = useState<DjSetTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [liveSaving, setLiveSaving] = useState(false);
   const [error, setError] = useState("");
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [liveUrl, setLiveUrl] = useState("");
+  const [liveEnabled, setLiveEnabled] = useState(false);
+
+  const loadLive = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/dj-set/settings");
+      const json = (await res.json()) as {
+        settings?: { live_url?: string | null; live_enabled?: boolean };
+        message?: string;
+      };
+      if (!res.ok) {
+        if (json.message) setError(json.message);
+        return;
+      }
+      setLiveUrl(json.settings?.live_url ?? "");
+      setLiveEnabled(Boolean(json.settings?.live_enabled));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -38,7 +59,35 @@ export function AdminDjSetManager() {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadLive();
+  }, [load, loadLive]);
+
+  const saveLive = async () => {
+    setLiveSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/dj-set/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          live_url: liveUrl.trim() || null,
+          live_enabled: liveEnabled,
+          live_platform: "youtube",
+        }),
+      });
+      const json = (await res.json()) as {
+        settings?: { live_url?: string | null; live_enabled?: boolean };
+        message?: string;
+      };
+      if (!res.ok) throw new Error(json.message || "라이브 설정 저장 실패");
+      setLiveUrl(json.settings?.live_url ?? "");
+      setLiveEnabled(Boolean(json.settings?.live_enabled));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "라이브 설정 저장 실패");
+    } finally {
+      setLiveSaving(false);
+    }
+  };
 
   const uploadFile = async (file: File, folder: string) => {
     const ext = file.name.split(".").pop() || "bin";
@@ -122,6 +171,38 @@ export function AdminDjSetManager() {
 
   return (
     <div className="space-y-8">
+      <section className="space-y-4 border border-border p-4">
+        <h2 className="text-sm font-medium uppercase tracking-wider">YouTube 라이브</h2>
+        <p className="text-xs text-muted">
+          공개 헤더 DJ SET에서 「라이브 듣기」로 YouTube 라이브 음원을 재생합니다.
+        </p>
+        <label className="block text-xs">
+          라이브 URL
+          <input
+            value={liveUrl}
+            onChange={(e) => setLiveUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=... 또는 /live/..."
+            className="mt-1 w-full border border-border bg-background px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={liveEnabled}
+            onChange={(e) => setLiveEnabled(e.target.checked)}
+          />
+          라이브 듣기 활성화
+        </label>
+        <button
+          type="button"
+          disabled={liveSaving}
+          onClick={() => void saveLive()}
+          className="border border-border px-4 py-2 text-[10px] uppercase tracking-widest hover:border-foreground disabled:opacity-50"
+        >
+          {liveSaving ? "저장 중…" : "저장"}
+        </button>
+      </section>
+
       <form onSubmit={(e) => void handleAdd(e)} className="space-y-4 border border-border p-4">
         <h2 className="text-sm font-medium uppercase tracking-wider">새 트랙 등록</h2>
         <div className="grid gap-3 md:grid-cols-2">

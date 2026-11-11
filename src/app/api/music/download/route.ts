@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { incrementTrackDownload } from "@/lib/musicStats";
 
 function safeFilename(name: string, ext: string) {
   const base = name
@@ -70,6 +71,8 @@ export async function GET(request: Request) {
   if (!fileRes.ok || !fileRes.body) {
     return NextResponse.json({ message: "파일을 가져오지 못했습니다." }, { status: 502 });
   }
+
+  void incrementTrackDownload(track.id);
 
   const filename = safeFilename(track.title, format);
   const contentType =

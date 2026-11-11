@@ -6,6 +6,7 @@ import type { ThinkPostDetail } from "@/lib/think";
 import { formatThinkDate, THINK_CONCEPT_THRESHOLD } from "@/lib/think";
 import { ThinkPostContent } from "@/components/think/ThinkPostContent";
 import { ThinkComments } from "@/components/think/ThinkComments";
+import { ThinkReportButton } from "@/components/think/ThinkReportButton";
 
 type ThinkPostDetailViewProps = {
   initialPost: ThinkPostDetail;
@@ -69,7 +70,7 @@ export function ThinkPostDetailView({
               <h1 className="text-lg font-semibold md:text-xl">{post.title}</h1>
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
             <span>{post.author_display}</span>
             <span>{formatThinkDate(post.created_at)}</span>
             <span>조회 {post.view_count}</span>
@@ -77,6 +78,9 @@ export function ThinkPostDetailView({
               <span aria-hidden>♥</span> {post.recommend_count}
             </span>
             <span>댓글 {post.comment_count ?? 0}</span>
+            <span className="ml-auto">
+              <ThinkReportButton postId={post.id} />
+            </span>
           </div>
         </header>
 

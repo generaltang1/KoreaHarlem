@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage, signInWithGoogle, signInWithKakao } from "@/lib/auth/oauth";
+import { enforceNotBlocked } from "@/lib/auth/enforceNotBlocked";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { TermsModal } from "@/components/ui/TermsModal";
 import { PrivacyModal } from "@/components/ui/PrivacyModal";
@@ -56,9 +57,15 @@ export function LoginModal() {
     setError("");
     setLoading(true);
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (authError) {
+      setLoading(false);
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      return;
+    }
+    const { blocked } = await enforceNotBlocked(supabase);
+    setLoading(false);
+    if (blocked) {
+      setError("이용이 제한된 계정입니다. 고객센터로 문의해 주세요.");
       return;
     }
     closeLoginModal();

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { getCurrentUser, isCurrentUserAdmin } from "@/lib/auth/session";
+import { getCurrentUser, isCurrentUserAdmin, isCurrentUserBlocked } from "@/lib/auth/session";
 import { getClientIp } from "@/lib/requestIp";
 import {
   THINK_CONCEPT_THRESHOLD,
@@ -51,7 +51,14 @@ export async function GET(request: Request) {
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
 
+  const isAdmin = await isCurrentUserAdmin();
   let query = admin.from("think_posts").select("*", { count: "exact" });
+
+  // 공개 목록에서는 숨김 글 제외 (관리자는 includeHidden=1 로 포함 가능)
+  const includeHidden = searchParams.get("includeHidden") === "1" && isAdmin;
+  if (!includeHidden) {
+    query = query.or("is_hidden.is.null,is_hidden.eq.false");
+  }
 
   if (tab === "notice") {
     query = query.eq("is_notice", true);
@@ -154,6 +161,10 @@ export async function POST(request: Request) {
 
   if (wantsNotice && !(await isCurrentUserAdmin())) {
     return NextResponse.json({ message: "공지는 관리자만 등록할 수 있습니다." }, { status: 403 });
+  }
+
+  if (await isCurrentUserBlocked()) {
+    return NextResponse.json({ message: "이용이 제한된 계정입니다." }, { status: 403 });
   }
 
   const user = await getCurrentUser();

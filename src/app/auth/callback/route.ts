@@ -19,6 +19,24 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_blocked")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile?.is_blocked) {
+          await supabase.auth.signOut();
+          return NextResponse.redirect(
+            `${origin}/login?error=auth&message=${encodeURIComponent(
+              "이용이 제한된 계정입니다. 고객센터로 문의해 주세요.",
+            )}`,
+          );
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
 

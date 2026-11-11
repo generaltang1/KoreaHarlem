@@ -9,11 +9,13 @@ import {
   OrderStatusTimeline,
   type OrderStatusHistoryItem,
 } from "@/components/admin/OrderStatusTimeline";
+import { writeAdminAudit } from "@/lib/adminAudit";
 import {
   REFUNDABLE_STATUSES,
   CANCELLABLE_PENDING_STATUSES,
   SHIPPING_COURIERS,
   canTransitionShipping,
+  orderStatusLabel,
 } from "@/lib/orders";
 import { getCurrency } from "@/lib/currency";
 import { orderTotalToTossCancelAmount } from "@/lib/toss";
@@ -42,6 +44,7 @@ interface AdminOrderRecord {
   prepared_at: string | null;
   shipped_at: string | null;
   delivered_at: string | null;
+  admin_memo: string | null;
   created_at: string;
   items: OrderDetailData["items"];
   csRequests: CsRequestItem[];
@@ -63,11 +66,16 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
   const [restoreStock, setRestoreStock] = useState(true);
   const [courier, setCourier] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
+  const [adminMemo, setAdminMemo] = useState("");
+  const [saveMsg, setSaveMsg] = useState("");
 
   const reload = () => {
     router.refresh();
     window.location.reload();
   };
+
+  const orderLabel = () =>
+    order?.order_number ?? orderId.slice(0, 8);
 
   useEffect(() => {
     fetch(`/api/admin/orders/${orderId}`)
@@ -77,6 +85,7 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
         setOrder(json.order);
         setCourier(json.order.tracking_courier ?? "");
         setTrackingNumber(json.order.tracking_number ?? "");
+        setAdminMemo(json.order.admin_memo ?? "");
         if (!json.order.csRequests) {
           json.order.csRequests = [];
         }
@@ -86,6 +95,59 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
       })
       .finally(() => setLoading(false));
   }, [orderId]);
+
+  const saveAdminMemo = async () => {
+    setActionLoading(true);
+    setError("");
+    setSaveMsg("");
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_memo: adminMemo }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "메모 저장 실패");
+      setSaveMsg("관리자 메모 저장됨");
+      setOrder((prev) => (prev ? { ...prev, admin_memo: adminMemo } : prev));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "메모 저장 실패");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const saveTracking = async () => {
+    setActionLoading(true);
+    setError("");
+    setSaveMsg("");
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tracking_courier: courier.trim() || null,
+          tracking_number: trackingNumber.trim() || null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "송장 저장 실패");
+      setSaveMsg("택배·송장 저장됨");
+      setOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              tracking_courier: courier.trim() || null,
+              tracking_number: trackingNumber.trim() || null,
+            }
+          : prev,
+      );
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "송장 저장 실패");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handlePendingCancel = async () => {
     if (!confirm("결제 대기 주문을 취소하고 재고를 복구할까요?")) return;
@@ -99,6 +161,14 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "취소 실패");
+      await writeAdminAudit({
+        module: "orders",
+        action: "cancel",
+        targetType: "order",
+        targetId: orderId,
+        summary: `주문 ${orderLabel()} 결제대기 취소`,
+        meta: { reason: reason.trim() || "관리자 주문 취소" },
+      });
       reload();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "취소 실패");
@@ -150,6 +220,14 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "환불 실패");
+      await writeAdminAudit({
+        module: "orders",
+        action: "refund",
+        targetType: "order",
+        targetId: orderId,
+        summary: `주문 ${orderLabel()} 환불`,
+        meta: { reason: reason.trim(), cancelAmount: amount, restoreStock },
+      });
       reload();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "환불 실패");
@@ -185,6 +263,18 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "배송 상태 변경 실패");
+      await writeAdminAudit({
+        module: "orders",
+        action: "shipping",
+        targetType: "order",
+        targetId: orderId,
+        summary: `주문 ${orderLabel()} → ${orderStatusLabel(action)}`,
+        meta: {
+          action,
+          trackingCourier: courier.trim() || undefined,
+          trackingNumber: trackingNumber.trim() || undefined,
+        },
+      });
       reload();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "배송 상태 변경 실패");
@@ -227,6 +317,7 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
       </div>
 
       {error && <p className="text-sm text-rose-500">{error}</p>}
+      {saveMsg && <p className="text-sm text-muted">{saveMsg}</p>}
 
       <OrderDetailView
         order={{
@@ -247,6 +338,25 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
         }}
         showActions={false}
       />
+
+      <section className="border border-border p-5">
+        <h2 className="text-sm font-medium uppercase tracking-wider">관리자 메모</h2>
+        <textarea
+          value={adminMemo}
+          onChange={(e) => setAdminMemo(e.target.value)}
+          rows={3}
+          placeholder="내부용 메모 (고객에게 노출되지 않음)"
+          className="mt-3 w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+        />
+        <button
+          type="button"
+          disabled={actionLoading}
+          onClick={() => void saveAdminMemo()}
+          className="mt-3 border border-border px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
+        >
+          저장
+        </button>
+      </section>
 
       <OrderStatusTimeline histories={order.statusHistories ?? []} />
 
@@ -290,6 +400,15 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
             </div>
           </div>
 
+          <button
+            type="button"
+            disabled={actionLoading}
+            onClick={() => void saveTracking()}
+            className="mt-3 border border-border px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
+          >
+            택배·송장 저장
+          </button>
+
           {(order.prepared_at || order.shipped_at || order.delivered_at) && (
             <dl className="mt-4 space-y-1 text-xs text-muted">
               {order.prepared_at && (
@@ -309,7 +428,7 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
               <button
                 type="button"
                 disabled={actionLoading}
-                onClick={() => handleShipping("preparing")}
+                onClick={() => void handleShipping("preparing")}
                 className="border border-border px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
               >
                 배송준비중
@@ -319,7 +438,7 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
               <button
                 type="button"
                 disabled={actionLoading}
-                onClick={() => handleShipping("shipped")}
+                onClick={() => void handleShipping("shipped")}
                 className="bg-foreground px-4 py-2 text-xs uppercase tracking-widest text-background disabled:opacity-50"
               >
                 송장등록 · 배송중
@@ -329,7 +448,7 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
               <button
                 type="button"
                 disabled={actionLoading}
-                onClick={() => handleShipping("delivered")}
+                onClick={() => void handleShipping("delivered")}
                 className="border border-border px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
               >
                 배송완료

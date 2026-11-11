@@ -29,14 +29,14 @@ export default async function AdminArtistsPage({ searchParams }: AdminArtistsPag
     q,
     from,
     to,
-    select: "id, name, bio, image_url, created_at",
+    select: "id, name, name_en, genre, bio, image_url, created_at",
   });
 
   const totalPages = getTotalPages(count, pageSize);
 
   return (
     <div>
-      <ListToolbar searchPlaceholder="아티스트명, 소개 검색" />
+      <ListToolbar searchPlaceholder="아티스트명, 영문명, 장르, 소개 검색" />
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted">Admin</p>
@@ -47,18 +47,28 @@ export default async function AdminArtistsPage({ searchParams }: AdminArtistsPag
             </p>
           )}
         </div>
-        <Link
-          href="/admin/artists/new"
-          className="border border-border px-4 py-2 text-[10px] uppercase tracking-widest transition-colors hover:border-foreground"
-        >
-          + 새 아티스트 등록
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/artists/dashboard"
+            className="border border-border px-4 py-2 text-[10px] uppercase tracking-widest transition-colors hover:border-foreground"
+          >
+            대시보드
+          </Link>
+          <Link
+            href="/admin/artists/new"
+            className="border border-border px-4 py-2 text-[10px] uppercase tracking-widest transition-colors hover:border-foreground"
+          >
+            + 새 아티스트 등록
+          </Link>
+        </div>
       </div>
 
       <AdminArtistsList
         artists={artists.map((artist) => ({
           id: artist.id,
           name: artist.name,
+          name_en: artist.name_en ?? null,
+          genre: artist.genre ?? null,
           bio: artist.bio ?? null,
           image_url: artist.image_url ?? null,
           created_at: artist.created_at ?? "",
