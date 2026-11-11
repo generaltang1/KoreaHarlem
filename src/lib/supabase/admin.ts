@@ -1,14 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
-/** Server-only Supabase client (bypasses RLS). Requires SUPABASE_SERVICE_ROLE_KEY. */
-export function createServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-}
+export { createServiceClient } from "@/lib/supabase/service";
 
 /** Admin layout guard — redirects non-admins to home. */
 export async function requireAdmin() {

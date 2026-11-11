@@ -1,6 +1,6 @@
 "use server";
 
-import { createServiceClient } from "@/lib/supabase/admin";
+import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getMemberNickname } from "@/lib/think";
 

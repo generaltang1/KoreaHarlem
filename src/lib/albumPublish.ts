@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 export type AlbumType = "single" | "ep" | "album" | "mix" | "playlist";
 export type AlbumPublishMode = "public" | "scheduled" | "private";
@@ -70,12 +69,12 @@ export function toDatetimeLocalValue(iso: string | null | undefined): string {
 
 /**
  * Auto-publish albums whose scheduled_publish_at has passed.
- * Call when admin music list / dashboard loads.
+ * Call when admin music list / dashboard loads (pass a server Supabase client).
  */
 export async function publishDueAlbums(
-  client?: SupabaseClient | null,
+  client: SupabaseClient | null | undefined,
 ): Promise<number> {
-  const db = client ?? createServiceClient();
+  const db = client;
   if (!db) return 0;
 
   const now = new Date().toISOString();

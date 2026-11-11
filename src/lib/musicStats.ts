@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { createServiceClient } from "@/lib/supabase/service";
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
