@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -492,7 +492,7 @@ export function AdminOrderDetail({ orderId }: AdminOrderDetailProps) {
 
             {canPartialRefund && (
               <>
-                <div className="border border-border bg-[#0c0c0c] px-4 py-3 text-sm">
+                <div className="border border-border bg-[#f8f9fa] px-4 py-3 text-sm">
                   <p>
                     결제액:{" "}
                     <span className="font-medium">

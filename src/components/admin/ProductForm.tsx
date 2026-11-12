@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -669,7 +669,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
               {stockSizeKeys.map((key) => (
                 <div
                   key={key || "__default"}
-                  className="border border-border bg-[#0c0c0c] px-4 py-3 text-sm"
+                  className="border border-border bg-[#f8f9fa] px-4 py-3 text-sm"
                 >
                   <span className="text-xs text-muted">{key || "단일 (사이즈 없음)"}</span>
                   <span className="ml-2 font-medium">{sizeStocks[key] ?? "0"}</span>
@@ -819,7 +819,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
           {keptExisting.map((img) => (
-            <div key={img.id} className="relative aspect-square border border-border bg-[#0c0c0c]">
+            <div key={img.id} className="relative aspect-square border border-border bg-[#f8f9fa]">
               <Image src={img.url} alt="" fill className="object-cover" />
               <button
                 type="button"
@@ -831,7 +831,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             </div>
           ))}
           {newPreviews.map((preview, index) => (
-            <div key={preview} className="relative aspect-square border border-border bg-[#0c0c0c]">
+            <div key={preview} className="relative aspect-square border border-border bg-[#f8f9fa]">
               <Image src={preview} alt="" fill className="object-cover" />
               <button
                 type="button"
@@ -904,12 +904,12 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 {[...keptExisting.map((img) => img.url), ...newPreviews].length === 0 ? (
-                  <div className="flex aspect-square items-center justify-center border border-border bg-[#0c0c0c] text-xs text-muted">
+                  <div className="flex aspect-square items-center justify-center border border-border bg-[#f8f9fa] text-xs text-muted">
                     이미지 없음
                   </div>
                 ) : (
                   [...keptExisting.map((img) => img.url), ...newPreviews].map((url) => (
-                    <div key={url} className="relative aspect-square border border-border bg-[#0c0c0c]">
+                    <div key={url} className="relative aspect-square border border-border bg-[#f8f9fa]">
                       <Image src={url} alt="" fill className="object-cover" />
                     </div>
                   ))

@@ -15,10 +15,10 @@ export function AdminPageHeader({
   actions,
 }: AdminPageHeaderProps) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[#262626] pb-6">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[#e8e8e8] pb-6">
       <div>
         <p className={admin.label}>{eyebrow}</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#F4F1EA]">{title}</h1>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#0a0a0a]">{title}</h1>
         {description ? <p className={`mt-2 text-sm ${admin.muted}`}>{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -36,7 +36,7 @@ export function AdminKpiRow({
       {items.map((item) => (
         <div key={item.label} className={`${admin.card} px-4 py-4`}>
           <p className={admin.label}>{item.label}</p>
-          <p className="mt-2 text-2xl font-semibold tabular-nums text-[#F4F1EA]">{item.value}</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-[#0a0a0a]">{item.value}</p>
           {item.hint ? <p className={`mt-1 text-xs ${admin.muted}`}>{item.hint}</p> : null}
         </div>
       ))}

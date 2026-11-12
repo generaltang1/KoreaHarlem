@@ -10,6 +10,7 @@ import { useLoginModal } from "@/context/LoginModalContext";
 import { TermsModal } from "@/components/ui/TermsModal";
 import { PrivacyModal } from "@/components/ui/PrivacyModal";
 import { GoogleMark, KakaoMark } from "@/components/auth/OAuthIcons";
+import { site } from "@/lib/siteTheme";
 
 export function LoginModal() {
   const { isOpen, closeLoginModal } = useLoginModal();
@@ -95,12 +96,12 @@ export function LoginModal() {
   return (
     <>
       <div
-        className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 backdrop-blur-[2px]"
+        className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 backdrop-blur-[4px]"
         onClick={closeLoginModal}
         role="presentation"
       >
         <div
-          className="relative w-full max-w-[420px] border border-[#2a2a2a] bg-[#141414] p-8 text-neutral-100 shadow-2xl"
+          className={`relative w-full max-w-[420px] p-8 ${site.glassModal} ${site.font} text-[#f4f1ea]`}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
@@ -111,7 +112,7 @@ export function LoginModal() {
             <button
               type="button"
               onClick={closeLoginModal}
-              className="flex h-8 w-8 items-center justify-center text-neutral-400 transition-colors hover:text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#a8a49b] transition-colors hover:bg-[rgba(244,241,234,0.06)] hover:text-[#f4f1ea]"
               aria-label="닫기"
             >
               ✕
@@ -121,7 +122,7 @@ export function LoginModal() {
           <h2 id="login-modal-title" className="text-xl font-bold tracking-tight">
             3초 만에 시작하기
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+          <p className="mt-2 text-sm leading-relaxed text-[#a8a49b]">
             로그인하고 주문 조회와 마이페이지를 바로 이용하세요. 처음이면 그대로 가입돼요.
           </p>
 
@@ -130,7 +131,7 @@ export function LoginModal() {
               type="button"
               onClick={handleKakao}
               disabled={!!oauthLoading}
-              className="flex w-full items-center justify-center gap-2 bg-[#FEE500] py-3.5 text-sm font-medium text-[#191919] transition-opacity hover:opacity-90 disabled:opacity-50"
+              className={`${site.yellowBtn} w-full gap-2`}
             >
               <KakaoMark />
               {oauthLoading === "kakao" ? "연결 중..." : "카카오톡으로 3초 만에 시작하기"}
@@ -139,7 +140,7 @@ export function LoginModal() {
               type="button"
               onClick={handleGoogle}
               disabled={!!oauthLoading}
-              className="flex w-full items-center justify-center gap-2 border border-[#333] bg-[#1c1c1c] py-3.5 text-sm text-white transition-colors hover:border-neutral-500 disabled:opacity-50"
+              className={`${site.ghostBtn} w-full gap-2`}
             >
               <GoogleMark />
               {oauthLoading === "google" ? "연결 중..." : "Google 계정으로 계속하기"}
@@ -147,16 +148,16 @@ export function LoginModal() {
           </div>
 
           <div className="my-5 flex items-center gap-3">
-            <div className="h-px flex-1 bg-[#2a2a2a]" />
-            <span className="text-[11px] text-neutral-500">또는</span>
-            <div className="h-px flex-1 bg-[#2a2a2a]" />
+            <div className="h-px flex-1 bg-[rgba(244,241,234,0.12)]" />
+            <span className="text-[11px] text-[#6e6b65]">또는</span>
+            <div className="h-px flex-1 bg-[rgba(244,241,234,0.12)]" />
           </div>
 
           {!emailMode ? (
             <button
               type="button"
               onClick={() => setEmailMode(true)}
-              className="w-full border border-[#333] bg-[#1c1c1c] py-3.5 text-sm text-white transition-colors hover:border-neutral-500"
+              className={`${site.ghostBtn} w-full`}
             >
               이메일로 로그인
             </button>
@@ -168,7 +169,7 @@ export function LoginModal() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="name@domain.com"
-                className="w-full border border-[#333] bg-[#0c0c0c] px-3 py-3 text-sm outline-none placeholder:text-neutral-600 focus:border-white"
+                className={site.input}
               />
               <input
                 type="password"
@@ -176,13 +177,13 @@ export function LoginModal() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="비밀번호를 입력해주세요"
-                className="w-full border border-[#333] bg-[#0c0c0c] px-3 py-3 text-sm outline-none placeholder:text-neutral-600 focus:border-white"
+                className={site.input}
               />
               {error && <p className="text-xs text-rose-400">{error}</p>}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#FEE500] py-3.5 text-sm font-semibold text-[#191919] disabled:opacity-50"
+                className={`${site.yellowBtn} w-full`}
               >
                 {loading ? "처리 중..." : "로그인하기"}
               </button>
@@ -191,7 +192,7 @@ export function LoginModal() {
 
           {error && !emailMode && <p className="mt-3 text-xs text-rose-400">{error}</p>}
 
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] text-neutral-500">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] text-[#a8a49b]">
             <button
               type="button"
               onClick={() => go("/signup")}
@@ -203,7 +204,7 @@ export function LoginModal() {
             <button
               type="button"
               onClick={() => go("/forgot-password")}
-              className="hover:text-white"
+              className="hover:text-[#f4f1ea]"
             >
               아이디 · 비밀번호 찾기
             </button>
@@ -211,26 +212,26 @@ export function LoginModal() {
             <button
               type="button"
               onClick={() => go("/order-inquiry")}
-              className="hover:text-white"
+              className="hover:text-[#f4f1ea]"
             >
               비회원 주문 조회
             </button>
           </div>
 
-          <p className="mt-4 text-center text-[11px] leading-relaxed text-neutral-500">
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-[#6e6b65]">
             시작하면{" "}
-            <button type="button" onClick={() => setTermsOpen(true)} className="underline hover:text-neutral-300">
+            <button type="button" onClick={() => setTermsOpen(true)} className="underline hover:text-[#f4f1ea]">
               이용약관
             </button>
             과{" "}
-            <button type="button" onClick={() => setPrivacyOpen(true)} className="underline hover:text-neutral-300">
+            <button type="button" onClick={() => setPrivacyOpen(true)} className="underline hover:text-[#f4f1ea]">
               개인정보처리방침
             </button>
             에 동의하게 돼요. 만 14세 이상만 가입할 수 있어요.
           </p>
 
-          <p className="mt-3 text-center text-[11px] text-neutral-600">
-            <Link href="/login" onClick={closeLoginModal} className="hover:text-neutral-400">
+          <p className="mt-3 text-center text-[11px] text-[#6e6b65]">
+            <Link href="/login" onClick={closeLoginModal} className="hover:text-[#a8a49b]">
               전체 로그인 페이지 →
             </Link>
           </p>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/supabase/admin";
+import { adminLight } from "@/lib/siteTheme";
 
 const NAV = [
   { href: "/admin/dashboard", label: "대시보드" },
@@ -25,8 +26,8 @@ export default async function AdminLayout({
   await requireAdmin();
 
   return (
-    <div className="admin-shell min-h-screen bg-[#0a0a0a] text-[#F4F1EA]">
-      <header className="sticky top-0 z-40 border-b border-[#262626] bg-[#0a0a0a]/95 backdrop-blur-md">
+    <div className={`admin-shell min-h-screen ${adminLight.page}`}>
+      <header className="sticky top-0 z-40 border-b border-[rgba(244,241,234,0.12)] bg-[#0a0a0a]/95 text-[#F4F1EA] backdrop-blur-md">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 md:px-6">
           <Link
             href="/admin/dashboard"

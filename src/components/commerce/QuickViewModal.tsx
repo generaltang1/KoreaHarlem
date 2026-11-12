@@ -9,6 +9,7 @@ import { getStockForSize } from "@/lib/stock";
 import { productCategoryLabel } from "@/lib/productCategories";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { site } from "@/lib/siteTheme";
 
 interface QuickViewModalProps {
   product: ProductWithImages;
@@ -58,7 +59,9 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
         onClick={onClose}
         aria-label="닫기"
       />
-      <div className="relative grid w-full max-w-[880px] overflow-hidden border border-[#262626] bg-[#0a0a0a] text-neutral-100 md:grid-cols-[400px_1fr]">
+      <div
+        className={`relative grid w-full max-w-[880px] overflow-hidden rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[#141414]/95 text-[#f4f1ea] shadow-[0_0_60px_rgba(0,0,0,0.55)] backdrop-blur-[10px] md:grid-cols-[400px_1fr] ${site.font}`}
+      >
         <div className="relative min-h-[280px] bg-white md:min-h-[520px]">
           {images[0] ? (
             <Image src={images[0]} alt={product.title} fill className="object-cover" sizes="400px" />
@@ -73,7 +76,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center text-neutral-400 hover:text-white"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-[8px] text-[#a8a49b] transition-colors hover:bg-[rgba(244,241,234,0.06)] hover:text-[#f4f1ea]"
             aria-label="닫기"
           >
             ✕
@@ -108,12 +111,12 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                       type="button"
                       disabled={out}
                       onClick={() => !out && setSize(s)}
-                      className={`relative min-w-14 border px-3 py-2.5 text-xs ${
+                      className={`relative min-w-14 rounded-[8px] border px-3 py-2.5 text-xs transition-colors ${
                         out
-                          ? "cursor-not-allowed border-[#333] text-neutral-600"
+                          ? "cursor-not-allowed border-[rgba(244,241,234,0.08)] text-[#6e6b65]"
                           : selected
-                            ? "border-[#f4f1ea] bg-[#f4f1ea] text-black"
-                            : "border-[#444] text-white hover:border-neutral-300"
+                            ? "border-[#f4f1ea] bg-[#f4f1ea] font-semibold text-[#0a0a0a]"
+                            : "border-[rgba(244,241,234,0.12)] text-[#f4f1ea] hover:bg-[rgba(244,241,234,0.06)]"
                       }`}
                     >
                       <span className={out ? "line-through" : ""}>{s}</span>
@@ -129,7 +132,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <span className="text-xs text-neutral-300">수량</span>
-            <div className="inline-flex items-center border border-[#333] bg-[#151515]">
+            <div className="inline-flex items-center overflow-hidden rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)]">
               <button
                 type="button"
                 className="flex h-8 w-8 items-center justify-center text-neutral-300 hover:text-white"
@@ -162,7 +165,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
           <div className="mt-auto space-y-3 pt-8">
             {!purchasable || soldOut ? (
-              <p className="border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center text-xs text-amber-200">
+              <p className="rounded-[8px] border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center text-xs text-amber-200">
                 {soldOut ? "품절된 상품입니다." : "판매 준비 중인 상품입니다."}
               </p>
             ) : (
@@ -170,14 +173,14 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                 <button
                   type="button"
                   onClick={addToCart}
-                  className="border border-[#f4f1ea]/40 py-3.5 text-sm text-white transition-colors hover:border-white"
+                  className={site.ghostBtn}
                 >
                   장바구니 담기
                 </button>
                 <Link
                   href={`/checkout?buy=${product.id}${size ? `&size=${encodeURIComponent(size)}` : ""}${qty > 1 ? `&qty=${qty}` : ""}`}
                   onClick={onClose}
-                  className="flex items-center justify-center bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black transition-opacity hover:opacity-90"
+                  className={site.creamBtn}
                 >
                   바로 구매
                 </Link>
@@ -186,7 +189,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             <Link
               href={`/sale/${product.id}`}
               onClick={onClose}
-              className="inline-block text-xs text-neutral-400 underline-offset-2 hover:text-white hover:underline"
+              className="inline-block text-xs text-[#a8a49b] underline-offset-2 hover:text-[#f4f1ea] hover:underline"
             >
               상품 상세 보기 →
             </Link>

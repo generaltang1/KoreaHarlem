@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { admin as adminTheme } from "@/lib/adminTheme";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { AdminOrderKpiCards } from "@/components/admin/AdminOrderKpiCards";
 import { AdminOrdersBulkList } from "@/components/admin/AdminOrdersBulkList";
@@ -72,7 +73,7 @@ export async function AdminOrdersPipeline({ stage, searchParams }: Props) {
         actions={
           <Link
             href="/admin/orders/claims"
-            className="inline-flex items-center justify-center border border-[#333] bg-transparent px-4 py-2 text-xs uppercase tracking-widest text-[#F4F1EA] transition hover:border-[#a8a49b]"
+            className={adminTheme.btnGhost}
           >
             클레임
           </Link>
@@ -84,10 +85,10 @@ export async function AdminOrdersPipeline({ stage, searchParams }: Props) {
           <Link
             key={p.stage}
             href={p.href}
-            className={`rounded-md border px-3 py-1.5 text-[10px] uppercase tracking-widest ${
+            className={`rounded-[8px] border px-3 py-1.5 text-[10px] uppercase tracking-widest ${
               p.stage === stage
-                ? "border-[#FEE500] bg-[#FEE500]/15 text-[#F4F1EA]"
-                : "border-[#333] bg-[#151515] text-[#a8a49b]"
+                ? "border-[#0a0a0a] bg-[#0a0a0a] text-white"
+                : "border-[#d4d4d4] bg-white text-[#737373] hover:border-[#0a0a0a]"
             }`}
           >
             {p.title}
@@ -98,7 +99,7 @@ export async function AdminOrdersPipeline({ stage, searchParams }: Props) {
       <AdminOrderKpiCards counts={kpiCounts} activeKey={STAGE_TO_KPI[stage] ?? null} />
 
       <ListToolbar searchPlaceholder="주문번호, 이름, 이메일 검색" />
-      <p className="mb-4 text-xs text-[#6e6b65]">이 화면 {count ?? 0}건</p>
+      <p className="mb-4 text-xs text-[#737373]">이 화면 {count ?? 0}건</p>
       <AdminOrdersBulkList orders={orders ?? []} />
       <Pagination
         currentPage={page}

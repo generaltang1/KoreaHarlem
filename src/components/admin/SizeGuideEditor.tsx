@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 import type { SizeGuideData } from "@/lib/sizeGuide";
@@ -87,7 +87,7 @@ export function SizeGuideEditor({
                           onChange={(e) => setCell(rowIdx, colIdx, e.target.value)}
                           readOnly={rowIdx === 0 && colIdx > 0}
                           className={`w-full min-w-[4rem] border border-border px-2 py-1.5 ${
-                            rowIdx === 0 && colIdx > 0 ? "bg-[#1c1c1c]" : ""
+                            rowIdx === 0 && colIdx > 0 ? "bg-[#f3f4f6]" : ""
                           }`}
                           placeholder={rowIdx === 0 && colIdx === 0 ? "사이즈" : ""}
                         />

@@ -8,7 +8,7 @@ function ResetPasswordFallback() {
   return (
     <AuthDarkShell>
       <AuthCard>
-        <p className="text-center text-sm text-neutral-500">확인 중...</p>
+        <p className="text-center text-sm text-[#6e6b65]">확인 중...</p>
       </AuthCard>
     </AuthDarkShell>
   );

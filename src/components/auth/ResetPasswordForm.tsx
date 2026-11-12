@@ -99,21 +99,21 @@ export function ResetPasswordForm() {
           회원
         </span>
         <h1 className="mt-3 text-xl font-bold tracking-tight">새 비밀번호 설정</h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+        <p className="mt-2 text-sm leading-relaxed text-[#a8a49b]">
           메일 링크로 들어오셨어요. 앞으로 사용할 새 비밀번호를 입력해주세요.
         </p>
 
         {!ready ? (
-          <p className="mt-6 text-center text-sm text-neutral-500">확인 중...</p>
+          <p className="mt-6 text-center text-sm text-[#6e6b65]">확인 중...</p>
         ) : done ? (
-          <div className="mt-6 border border-[#333] bg-[#0c0c0c] p-5 text-center">
+          <div className="mt-6 rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-5 text-center">
             <p className="text-sm">비밀번호가 변경되었습니다.</p>
-            <p className="mt-2 text-xs text-neutral-400">잠시 후 로그인 화면으로 이동합니다.</p>
+            <p className="mt-2 text-xs text-[#a8a49b]">잠시 후 로그인 화면으로 이동합니다.</p>
           </div>
         ) : hasSession ? (
           <form onSubmit={handleSubmit} className="mt-6 space-y-3">
             <div>
-              <label className="mb-1.5 block text-xs text-neutral-400">새 비밀번호</label>
+              <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-[#a8a49b]">새 비밀번호</label>
               <input
                 type="password"
                 value={password}
@@ -124,7 +124,7 @@ export function ResetPasswordForm() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs text-neutral-400">새 비밀번호 확인</label>
+              <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-[#a8a49b]">새 비밀번호 확인</label>
               <input
                 type="password"
                 value={passwordConfirm}
@@ -145,7 +145,7 @@ export function ResetPasswordForm() {
               ).map(([key, label, ok]) => (
                 <li
                   key={key}
-                  className={ok ? "text-[#FEE500]" : "text-neutral-600"}
+                  className={ok ? "text-[#FEE500]" : "text-[#6e6b65]"}
                 >
                   {ok ? "✓" : "○"} {label}
                 </li>
@@ -158,7 +158,7 @@ export function ResetPasswordForm() {
             </button>
           </form>
         ) : (
-          <div className="mt-6 border border-[#333] bg-[#0c0c0c] p-5 text-center">
+          <div className="mt-6 rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-5 text-center">
             {error && <p className="text-xs text-rose-400">{error}</p>}
             <Link
               href="/forgot-password"
@@ -169,7 +169,7 @@ export function ResetPasswordForm() {
           </div>
         )}
 
-        <p className="mt-6 text-center text-xs text-neutral-500">
+        <p className="mt-6 text-center text-xs text-[#6e6b65]">
           링크가 만료됐나요?{" "}
           <Link href="/forgot-password" className="text-[#FEE500] hover:underline">
             재설정 메일 다시 받기

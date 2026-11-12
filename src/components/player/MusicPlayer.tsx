@@ -100,7 +100,7 @@ export function MusicPlayer() {
   };
 
   const cover = (
-    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-sm bg-[#222] sm:h-[52px] sm:w-[52px]">
+    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[8px] bg-[rgba(244,241,234,0.08)] sm:h-[52px] sm:w-[52px]">
       {currentTrack.cover_url ? (
         <Image
           src={currentTrack.cover_url}
@@ -136,12 +136,12 @@ export function MusicPlayer() {
   );
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#262626] bg-[#0a0a0a] text-[#f4f1ea]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[rgba(244,241,234,0.12)] bg-[rgba(10,10,10,0.85)] text-[#f4f1ea] backdrop-blur-[10px] [font-family:var(--font-f-sans),var(--font-geist-sans),sans-serif]">
       {/* 모바일: 작은 바 (시안 Mobile 390) */}
       <div className="md:hidden">
         <button
           type="button"
-          className="block h-[3px] w-full bg-[#2a2a2a]"
+          className="block h-[3px] w-full bg-[rgba(244,241,234,0.12)]"
           aria-label="재생 위치"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
@@ -162,7 +162,7 @@ export function MusicPlayer() {
             type="button"
             onClick={playPrev}
             disabled={!hasPrev && currentTime <= 3}
-            className="flex h-9 w-9 shrink-0 items-center justify-center text-[#f4f1ea] disabled:opacity-30"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-[#f4f1ea] disabled:opacity-30"
             aria-label="이전 곡"
           >
             <svg width="18" height="18" viewBox="0 0 14 14" fill="currentColor">
@@ -185,7 +185,7 @@ export function MusicPlayer() {
             type="button"
             onClick={playNext}
             disabled={!hasNext}
-            className="flex h-9 w-9 shrink-0 items-center justify-center text-[#f4f1ea] disabled:opacity-30"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-[#f4f1ea] disabled:opacity-30"
             aria-label="다음 곡"
           >
             <svg width="18" height="18" viewBox="0 0 14 14" fill="currentColor">
@@ -207,7 +207,7 @@ export function MusicPlayer() {
             <button
               type="button"
               onClick={toggleShuffle}
-              className={`flex h-8 w-8 items-center justify-center ${
+              className={`flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(244,241,234,0.06)] ${
                 isShuffle ? "text-[#FEE500]" : "text-[#a8a49b] hover:text-white"
               }`}
               aria-label={isShuffle ? "셔플 끄기" : "셔플 켜기"}
@@ -219,7 +219,7 @@ export function MusicPlayer() {
               type="button"
               onClick={playPrev}
               disabled={!hasPrev && currentTime <= 3}
-              className="flex h-8 w-8 items-center justify-center text-[#f4f1ea] disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(244,241,234,0.06)] text-[#f4f1ea] disabled:opacity-30"
               aria-label="이전 곡"
             >
               <svg width="18" height="18" viewBox="0 0 14 14" fill="currentColor">
@@ -242,7 +242,7 @@ export function MusicPlayer() {
               type="button"
               onClick={playNext}
               disabled={!hasNext}
-              className="flex h-8 w-8 items-center justify-center text-[#f4f1ea] disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(244,241,234,0.06)] text-[#f4f1ea] disabled:opacity-30"
               aria-label="다음 곡"
             >
               <svg width="18" height="18" viewBox="0 0 14 14" fill="currentColor">
@@ -252,7 +252,7 @@ export function MusicPlayer() {
             <button
               type="button"
               onClick={cycleRepeat}
-              className={`flex h-8 w-8 items-center justify-center ${
+              className={`flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(244,241,234,0.06)] ${
                 repeatMode !== "off" ? "text-[#FEE500]" : "text-[#a8a49b] hover:text-white"
               }`}
               aria-label={repeatAriaLabel(repeatMode)}
@@ -274,7 +274,7 @@ export function MusicPlayer() {
               className="group relative h-3 flex-1 cursor-pointer py-1"
               onClick={seekFromClick}
             >
-              <div className="h-[3px] overflow-hidden rounded-full bg-[#2a2a2a]">
+              <div className="h-[3px] overflow-hidden rounded-full bg-[rgba(244,241,234,0.12)]">
                 <div
                   className="h-full rounded-full bg-[#f4f1ea]"
                   style={{ width: `${progress}%` }}
@@ -293,7 +293,7 @@ export function MusicPlayer() {
               <button
                 type="button"
                 onClick={toggleMute}
-                className="flex h-8 w-8 items-center justify-center text-[#a8a49b] hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(244,241,234,0.06)] text-[#a8a49b] hover:text-white"
                 aria-label={isMuted || volume <= 0 ? "음소거 해제" : "음소거"}
               >
                 <PlayerVolumeIcon muted={isMuted || volume <= 0} />
@@ -305,7 +305,7 @@ export function MusicPlayer() {
                 step="0.01"
                 value={displayVolume}
                 onChange={(e) => setVolume(Number(e.target.value))}
-                className="h-[3px] w-20 cursor-pointer appearance-none bg-[#2a2a2a] accent-[#f4f1ea]"
+                className="h-[3px] w-20 cursor-pointer appearance-none rounded-full bg-[rgba(244,241,234,0.12)] accent-[#f4f1ea]"
                 aria-label="음량"
               />
             </>
@@ -313,7 +313,7 @@ export function MusicPlayer() {
           <button
             type="button"
             onClick={close}
-            className="ml-2 flex h-8 w-8 items-center justify-center text-[#a8a49b] hover:text-white"
+            className="ml-2 flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors hover:bg-[rgba(244,241,234,0.06)] text-[#a8a49b] hover:text-white"
             aria-label="재생 종료"
           >
             ✕

@@ -81,7 +81,7 @@ export function AdminThinkList() {
           type="button"
           onClick={() => setTab("posts")}
           className={`rounded-md border px-3 py-1.5 text-xs uppercase tracking-widest ${
-            tab === "posts" ? "border-neutral-900 bg-[#f4f1ea] text-black" : "border-[#333] bg-[#151515]"
+            tab === "posts" ? "border-neutral-900 bg-[#0a0a0a] text-white" : "border-[#d4d4d4] bg-white"
           }`}
         >
           게시글
@@ -90,7 +90,7 @@ export function AdminThinkList() {
           type="button"
           onClick={() => setTab("reports")}
           className={`rounded-md border px-3 py-1.5 text-xs uppercase tracking-widest ${
-            tab === "reports" ? "border-neutral-900 bg-[#f4f1ea] text-black" : "border-[#333] bg-[#151515]"
+            tab === "reports" ? "border-neutral-900 bg-[#0a0a0a] text-white" : "border-[#d4d4d4] bg-white"
           }`}
         >
           신고 {openReports ? `(${openReports})` : ""}
@@ -98,21 +98,21 @@ export function AdminThinkList() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-[#6e6b65]">불러오는 중…</p>
+        <p className="text-sm text-[#737373]">불러오는 중…</p>
       ) : tab === "posts" ? (
         <div className="space-y-3">
           {posts.length === 0 ? (
-            <p className="text-sm text-[#6e6b65]">게시글이 없습니다.</p>
+            <p className="text-sm text-[#737373]">게시글이 없습니다.</p>
           ) : (
             posts.map((post) => (
               <div
                 key={post.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#262626] bg-[#151515] p-4"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#e8e8e8] bg-white p-4"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     {post.is_notice && (
-                      <span className="rounded bg-[#f4f1ea] px-2 py-0.5 text-[10px] text-black">공지</span>
+                      <span className="rounded bg-[#0a0a0a] px-2 py-0.5 text-[10px] text-white">공지</span>
                     )}
                     {post.is_hidden && (
                       <span className="rounded bg-rose-100 px-2 py-0.5 text-[10px] text-rose-700">숨김</span>
@@ -121,7 +121,7 @@ export function AdminThinkList() {
                       {post.title}
                     </Link>
                   </div>
-                  <p className="mt-1 text-xs text-[#6e6b65]">
+                  <p className="mt-1 text-xs text-[#737373]">
                     {post.author_display} · {formatThinkDate(post.created_at)} · 추천{" "}
                     {post.recommend_count}
                   </p>
@@ -159,9 +159,9 @@ export function AdminThinkList() {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-[#262626] bg-[#151515]">
+        <div className="overflow-x-auto rounded-lg border border-[#e8e8e8] bg-white">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-[#262626] bg-[#0c0c0c] text-[10px] uppercase tracking-widest text-[#6e6b65]">
+            <thead className="border-b border-[#e8e8e8] bg-[#f8f9fa] text-[10px] uppercase tracking-widest text-[#737373]">
               <tr>
                 <th className="px-4 py-3">글</th>
                 <th className="px-4 py-3">사유</th>
@@ -174,7 +174,7 @@ export function AdminThinkList() {
               {reports.map((r) => {
                 const post = Array.isArray(r.think_posts) ? r.think_posts[0] : r.think_posts;
                 return (
-                  <tr key={r.id} className="border-b border-[#262626]">
+                  <tr key={r.id} className="border-b border-[#e8e8e8]">
                     <td className="px-4 py-3">
                       <Link href={`/think/${r.post_id}`} className="font-medium hover:underline">
                         {post?.title ?? r.post_id.slice(0, 8)}
@@ -182,7 +182,7 @@ export function AdminThinkList() {
                     </td>
                     <td className="px-4 py-3 text-xs">{r.reason}</td>
                     <td className="px-4 py-3 text-xs">{r.status}</td>
-                    <td className="px-4 py-3 text-xs text-[#6e6b65]">
+                    <td className="px-4 py-3 text-xs text-[#737373]">
                       {new Date(r.created_at).toLocaleString("ko-KR")}
                     </td>
                     <td className="px-4 py-3 space-x-2 text-xs">
@@ -216,7 +216,7 @@ export function AdminThinkList() {
                           </button>
                         </>
                       ) : (
-                        <span className="text-[#6e6b65]">완료</span>
+                        <span className="text-[#737373]">완료</span>
                       )}
                     </td>
                   </tr>
@@ -225,7 +225,7 @@ export function AdminThinkList() {
             </tbody>
           </table>
           {reports.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-[#6e6b65]">신고가 없습니다.</p>
+            <p className="px-4 py-8 text-center text-sm text-[#737373]">신고가 없습니다.</p>
           ) : null}
         </div>
       )}

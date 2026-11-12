@@ -76,7 +76,7 @@ export function CartDrawer() {
         aria-label="장바구니 닫기"
         onClick={closeCart}
       />
-      <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col border-l border-[rgba(244,241,234,0.12)] bg-[#0a0a0a]/95 text-[#f4f1ea] shadow-2xl backdrop-blur-[6px] [font-family:var(--font-f-sans),var(--font-geist-sans),sans-serif]">
+      <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col border-l border-[rgba(244,241,234,0.12)] bg-[#141414]/90 text-[#f4f1ea] shadow-[0_0_60px_rgba(0,0,0,0.55)] backdrop-blur-[10px] [font-family:var(--font-f-sans),var(--font-geist-sans),sans-serif]">
         <div className="flex items-center justify-between px-6 py-5">
           <h2 className="flex items-baseline gap-2 text-xl font-bold tracking-tight">
             장바구니
@@ -85,7 +85,7 @@ export function CartDrawer() {
           <button
             type="button"
             onClick={closeCart}
-            className="flex h-8 w-8 items-center justify-center text-neutral-400 transition-colors hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#a8a49b] transition-colors hover:bg-[rgba(244,241,234,0.06)] hover:text-[#f4f1ea]"
             aria-label="닫기"
           >
             ✕
@@ -125,7 +125,7 @@ export function CartDrawer() {
                       showUnavailable ? "opacity-50" : ""
                     }`}
                   >
-                    <div className="relative h-24 w-[72px] shrink-0 overflow-hidden rounded-[6px] bg-[rgba(244,241,234,0.05)]">
+                    <div className="relative h-24 w-[72px] shrink-0 overflow-hidden rounded-[8px] bg-[rgba(244,241,234,0.05)]">
                       {item.imageUrl ? (
                         <Image
                           src={item.imageUrl}
@@ -146,7 +146,7 @@ export function CartDrawer() {
                       <p className="mt-1 text-xs text-[#a8a49b]">{lineOptionLabel(item)}</p>
                       <div className="mt-3 flex items-center gap-3">
                         {!digital ? (
-                          <div className="inline-flex items-center overflow-hidden rounded-[6px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)]">
+                          <div className="inline-flex items-center overflow-hidden rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)]">
                             <button
                               type="button"
                               className="flex h-7 w-7 items-center justify-center text-sm text-[#a8a49b] hover:text-[#f4f1ea]"
@@ -175,7 +175,7 @@ export function CartDrawer() {
                     </div>
                     <button
                       type="button"
-                      className="absolute right-5 top-5 text-neutral-500 transition-colors hover:text-white"
+                      className="absolute right-5 top-5 flex h-6 w-6 items-center justify-center rounded-[6px] text-[#6e6b65] transition-colors hover:bg-[rgba(244,241,234,0.06)] hover:text-[#f4f1ea]"
                       onClick={() => removeItem(item.key)}
                       aria-label="삭제"
                     >
@@ -226,7 +226,7 @@ export function CartDrawer() {
           <Link
             href="/cart"
             onClick={closeCart}
-            className="mt-3 flex w-full items-center justify-center rounded-[6px] border border-[rgba(244,241,234,0.12)] py-3 text-sm text-[#f4f1ea] transition-colors hover:bg-[rgba(244,241,234,0.06)]"
+            className="mt-3 flex w-full items-center justify-center rounded-[8px] border border-[rgba(244,241,234,0.12)] py-3 text-sm text-[#f4f1ea] transition-colors hover:bg-[rgba(244,241,234,0.06)]"
           >
             장바구니 전체 보기
           </Link>

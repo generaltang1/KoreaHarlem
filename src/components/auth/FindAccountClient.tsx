@@ -90,37 +90,37 @@ export function FindAccountClient({ initialTab }: { initialTab: Tab }) {
           <button
             type="button"
             onClick={() => switchTab("id")}
-            className={`border px-3 py-2.5 text-left text-xs transition-colors ${
+            className={`rounded-[8px] border px-3 py-2.5 text-left text-xs transition-colors ${
               tab === "id"
-                ? "border-white/40 bg-[#1c1c1c] text-white"
-                : "border-[#2a2a2a] text-neutral-500 hover:text-neutral-300"
+                ? "border-[#fbc201] bg-[rgba(251,194,1,0.08)] text-[#fbc201]"
+                : "border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] text-[#a8a49b] hover:text-[#f4f1ea]"
             }`}
           >
-            <span className="font-mono text-[10px] text-neutral-500">[01]</span>{" "}
+            <span className="font-mono text-[10px] opacity-70">[01]</span>{" "}
             아이디 찾기
           </button>
           <button
             type="button"
             onClick={() => switchTab("password")}
-            className={`border px-3 py-2.5 text-left text-xs transition-colors ${
+            className={`rounded-[8px] border px-3 py-2.5 text-left text-xs transition-colors ${
               tab === "password"
-                ? "border-white/40 bg-[#1c1c1c] text-white"
-                : "border-[#2a2a2a] text-neutral-500 hover:text-neutral-300"
+                ? "border-[#fbc201] bg-[rgba(251,194,1,0.08)] text-[#fbc201]"
+                : "border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] text-[#a8a49b] hover:text-[#f4f1ea]"
             }`}
           >
-            <span className="font-mono text-[10px] text-neutral-500">[02]</span>{" "}
+            <span className="font-mono text-[10px] opacity-70">[02]</span>{" "}
             비밀번호 찾기
           </button>
         </div>
 
         {tab === "id" ? (
           <>
-            <p className="mt-5 text-sm leading-relaxed text-neutral-400">
+            <p className="mt-5 text-sm leading-relaxed text-[#a8a49b]">
               가입 시 사용한 이메일을 입력하면 계정 존재 여부와 로그인 방식(이메일 /
               카카오 / Google)을 안내해 드려요.
             </p>
             <form onSubmit={handleFindId} className="mt-5 space-y-3">
-              <label className="block text-xs text-neutral-400">가입 이메일</label>
+              <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-[#a8a49b]">가입 이메일</label>
               <input
                 type="email"
                 value={email}
@@ -136,15 +136,15 @@ export function FindAccountClient({ initialTab }: { initialTab: Tab }) {
             </form>
 
             {result && (
-              <div className="mt-4 border border-[#333] bg-[#0c0c0c] p-4 text-sm">
+              <div className="mt-4 rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-4 text-sm">
                 {result.found ? (
                   <>
                     <p className="font-medium text-[#FEE500]">✓ {result.maskedEmail}</p>
-                    <p className="mt-2 text-neutral-300">
+                    <p className="mt-2 text-[#f4f1ea]/85">
                       {PROVIDER_LABEL[result.provider ?? "unknown"]}로 가입한 계정이에요
                       {result.createdAt ? ` · ${result.createdAt} 가입` : ""}
                     </p>
-                    <p className="mt-2 text-xs text-neutral-500">
+                    <p className="mt-2 text-xs text-[#6e6b65]">
                       {result.provider === "kakao"
                         ? "로그인 화면에서 카카오로 시작하기를 눌러주세요."
                         : result.provider === "google"
@@ -153,7 +153,7 @@ export function FindAccountClient({ initialTab }: { initialTab: Tab }) {
                     </p>
                   </>
                 ) : (
-                  <p className="text-neutral-400">
+                  <p className="text-[#a8a49b]">
                     {result.message || "가입 정보를 찾지 못했어요."}
                   </p>
                 )}
@@ -161,9 +161,9 @@ export function FindAccountClient({ initialTab }: { initialTab: Tab }) {
             )}
           </>
         ) : sent ? (
-          <div className="mt-6 border border-[#333] bg-[#0c0c0c] p-5 text-center">
+          <div className="mt-6 rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-5 text-center">
             <p className="text-sm">메일을 확인해 주세요.</p>
-            <p className="mt-2 text-xs leading-relaxed text-neutral-400">
+            <p className="mt-2 text-xs leading-relaxed text-[#a8a49b]">
               {email} 주소로 재설정 안내를 발송했습니다.
               <br />
               메일이 보이지 않으면 스팸함을 확인해 주세요.
@@ -171,12 +171,12 @@ export function FindAccountClient({ initialTab }: { initialTab: Tab }) {
           </div>
         ) : (
           <>
-            <p className="mt-5 text-sm leading-relaxed text-neutral-400">
+            <p className="mt-5 text-sm leading-relaxed text-[#a8a49b]">
               가입 시 사용한 이메일을 입력하면 비밀번호를 다시 설정할 수 있는 보안
               링크를 보내드려요.
             </p>
             <form onSubmit={handleReset} className="mt-5 space-y-3">
-              <label className="block text-xs text-neutral-400">가입 이메일</label>
+              <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-[#a8a49b]">가입 이메일</label>
               <input
                 type="email"
                 value={email}
@@ -190,7 +190,7 @@ export function FindAccountClient({ initialTab }: { initialTab: Tab }) {
                 {loading ? "발송 중..." : "재설정 메일 보내기"}
               </button>
             </form>
-            <div className="mt-4 border border-[#333] bg-[#0c0c0c] p-4 text-xs leading-relaxed text-neutral-400">
+            <div className="mt-4 rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-4 text-xs leading-relaxed text-[#a8a49b]">
               <p className="font-medium text-[#FEE500]">Google / Kakao로 가입하셨나요?</p>
               <p className="mt-2">
                 소셜 로그인으로 가입한 계정은 별도 비밀번호가 없습니다. 로그인 화면에서
@@ -200,8 +200,8 @@ export function FindAccountClient({ initialTab }: { initialTab: Tab }) {
           </>
         )}
 
-        <p className="mt-6 text-center text-xs text-neutral-500">
-          <Link href="/login" className="hover:text-white">
+        <p className="mt-6 text-center text-xs text-[#6e6b65]">
+          <Link href="/login" className="hover:text-[#f4f1ea]">
             로그인
           </Link>
           {" · "}

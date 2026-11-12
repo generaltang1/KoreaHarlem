@@ -119,7 +119,7 @@ export function DjSetBar() {
   if (!ready || (!hasTracks && !hasLive)) return null;
 
   return (
-    <div ref={rootRef} className="relative z-10 border-b border-neutral-800 bg-[#050505] text-[#F4F1EA]">
+    <div ref={rootRef} className="relative z-10 border-b border-[rgba(244,241,234,0.12)] bg-[rgba(10,10,10,0.85)] text-[#F4F1EA] backdrop-blur-[10px]">
       {liveMode && liveVideoId && isPlaying ? (
         <iframe
           key={`${liveVideoId}-play`}
@@ -132,8 +132,8 @@ export function DjSetBar() {
       ) : null}
 
       {/* Desktop bar */}
-      <div className="mx-auto hidden h-11 max-w-[1720px] items-center gap-3.5 pr-6 sm:flex">
-        <span className="flex h-11 w-[52px] shrink-0 items-center justify-center bg-[#FBC201] font-black text-[14px] text-[#0a0a0a]">
+      <div className="mx-auto hidden h-11 max-w-[1720px] items-center gap-3.5 px-6 sm:flex">
+        <span className="flex h-7 w-[40px] shrink-0 items-center justify-center rounded-[6px] bg-[#FBC201] font-black text-[13px] text-[#0a0a0a]">
           KH
         </span>
         <span className="flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[1.5px] text-[#F4F1EA]">
@@ -195,10 +195,10 @@ export function DjSetBar() {
               if (liveMode) exitLive();
               else enterLive();
             }}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded border px-2.5 py-1 text-[10px] font-medium transition ${
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 py-1 text-[10px] font-medium transition ${
               liveMode
                 ? "border-rose-500 bg-rose-500/20 text-rose-300"
-                : "border-neutral-700 text-[#A8A49B] hover:border-rose-500 hover:text-rose-300"
+                : "border-[rgba(244,241,234,0.12)] text-[#A8A49B] hover:border-rose-500 hover:text-rose-300"
             }`}
           >
             라이브 듣기
@@ -209,10 +209,10 @@ export function DjSetBar() {
             type="button"
             onClick={() => setPlaylistOpen((v) => !v)}
             aria-expanded={playlistOpen}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded border px-2.5 py-1 text-[10px] font-medium transition ${
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-[8px] border px-2.5 py-1 text-[10px] font-medium transition ${
               playlistOpen
                 ? "border-[#FBC201] bg-[rgba(251,194,1,0.15)] text-[#FBC201]"
-                : "border-neutral-700 text-[#A8A49B] hover:border-neutral-500 hover:text-[#F4F1EA]"
+                : "border-[rgba(244,241,234,0.12)] text-[#A8A49B] hover:bg-[rgba(244,241,234,0.06)] hover:text-[#F4F1EA]"
             }`}
           >
             <ListIcon />
@@ -240,8 +240,8 @@ export function DjSetBar() {
       </div>
 
       {/* Mobile bar */}
-      <div className="flex h-10 items-center gap-2.5 pr-3.5 sm:hidden">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-[#FBC201] text-xs font-black text-[#0a0a0a]">
+      <div className="flex h-10 items-center gap-2.5 px-3 sm:hidden">
+        <span className="flex h-6 w-8 shrink-0 items-center justify-center rounded-[6px] bg-[#FBC201] text-[11px] font-black text-[#0a0a0a]">
           KH
         </span>
         <button
@@ -296,9 +296,9 @@ export function DjSetBar() {
       </div>
 
       {playlistOpen && !liveMode && current ? (
-        <div className="border-b border-neutral-800 bg-[#151515] px-4 py-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)] sm:px-6">
+        <div className="border-b border-[rgba(244,241,234,0.12)] bg-[rgba(20,20,20,0.92)] px-4 py-4 shadow-[0_16px_32px_rgba(0,0,0,0.35)] backdrop-blur-[10px] sm:px-6">
           <div className="mx-auto max-w-[1720px]">
-            <div className="flex flex-wrap items-center gap-3 border-b border-neutral-800 py-2">
+            <div className="flex flex-wrap items-center gap-3 border-b border-[rgba(244,241,234,0.12)] py-2">
               <p className="text-sm font-black tracking-wide text-[#F4F1EA]">
                 DJ SET · <span className="font-medium">지금</span> &{" "}
                 <span className="font-medium">다음</span>
@@ -306,7 +306,7 @@ export function DjSetBar() {
               <p className="text-xs text-[#6E6B65]">지금 트는 곡과 다음 곡만 보여요</p>
             </div>
 
-            <div className="mt-1 flex items-center gap-4 rounded-md border-b border-neutral-800 bg-[rgba(251,194,1,0.06)] px-2 py-1">
+            <div className="mt-1 flex items-center gap-4 rounded-[8px] bg-[rgba(251,194,1,0.06)] px-2 py-1">
               <span className="w-10 shrink-0 font-mono text-[10px] tracking-widest text-[#FBC201]">
                 NOW
               </span>
@@ -339,7 +339,7 @@ export function DjSetBar() {
                   playAt((index + 1) % tracks.length);
                   setPlaylistOpen(false);
                 }}
-                className="mt-0.5 flex w-full items-center gap-4 rounded-md border-b border-neutral-800 px-2 py-1 text-left transition hover:bg-white/5"
+                className="mt-0.5 flex w-full items-center gap-4 rounded-[8px] px-2 py-1 text-left transition hover:bg-[rgba(244,241,234,0.06)]"
               >
                 <span className="w-10 shrink-0 font-mono text-[10px] tracking-widest text-[#6E6B65]">
                   NEXT

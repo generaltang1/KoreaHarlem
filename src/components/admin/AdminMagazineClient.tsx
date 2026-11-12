@@ -171,19 +171,19 @@ export function AdminMagazineClient() {
         ]}
       />
 
-      <section className="mb-8 rounded-lg border border-[#262626] bg-[#151515] p-5  ">
+      <section className="mb-8 rounded-lg border border-[#e8e8e8] bg-white p-5  ">
         <h2 className="mb-4 text-sm font-semibold">새 글 (빠른 등록)</h2>
         <div className="grid gap-3 md:grid-cols-2">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="제목"
-            className="rounded-md border border-[#333] px-3 py-2 text-sm"
+            className="rounded-md border border-[#d4d4d4] px-3 py-2 text-sm"
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as "culture" | "news")}
-            className="rounded-md border border-[#333] px-3 py-2 text-sm"
+            className="rounded-md border border-[#d4d4d4] px-3 py-2 text-sm"
           >
             <option value="culture">Culture</option>
             <option value="news">News</option>
@@ -193,7 +193,7 @@ export function AdminMagazineClient() {
             onChange={(e) => setExcerpt(e.target.value)}
             placeholder="요약 / 본문 초안"
             rows={3}
-            className="rounded-md border border-[#333] px-3 py-2 text-sm md:col-span-2"
+            className="rounded-md border border-[#d4d4d4] px-3 py-2 text-sm md:col-span-2"
           />
           <label className="flex items-center gap-2 text-sm md:col-span-2">
             <input
@@ -203,13 +203,13 @@ export function AdminMagazineClient() {
             />
             MUSIC에 표기
           </label>
-          <label className="block text-xs text-[#6e6b65] md:col-span-2">
+          <label className="block text-xs text-[#737373] md:col-span-2">
             예약 발행 일시 (예약 시 필요)
             <input
               type="datetime-local"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              className="mt-1 w-full rounded-md border border-[#333] px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-[#d4d4d4] px-3 py-2 text-sm"
             />
           </label>
         </div>
@@ -218,7 +218,7 @@ export function AdminMagazineClient() {
             type="button"
             disabled={saving}
             onClick={() => void create("draft")}
-            className="rounded-md border border-[#333] px-4 py-2 text-xs uppercase tracking-widest"
+            className="rounded-md border border-[#d4d4d4] px-4 py-2 text-xs uppercase tracking-widest"
           >
             임시저장
           </button>
@@ -234,7 +234,7 @@ export function AdminMagazineClient() {
             type="button"
             disabled={saving}
             onClick={() => void create("published")}
-            className="rounded-md bg-[#f4f1ea] px-4 py-2 text-xs uppercase tracking-widest text-black"
+            className="rounded-md bg-[#0a0a0a] px-4 py-2 text-xs uppercase tracking-widest text-white"
           >
             바로 발행
           </button>
@@ -243,11 +243,11 @@ export function AdminMagazineClient() {
 
       {error ? <p className="mb-4 text-sm text-rose-600">{error}</p> : null}
       {loading ? (
-        <p className="text-sm text-[#6e6b65]">불러오는 중…</p>
+        <p className="text-sm text-[#737373]">불러오는 중…</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-[#262626] bg-[#151515]">
+        <div className="overflow-x-auto rounded-lg border border-[#e8e8e8] bg-white">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-[#262626] bg-[#0c0c0c] text-[10px] uppercase tracking-widest text-[#6e6b65]">
+            <thead className="border-b border-[#e8e8e8] bg-[#f8f9fa] text-[10px] uppercase tracking-widest text-[#737373]">
               <tr>
                 <th className="px-4 py-3">제목</th>
                 <th className="px-4 py-3">분류</th>
@@ -259,15 +259,15 @@ export function AdminMagazineClient() {
             </thead>
             <tbody>
               {posts.map((post) => (
-                <tr key={post.id} className="border-b border-[#262626]">
+                <tr key={post.id} className="border-b border-[#e8e8e8]">
                   <td className="px-4 py-3">
                     <p className="font-medium">{post.title}</p>
-                    <p className="text-xs text-[#6e6b65] line-clamp-1">{post.excerpt}</p>
+                    <p className="text-xs text-[#737373] line-clamp-1">{post.excerpt}</p>
                   </td>
                   <td className="px-4 py-3 text-xs">{magazineCategoryLabel(post.category)}</td>
                   <td className="px-4 py-3">
                     <select
-                      className="rounded border border-[#333] px-2 py-1 text-xs"
+                      className="rounded border border-[#d4d4d4] px-2 py-1 text-xs"
                       value={post.status}
                       onChange={(e) => {
                         const next = e.target.value as MagazineStatus;
@@ -286,7 +286,7 @@ export function AdminMagazineClient() {
                       <option value="published">발행</option>
                       <option value="archived">보관</option>
                     </select>
-                    <p className="mt-1 text-[10px] text-[#6e6b65]">
+                    <p className="mt-1 text-[10px] text-[#737373]">
                       {magazineStatusLabel(post.status)}
                     </p>
                   </td>
@@ -296,7 +296,7 @@ export function AdminMagazineClient() {
                         <input
                           type="datetime-local"
                           defaultValue={toLocalInputValue(post.scheduled_at)}
-                          className="rounded border border-[#333] px-2 py-1 text-xs"
+                          className="rounded border border-[#d4d4d4] px-2 py-1 text-xs"
                           onBlur={(e) => {
                             const v = e.target.value;
                             if (!v || v === toLocalInputValue(post.scheduled_at)) return;
@@ -318,7 +318,7 @@ export function AdminMagazineClient() {
                         </button>
                       </div>
                     ) : (
-                      <span className="text-xs text-[#6e6b65]">—</span>
+                      <span className="text-xs text-[#737373]">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -348,7 +348,7 @@ export function AdminMagazineClient() {
             </tbody>
           </table>
           {posts.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-[#6e6b65]">등록된 글이 없습니다.</p>
+            <p className="px-4 py-8 text-center text-sm text-[#737373]">등록된 글이 없습니다.</p>
           ) : null}
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { site } from "@/lib/siteTheme";
 
 type ErrorScreenProps = {
   variant: "404" | "500";
@@ -51,13 +52,13 @@ export function ErrorScreen({ variant, errorCode, onRetry }: ErrorScreenProps) {
             <>
               <Link
                 href="/"
-                className="inline-flex h-12 items-center justify-center rounded-lg bg-[#F4F1EA] px-5 text-sm font-bold text-[#0a0a0a] transition hover:bg-white"
+                className={`${site.creamBtn} h-12 !py-0 font-bold`}
               >
                 홈으로
               </Link>
               <Link
                 href="/sale"
-                className="inline-flex h-12 items-center justify-center rounded-lg border border-[rgba(244,241,234,0.12)] px-5 text-sm font-medium text-[#F4F1EA] transition hover:border-white/40"
+                className={`${site.ghostBtn} h-12 !py-0 font-medium`}
               >
                 스토어 보기
               </Link>
@@ -68,14 +69,14 @@ export function ErrorScreen({ variant, errorCode, onRetry }: ErrorScreenProps) {
                 <button
                   type="button"
                   onClick={onRetry}
-                  className="inline-flex h-12 items-center justify-center rounded-lg bg-[#F4F1EA] px-5 text-sm font-bold text-[#0a0a0a] transition hover:bg-white"
+                  className={`${site.creamBtn} h-12 !py-0 font-bold`}
                 >
                   다시 시도
                 </button>
               ) : null}
               <Link
                 href="/"
-                className="inline-flex h-12 items-center justify-center rounded-lg border border-[rgba(244,241,234,0.12)] px-5 text-sm font-medium text-[#F4F1EA] transition hover:border-white/40"
+                className={`${site.ghostBtn} h-12 !py-0 font-medium`}
               >
                 홈으로
               </Link>

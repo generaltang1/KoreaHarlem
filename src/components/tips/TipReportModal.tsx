@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { TIP_MAX_ATTACHMENTS, TIP_MAX_IMAGE_BYTES, TIP_MAX_VIDEO_BYTES } from "@/lib/tips";
+import { site } from "@/lib/siteTheme";
 
 interface TipReportModalProps {
   onClose: () => void;
@@ -21,8 +22,7 @@ function newId() {
     : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-const inputClass =
-  "w-full border border-[#333] bg-[#0c0c0c] px-3.5 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-neutral-400";
+const inputClass = site.input;
 
 export function TipReportModal({ onClose }: TipReportModalProps) {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -132,7 +132,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
       img.src = url;
       img.alt = "붙여넣기 이미지";
       img.dataset.pasteId = id;
-      img.className = "max-h-48 max-w-full";
+      img.className = "max-h-48 max-w-full rounded-[8px]";
       const sel = window.getSelection();
       if (sel?.rangeCount) {
         const range = sel.getRangeAt(0);
@@ -265,16 +265,16 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
       }}
     >
       <div
-        className="relative max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-xl border border-[#262626] bg-[#151515] text-neutral-100 shadow-2xl"
+        className={`relative max-h-[90vh] w-full max-w-[560px] overflow-y-auto text-[#f4f1ea] ${site.glassModal} ${site.font}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#262626] bg-[#151515] px-6 py-5">
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-[20px] border-b border-[rgba(244,241,234,0.12)] bg-[#141414]/95 px-6 py-5 backdrop-blur-[10px]">
           <h2 className="text-xl font-bold tracking-tight">제보하기</h2>
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="flex h-8 w-8 items-center justify-center text-neutral-400 transition-colors hover:text-white disabled:opacity-50"
+            className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#a8a49b] transition-colors hover:bg-[rgba(244,241,234,0.06)] hover:text-[#f4f1ea] disabled:opacity-50"
             aria-label="닫기"
           >
             ✕
@@ -284,27 +284,36 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
         {done ? (
           <div className="px-6 py-12 text-center">
             <p className="text-base font-semibold">제보가 접수되었습니다.</p>
-            <p className="mt-2 text-sm text-neutral-400">
+            <p className={`mt-2 text-sm ${site.muted}`}>
               일상 속 재미있는 순간을 보내 주셔서 감사합니다.
             </p>
             <button
               type="button"
               onClick={onClose}
-              className="mt-8 w-full bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black"
+              className={`mt-8 w-full ${site.creamBtn}`}
             >
               확인
             </button>
           </div>
         ) : (
           <div className="space-y-5 px-6 py-5">
-            <div className="space-y-1.5 rounded-lg bg-[#FEE500] px-4 py-3.5 text-[13px] leading-relaxed text-[#191919]">
-              <p>· 제보한 내용은 안전하게 정리돼요.</p>
-              <p>· 기본은 익명이에요. 인스타그램 아이디를 남기면 게시물에 언급해드릴 수 있어요.</p>
-              <p>· 로그인 없이도 제보할 수 있어요.</p>
-            </div>
+            <ul className="space-y-1.5 rounded-[8px] bg-[#FEE500] px-4 py-3.5 text-[13px] leading-relaxed text-[#191919]">
+              <li className="flex gap-2">
+                <span aria-hidden>•</span>
+                <span>제보한 내용은 안전하게 정리돼요.</span>
+              </li>
+              <li className="flex gap-2">
+                <span aria-hidden>•</span>
+                <span>기본은 익명이에요. 인스타그램 아이디를 남기면 게시물에 언급해드릴 수 있어요.</span>
+              </li>
+              <li className="flex gap-2">
+                <span aria-hidden>•</span>
+                <span>로그인 없이도 제보할 수 있어요.</span>
+              </li>
+            </ul>
 
             <div>
-              <label className="mb-1.5 block text-xs text-neutral-400">제목</label>
+              <label className={site.label}>제목</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -315,18 +324,18 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs text-neutral-400">내용</label>
+              <label className={site.label}>내용</label>
               <div
                 ref={editorRef}
                 contentEditable
                 suppressContentEditableWarning
                 onPaste={handlePaste}
                 data-placeholder="제보할 내용을 적어주세요"
-                className="min-h-[120px] border border-[#333] bg-[#0c0c0c] px-3.5 py-3 text-sm outline-none empty:before:text-neutral-600 empty:before:content-[attr(data-placeholder)] focus:border-neutral-400"
+                className="min-h-[120px] rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] px-3.5 py-3 text-sm text-[#f4f1ea] outline-none empty:before:text-[#6e6b65] empty:before:content-[attr(data-placeholder)] focus:border-[rgba(244,241,234,0.35)]"
                 style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
                 aria-label="제보 내용"
               />
-              <p className="mt-1 text-[10px] text-neutral-600">
+              <p className="mt-1 text-[10px] text-[#6e6b65]">
                 카카오톡·웹에서 이미지를 복사한 뒤 본문에 붙여넣기(Ctrl/Cmd+V)할 수 있습니다.
               </p>
             </div>
@@ -346,12 +355,12 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex w-full items-center gap-3 border border-dashed border-[#444] bg-[#0c0c0c] px-4 py-4 text-left transition-colors hover:border-neutral-500"
+                className="flex w-full items-center gap-3 rounded-[12px] border border-dashed border-[rgba(244,241,234,0.25)] bg-[rgba(244,241,234,0.05)] px-4 py-4 text-left transition-colors hover:border-[rgba(244,241,234,0.45)] hover:bg-[rgba(244,241,234,0.08)]"
               >
-                <span className="text-lg text-neutral-400">↑</span>
+                <span className="text-lg text-[#a8a49b]">↑</span>
                 <span>
-                  <span className="block text-sm text-neutral-200">이미지 · 영상 첨부</span>
-                  <span className="mt-0.5 block text-[11px] text-neutral-500">파일당 최대 1GB</span>
+                  <span className="block text-sm text-[#f4f1ea]">이미지 · 영상 첨부</span>
+                  <span className="mt-0.5 block text-[11px] text-[#6e6b65]">파일당 최대 1GB</span>
                 </span>
               </button>
               {attachments.length > 0 && (
@@ -359,21 +368,21 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
                   {attachments.map((a) => (
                     <li
                       key={a.id}
-                      className="flex items-center gap-3 border border-[#333] bg-[#0c0c0c] px-3 py-2 text-xs"
+                      className="flex items-center gap-3 rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] px-3 py-2 text-xs"
                     >
                       {a.kind === "image" ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={a.url} alt="" className="h-12 w-12 object-cover" />
+                        <img src={a.url} alt="" className="h-12 w-12 rounded-[6px] object-cover" />
                       ) : (
-                        <div className="flex h-12 w-12 items-center justify-center bg-[#1c1c1c] text-[10px] text-neutral-500">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-[6px] bg-[rgba(244,241,234,0.08)] text-[10px] text-[#6e6b65]">
                           VIDEO
                         </div>
                       )}
-                      <span className="min-w-0 flex-1 truncate text-neutral-300">{a.file.name}</span>
+                      <span className="min-w-0 flex-1 truncate text-[#f4f1ea]">{a.file.name}</span>
                       <button
                         type="button"
                         onClick={() => removeAttachment(a.id)}
-                        className="text-neutral-500 underline hover:text-white"
+                        className="text-[#6e6b65] underline hover:text-[#f4f1ea]"
                       >
                         제거
                       </button>
@@ -385,7 +394,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-xs text-neutral-400">
+                <label className={site.label}>
                   인스타그램 아이디 (선택)
                 </label>
                 <input
@@ -396,7 +405,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs text-neutral-400">비밀번호</label>
+                <label className={site.label}>비밀번호</label>
                 <input
                   type="password"
                   value={password}
@@ -414,7 +423,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
               type="button"
               disabled={submitting}
               onClick={() => void submit()}
-              className="w-full bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+              className={`w-full ${site.creamBtn}`}
             >
               {submitting ? "전송 중…" : "제보 보내기"}
             </button>
