@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 
@@ -50,7 +50,7 @@ export function ProductAddonSelect({
                 checked={selectedIds.includes(p.id)}
                 onChange={() => toggle(p.id)}
               />
-              <div className="relative h-10 w-10 shrink-0 bg-neutral-100">
+              <div className="relative h-10 w-10 shrink-0 bg-[#1c1c1c]">
                 {p.image_url && (
                   <Image src={p.image_url} alt="" fill className="object-cover" />
                 )}

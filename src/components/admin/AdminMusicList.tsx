@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ function PublishBadge({ status }: { status?: AlbumPublishStatus }) {
       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
       : status === "scheduled"
         ? "border-amber-200 bg-amber-50 text-amber-900"
-        : "border-neutral-200 bg-neutral-50 text-neutral-600";
+        : "border-[#262626] bg-[#0c0c0c] text-[#a8a49b]";
   return (
     <span
       className={`inline-flex shrink-0 items-center border px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest ${className}`}

@@ -71,7 +71,7 @@ export default async function AdminClaimsPage({ searchParams }: Props) {
         actions={
           <Link
             href="/admin/orders"
-            className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs uppercase tracking-widest"
+            className="rounded-md border border-[#333] bg-[#151515] px-3 py-2 text-xs uppercase tracking-widest"
           >
             주문 목록
           </Link>
@@ -88,8 +88,8 @@ export default async function AdminClaimsPage({ searchParams }: Props) {
               href={href}
               className={`rounded-md border px-3 py-1.5 text-[10px] uppercase tracking-widest ${
                 active
-                  ? "border-neutral-900 bg-neutral-900 text-white"
-                  : "border-neutral-300 bg-white text-neutral-600"
+                  ? "border-neutral-900 bg-[#f4f1ea] text-black"
+                  : "border-[#333] bg-[#151515] text-[#a8a49b]"
               }`}
             >
               {tab.label}
@@ -99,7 +99,7 @@ export default async function AdminClaimsPage({ searchParams }: Props) {
       </div>
 
       {typeParam === "cancel" ? (
-        <p className="mb-4 text-xs text-neutral-500">
+        <p className="mb-4 text-xs text-[#6e6b65]">
           취소신청은 CS 요청 테이블에 유형이 없습니다. 결제대기 취소는 주문 상세에서 처리하세요.
         </p>
       ) : null}
@@ -113,9 +113,9 @@ export default async function AdminClaimsPage({ searchParams }: Props) {
         ]}
       />
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-[#262626] bg-[#151515]">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-neutral-200 bg-neutral-50 text-[10px] uppercase tracking-widest text-neutral-500">
+          <thead className="border-b border-[#262626] bg-[#0c0c0c] text-[10px] uppercase tracking-widest text-[#6e6b65]">
             <tr>
               <th className="px-4 py-3">유형</th>
               <th className="px-4 py-3">상태</th>
@@ -138,7 +138,7 @@ export default async function AdminClaimsPage({ searchParams }: Props) {
                   }
                 | null;
               return (
-                <tr key={row.id} className="border-b border-neutral-100">
+                <tr key={row.id} className="border-b border-[#262626]">
                   <td className="px-4 py-3 font-medium">
                     {csRequestTypeLabel(row.request_type)}
                   </td>
@@ -148,12 +148,12 @@ export default async function AdminClaimsPage({ searchParams }: Props) {
                   </td>
                   <td className="px-4 py-3 text-xs">
                     <p>{orderObj?.customer_name ?? "—"}</p>
-                    <p className="text-neutral-400">{orderObj?.customer_email ?? ""}</p>
+                    <p className="text-[#6e6b65]">{orderObj?.customer_email ?? ""}</p>
                   </td>
                   <td className="px-4 py-3 text-xs">
                     {orderObj?.status ? orderStatusLabel(orderObj.status) : "—"}
                   </td>
-                  <td className="px-4 py-3 text-xs text-neutral-500">
+                  <td className="px-4 py-3 text-xs text-[#6e6b65]">
                     {new Date(row.created_at).toLocaleString("ko-KR")}
                   </td>
                   <td className="px-4 py-3">
@@ -170,7 +170,7 @@ export default async function AdminClaimsPage({ searchParams }: Props) {
           </tbody>
         </table>
         {rows.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-neutral-500">CS 요청이 없습니다.</p>
+          <p className="px-4 py-10 text-center text-sm text-[#6e6b65]">CS 요청이 없습니다.</p>
         ) : null}
       </div>
     </div>

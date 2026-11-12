@@ -85,13 +85,13 @@ export default async function ArtistsDashboardPage() {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/artists/new"
-              className="rounded-md bg-neutral-900 px-3 py-2 text-xs uppercase tracking-widest text-white"
+              className="rounded-md bg-[#f4f1ea] px-3 py-2 text-xs uppercase tracking-widest text-white"
             >
               + 아티스트 등록
             </Link>
             <Link
               href="/admin/artists"
-              className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs uppercase tracking-widest"
+              className="rounded-md border border-[#333] bg-[#151515] px-3 py-2 text-xs uppercase tracking-widest"
             >
               검색 / 목록
             </Link>
@@ -112,10 +112,10 @@ export default async function ArtistsDashboardPage() {
         ]}
       />
 
-      <section className="mb-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+      <section className="mb-8 rounded-lg border border-[#262626] bg-[#151515] p-5  ">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold">7일 스트리밍</h2>
-          <span className="text-[10px] uppercase tracking-widest text-neutral-400">Streams</span>
+          <span className="text-[10px] uppercase tracking-widest text-[#6e6b65]">Streams</span>
         </div>
         <div className="flex h-40 items-end gap-2">
           {streamSeries.map(([day, count]) => (
@@ -125,29 +125,29 @@ export default async function ArtistsDashboardPage() {
                 style={{ height: `${Math.max(4, (count / maxStream) * 100)}%` }}
                 title={`${count.toLocaleString("ko-KR")}회`}
               />
-              <span className="text-[10px] text-neutral-400">{day.slice(5)}</span>
+              <span className="text-[10px] text-[#6e6b65]">{day.slice(5)}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+      <section className="rounded-lg border border-[#262626] bg-[#151515]  ">
+        <div className="flex items-center justify-between border-b border-[#262626] px-5 py-4">
           <h2 className="text-sm font-semibold">최근 아티스트</h2>
           <Link
             href="/admin/artists"
-            className="text-[10px] uppercase tracking-widest text-neutral-500 underline"
+            className="text-[10px] uppercase tracking-widest text-[#6e6b65] underline"
           >
             전체 보기
           </Link>
         </div>
         {(recentArtists ?? []).length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-neutral-500">등록된 아티스트가 없습니다.</p>
+          <p className="px-5 py-8 text-center text-sm text-[#6e6b65]">등록된 아티스트가 없습니다.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead>
-                <tr className="border-b border-neutral-100 text-[10px] uppercase tracking-widest text-neutral-400">
+                <tr className="border-b border-[#262626] text-[10px] uppercase tracking-widest text-[#6e6b65]">
                   <th className="px-5 py-3 font-medium">아티스트</th>
                   <th className="px-5 py-3 font-medium">장르</th>
                   <th className="px-5 py-3 font-medium">등록일</th>
@@ -158,13 +158,13 @@ export default async function ArtistsDashboardPage() {
                 {(recentArtists ?? []).map((artist) => (
                   <tr key={artist.id} className="border-b border-neutral-50 last:border-0">
                     <td className="px-5 py-3">
-                      <p className="font-medium text-neutral-900">{artist.name}</p>
+                      <p className="font-medium text-[#F4F1EA]">{artist.name}</p>
                       {artist.name_en ? (
-                        <p className="mt-0.5 text-xs text-neutral-400">{artist.name_en}</p>
+                        <p className="mt-0.5 text-xs text-[#6e6b65]">{artist.name_en}</p>
                       ) : null}
                     </td>
-                    <td className="px-5 py-3 text-neutral-600">{artist.genre || "—"}</td>
-                    <td className="px-5 py-3 text-neutral-500">
+                    <td className="px-5 py-3 text-[#a8a49b]">{artist.genre || "—"}</td>
+                    <td className="px-5 py-3 text-[#6e6b65]">
                       {artist.created_at
                         ? new Date(artist.created_at).toLocaleDateString("ko-KR")
                         : "—"}
@@ -172,7 +172,7 @@ export default async function ArtistsDashboardPage() {
                     <td className="px-5 py-3 text-right">
                       <Link
                         href={`/admin/artists/${artist.id}/edit`}
-                        className="text-[10px] uppercase tracking-widest text-neutral-500 underline"
+                        className="text-[10px] uppercase tracking-widest text-[#6e6b65] underline"
                       >
                         수정
                       </Link>

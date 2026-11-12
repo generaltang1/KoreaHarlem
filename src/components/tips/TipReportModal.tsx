@@ -15,16 +15,14 @@ type AttachPreview = {
   kind: "image" | "video";
 };
 
-type PasteImage = {
-  id: string;
-  file: File;
-};
-
 function newId() {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
+
+const inputClass =
+  "w-full border border-[#333] bg-[#0c0c0c] px-3.5 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-neutral-400";
 
 export function TipReportModal({ onClose }: TipReportModalProps) {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -32,6 +30,8 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
   const pasteMapRef = useRef<Map<string, File>>(new Map());
 
   const [title, setTitle] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [password, setPassword] = useState("");
   const [attachments, setAttachments] = useState<AttachPreview[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -111,7 +111,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
         if (file) imageFiles.push(file);
       }
     }
-    if (imageFiles.length === 0) return; // 텍스트 붙여넣기는 기본 동작
+    if (imageFiles.length === 0) return;
 
     e.preventDefault();
     setError("");
@@ -122,7 +122,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
         break;
       }
       if (file.size > TIP_MAX_IMAGE_BYTES) {
-        setError("붙여넣기 이미지는 10MB 이하여야 합니다.");
+        setError("이미지는 파일당 10MB 이하여야 합니다.");
         continue;
       }
       const id = newId();
@@ -130,18 +130,11 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
       const url = URL.createObjectURL(file);
       const img = document.createElement("img");
       img.src = url;
-      img.alt = "";
-      img.setAttribute("data-paste-id", id);
-      img.style.maxWidth = "100%";
-      img.style.height = "auto";
-      img.style.display = "block";
-      img.style.margin = "8px 0";
-
+      img.alt = "붙여넣기 이미지";
+      img.dataset.pasteId = id;
+      img.className = "max-h-48 max-w-full";
       const sel = window.getSelection();
-      const editor = editorRef.current;
-      if (!editor) continue;
-
-      if (sel && sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+      if (sel?.rangeCount) {
         const range = sel.getRangeAt(0);
         range.deleteContents();
         range.insertNode(img);
@@ -150,10 +143,18 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
         sel.removeAllRanges();
         sel.addRange(range);
       } else {
-        editor.appendChild(img);
+        editorRef.current?.appendChild(img);
       }
     }
   };
+
+  async function parseJsonResponse(res: Response) {
+    try {
+      return await res.json();
+    } catch {
+      return {};
+    }
+  }
 
   const submit = async () => {
     setError("");
@@ -162,9 +163,13 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
       setError("제목을 입력해주세요.");
       return;
     }
-    const editor = editorRef.current;
-    const contentHtml = editor?.innerHTML ?? "";
-    const textOnly = (editor?.innerText ?? "").replace(/\u00a0/g, " ").trim();
+    if (password.trim().length < 4) {
+      setError("수정·삭제용 비밀번호를 4자 이상 입력해주세요.");
+      return;
+    }
+
+    const contentHtml = editorRef.current?.innerHTML ?? "";
+    const textOnly = contentHtml.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
     if (!textOnly && attachments.length === 0 && pasteMapRef.current.size === 0) {
       setError("내용 또는 첨부파일을 입력해주세요.");
       return;
@@ -173,30 +178,8 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
     setSubmitting(true);
     let tipId: string | null = null;
 
-    type UploadSlot = {
-      path: string;
-      token: string;
-      signedUrl: string;
-      fileName: string;
-      mimeType: string;
-      kind: "image" | "video";
-      pasteId?: string;
-    };
-
-    const parseJsonResponse = async (res: Response) => {
-      const text = await res.text();
-      try {
-        return JSON.parse(text) as { message?: string; ok?: boolean; id?: string; uploads?: UploadSlot[] };
-      } catch {
-        if (text.includes("Request Entity Too Large") || text.includes("FUNCTION_PAYLOAD_TOO_LARGE")) {
-          throw new Error("파일 크기가 서버 제한을 초과했습니다. 동영상은 1GB 이하 MP4(H.264)를 권장합니다.");
-        }
-        throw new Error("서버 응답을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.");
-      }
-    };
-
     try {
-      const pasteEntries: PasteImage[] = [];
+      const pasteEntries: { id: string; file: File }[] = [];
       pasteMapRef.current.forEach((file, id) => {
         pasteEntries.push({ id, file });
       });
@@ -207,6 +190,8 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
         body: JSON.stringify({
           title: t,
           contentHtml,
+          instagramHandle: instagram.trim(),
+          accessPassword: password.trim(),
           attachments: attachments.map((a) => ({
             name: a.file.name,
             mimeType: a.file.type,
@@ -248,7 +233,7 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            uploads: uploadSlots.map((slot) => ({
+            uploads: uploadSlots.map((slot: { path: string; fileName: string; mimeType: string; kind: string; pasteId?: string }) => ({
               path: slot.path,
               fileName: slot.fileName,
               mimeType: slot.mimeType,
@@ -274,81 +259,79 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4"
       onClick={() => {
         if (!submitting) onClose();
       }}
     >
       <div
-        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto bg-background"
+        className="relative max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-xl border border-[#262626] bg-[#151515] text-neutral-100 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background px-5 py-4">
-          <h2 className="text-sm font-medium uppercase tracking-wider">제보하기</h2>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#262626] bg-[#151515] px-6 py-5">
+          <h2 className="text-xl font-bold tracking-tight">제보하기</h2>
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="text-xs text-muted transition-colors hover:text-foreground disabled:opacity-50"
+            className="flex h-8 w-8 items-center justify-center text-neutral-400 transition-colors hover:text-white disabled:opacity-50"
+            aria-label="닫기"
           >
-            닫기
+            ✕
           </button>
         </div>
 
         {done ? (
-          <div className="px-5 py-10 text-center">
-            <p className="text-sm font-medium">제보가 접수되었습니다.</p>
-            <p className="mt-2 text-xs text-muted">일상 속 재미있는 순간을 보내 주셔서 감사합니다.</p>
+          <div className="px-6 py-12 text-center">
+            <p className="text-base font-semibold">제보가 접수되었습니다.</p>
+            <p className="mt-2 text-sm text-neutral-400">
+              일상 속 재미있는 순간을 보내 주셔서 감사합니다.
+            </p>
             <button
               type="button"
               onClick={onClose}
-              className="mt-8 border border-foreground bg-foreground px-6 py-2.5 text-[10px] uppercase tracking-widest text-background"
+              className="mt-8 w-full bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black"
             >
               확인
             </button>
           </div>
         ) : (
-          <div className="space-y-5 px-5 py-5">
-            <p className="text-xs leading-relaxed text-muted">
-              회원·비회원 누구나 제보할 수 있습니다. 사진·동영상을 첨부하거나, 본문에 이미지를
-              붙여넣기(Ctrl/Cmd+V)할 수 있습니다.
-            </p>
+          <div className="space-y-5 px-6 py-5">
+            <div className="space-y-1.5 rounded-lg bg-[#FEE500] px-4 py-3.5 text-[13px] leading-relaxed text-[#191919]">
+              <p>· 제보한 내용은 안전하게 정리돼요.</p>
+              <p>· 기본은 익명이에요. 인스타그램 아이디를 남기면 게시물에 언급해드릴 수 있어요.</p>
+              <p>· 로그인 없이도 제보할 수 있어요.</p>
+            </div>
 
             <div>
-              <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
-                제목 *
-              </label>
+              <label className="mb-1.5 block text-xs text-neutral-400">제목</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={120}
                 placeholder="제보 제목"
-                className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
-                내용 *
-              </label>
+              <label className="mb-1.5 block text-xs text-neutral-400">내용</label>
               <div
                 ref={editorRef}
                 contentEditable
                 suppressContentEditableWarning
                 onPaste={handlePaste}
-                className="min-h-[160px] border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+                data-placeholder="제보할 내용을 적어주세요"
+                className="min-h-[120px] border border-[#333] bg-[#0c0c0c] px-3.5 py-3 text-sm outline-none empty:before:text-neutral-600 empty:before:content-[attr(data-placeholder)] focus:border-neutral-400"
                 style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
                 aria-label="제보 내용"
               />
-              <p className="mt-1 text-[10px] text-muted">
+              <p className="mt-1 text-[10px] text-neutral-600">
                 카카오톡·웹에서 이미지를 복사한 뒤 본문에 붙여넣기(Ctrl/Cmd+V)할 수 있습니다.
               </p>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
-                첨부파일 (이미지·동영상)
-              </label>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -363,30 +346,34 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="border border-border px-4 py-2 text-[10px] uppercase tracking-widest transition-colors hover:border-foreground"
+                className="flex w-full items-center gap-3 border border-dashed border-[#444] bg-[#0c0c0c] px-4 py-4 text-left transition-colors hover:border-neutral-500"
               >
-                파일 선택
+                <span className="text-lg text-neutral-400">↑</span>
+                <span>
+                  <span className="block text-sm text-neutral-200">이미지 · 영상 첨부</span>
+                  <span className="mt-0.5 block text-[11px] text-neutral-500">파일당 최대 1GB</span>
+                </span>
               </button>
               {attachments.length > 0 && (
                 <ul className="mt-3 space-y-2">
                   {attachments.map((a) => (
                     <li
                       key={a.id}
-                      className="flex items-center gap-3 border border-border px-3 py-2 text-xs"
+                      className="flex items-center gap-3 border border-[#333] bg-[#0c0c0c] px-3 py-2 text-xs"
                     >
                       {a.kind === "image" ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={a.url} alt="" className="h-12 w-12 object-cover" />
                       ) : (
-                        <div className="flex h-12 w-12 items-center justify-center bg-neutral-100 text-[10px] text-muted">
+                        <div className="flex h-12 w-12 items-center justify-center bg-[#1c1c1c] text-[10px] text-neutral-500">
                           VIDEO
                         </div>
                       )}
-                      <span className="min-w-0 flex-1 truncate">{a.file.name}</span>
+                      <span className="min-w-0 flex-1 truncate text-neutral-300">{a.file.name}</span>
                       <button
                         type="button"
                         onClick={() => removeAttachment(a.id)}
-                        className="text-muted underline hover:text-foreground"
+                        className="text-neutral-500 underline hover:text-white"
                       >
                         제거
                       </button>
@@ -396,15 +383,40 @@ export function TipReportModal({ onClose }: TipReportModalProps) {
               )}
             </div>
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs text-neutral-400">
+                  인스타그램 아이디 (선택)
+                </label>
+                <input
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  placeholder="@koreaharlem"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs text-neutral-400">비밀번호</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="수정 · 삭제용"
+                  className={inputClass}
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+
+            {error ? <p className="text-sm text-rose-400">{error}</p> : null}
 
             <button
               type="button"
               disabled={submitting}
               onClick={() => void submit()}
-              className="w-full border border-foreground bg-foreground px-4 py-3 text-[10px] uppercase tracking-widest text-background disabled:opacity-50"
+              className="w-full bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {submitting ? "전송 중…" : "제보완료"}
+              {submitting ? "전송 중…" : "제보 보내기"}
             </button>
           </div>
         )}

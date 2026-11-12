@@ -79,11 +79,11 @@ export function AdminMembersClient() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="이메일 · ID 검색"
-              className="min-w-[220px] rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm"
+              className="min-w-[220px] rounded-md border border-[#333] bg-[#151515] px-3 py-2 text-sm"
             />
             <button
               type="submit"
-              className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs uppercase tracking-widest"
+              className="rounded-md border border-[#333] bg-[#151515] px-3 py-2 text-xs uppercase tracking-widest"
             >
               검색
             </button>
@@ -102,11 +102,11 @@ export function AdminMembersClient() {
 
       {error ? <p className="mb-4 text-sm text-rose-600">{error}</p> : null}
       {loading ? (
-        <p className="text-sm text-neutral-500">불러오는 중…</p>
+        <p className="text-sm text-[#6e6b65]">불러오는 중…</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-[#262626] bg-[#151515]">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-[10px] uppercase tracking-widest text-neutral-500">
+            <thead className="border-b border-[#262626] bg-[#0c0c0c] text-[10px] uppercase tracking-widest text-[#6e6b65]">
               <tr>
                 <th className="px-4 py-3">이메일</th>
                 <th className="px-4 py-3">권한</th>
@@ -118,14 +118,14 @@ export function AdminMembersClient() {
             </thead>
             <tbody>
               {members.map((m) => (
-                <tr key={m.id} className="border-b border-neutral-100">
+                <tr key={m.id} className="border-b border-[#262626]">
                   <td className="px-4 py-3">
                     <p className="font-medium">{m.email || "(이메일 없음)"}</p>
-                    <p className="font-mono text-[10px] text-neutral-400">{m.id.slice(0, 8)}…</p>
+                    <p className="font-mono text-[10px] text-[#6e6b65]">{m.id.slice(0, 8)}…</p>
                   </td>
                   <td className="px-4 py-3">
                     <select
-                      className="rounded border border-neutral-300 px-2 py-1 text-xs"
+                      className="rounded border border-[#333] px-2 py-1 text-xs"
                       value={m.role}
                       disabled={busyId === m.id}
                       onChange={(e) =>
@@ -147,10 +147,10 @@ export function AdminMembersClient() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-neutral-500">
+                  <td className="px-4 py-3 text-xs text-[#6e6b65]">
                     {new Date(m.created_at).toLocaleDateString("ko-KR")}
                   </td>
-                  <td className="px-4 py-3 text-xs text-neutral-500">
+                  <td className="px-4 py-3 text-xs text-[#6e6b65]">
                     {m.last_sign_in_at
                       ? new Date(m.last_sign_in_at).toLocaleString("ko-KR")
                       : "—"}
@@ -184,7 +184,7 @@ export function AdminMembersClient() {
             </tbody>
           </table>
           {members.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-neutral-500">회원이 없습니다.</p>
+            <p className="px-4 py-8 text-center text-sm text-[#6e6b65]">회원이 없습니다.</p>
           ) : null}
         </div>
       )}

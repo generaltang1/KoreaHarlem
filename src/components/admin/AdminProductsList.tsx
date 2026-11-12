@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -28,7 +28,7 @@ function DisplayStatusBadge({ published }: { published: boolean }) {
       className={
         published
           ? "inline-flex shrink-0 items-center border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-emerald-800"
-          : "inline-flex shrink-0 items-center border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-neutral-600"
+          : "inline-flex shrink-0 items-center border border-[#262626] bg-[#0c0c0c] px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-[#a8a49b]"
       }
     >
       {published ? "진열함" : "진열안함"}
@@ -56,7 +56,7 @@ function StockDisplayBadge({ show }: { show: boolean }) {
       className={
         show
           ? "inline-flex shrink-0 items-center border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-violet-800"
-          : "inline-flex shrink-0 items-center border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-neutral-600"
+          : "inline-flex shrink-0 items-center border border-[#262626] bg-[#0c0c0c] px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest text-[#a8a49b]"
       }
     >
       {show ? "재고표시" : "재고숨김"}
@@ -110,7 +110,7 @@ export function AdminProductsList({ products }: { products: AdminProductItem[] }
           className="flex flex-col gap-3 border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex min-w-0 items-center gap-4">
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden bg-neutral-100">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden bg-[#1c1c1c]">
               {product.image_url ? (
                 <Image src={product.image_url} alt={product.title} fill className="object-cover" />
               ) : (

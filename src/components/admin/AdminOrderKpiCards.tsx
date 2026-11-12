@@ -15,15 +15,15 @@ export function AdminOrderKpiCards({ counts, activeKey }: Props) {
           <Link
             key={card.key}
             href={card.href}
-            className={`rounded-lg border px-4 py-4 shadow-sm transition ${
+            className={`rounded-xl border px-4 py-4 transition ${
               active
-                ? "border-neutral-900 bg-neutral-900 text-white"
-                : "border-neutral-200 bg-white text-neutral-900 hover:border-neutral-400"
+                ? "border-[#FEE500] bg-[#FEE500]/10 text-[#F4F1EA]"
+                : "border-[#262626] bg-[#151515] text-[#F4F1EA] hover:border-[#3d3d3d]"
             }`}
           >
             <p
               className={`text-[10px] uppercase tracking-widest ${
-                active ? "text-neutral-300" : "text-neutral-500"
+                active ? "text-[#FEE500]" : "text-[#6e6b65]"
               }`}
             >
               {card.label}

@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -17,7 +18,13 @@ type TipCreateBody = {
   contentHtml?: string;
   attachments?: TipFileMeta[];
   pasteImages?: TipPasteMeta[];
+  instagramHandle?: string;
+  accessPassword?: string;
 };
+
+function hashTipPassword(password: string) {
+  return createHash("sha256").update(`kh-tip:${password}`).digest("hex");
+}
 
 /** 공개 제보 등록 — 메타데이터만 받고 Signed Upload URL 발급 (대용량 파일은 클라이언트→Storage 직접 업로드) */
 export async function POST(request: Request) {
@@ -41,9 +48,20 @@ export async function POST(request: Request) {
   const contentHtml = sanitizeTipHtml(rawHtml);
   const attachmentMetas = Array.isArray(body.attachments) ? body.attachments : [];
   const pasteMetas = Array.isArray(body.pasteImages) ? body.pasteImages : [];
+  const instagramHandle = String(body.instagramHandle ?? "")
+    .trim()
+    .replace(/^@+/, "")
+    .slice(0, 64);
+  const accessPassword = String(body.accessPassword ?? "").trim();
 
   if (!title) {
     return NextResponse.json({ message: "제목을 입력해주세요." }, { status: 400 });
+  }
+  if (accessPassword.length < 4) {
+    return NextResponse.json(
+      { message: "수정·삭제용 비밀번호를 4자 이상 입력해주세요." },
+      { status: 400 },
+    );
   }
   if (title.length > TIP_MAX_TITLE_LENGTH) {
     return NextResponse.json({ message: "제목이 너무 깁니다." }, { status: 400 });
@@ -79,15 +97,42 @@ export async function POST(request: Request) {
     /* guest ok */
   }
 
-  const { data: tip, error: tipError } = await admin
-    .from("tip_reports")
-    .insert({
-      title,
-      content_html: contentHtml || "<p></p>",
-      user_id: userId,
-    })
-    .select("id")
-    .single();
+  const passwordHash = hashTipPassword(accessPassword);
+  const insertPayload: Record<string, unknown> = {
+    title,
+    content_html: contentHtml || "<p></p>",
+    user_id: userId,
+    instagram_handle: instagramHandle || null,
+    access_password_hash: passwordHash,
+  };
+
+  let tip: { id: string } | null = null;
+  let tipError: { message?: string } | null = null;
+
+  {
+    const res = await admin.from("tip_reports").insert(insertPayload).select("id").single();
+    tip = res.data as { id: string } | null;
+    tipError = res.error;
+  }
+
+  // 컬럼 미적용 환경: 기본 컬럼만으로 재시도 (인스타는 본문에 병기)
+  if (tipError && /instagram_handle|access_password_hash|column/i.test(tipError.message ?? "")) {
+    const fallbackHtml =
+      instagramHandle
+        ? `${contentHtml || "<p></p>"}<p data-tip-meta="instagram">Instagram: @${instagramHandle}</p>`
+        : contentHtml || "<p></p>";
+    const res = await admin
+      .from("tip_reports")
+      .insert({
+        title,
+        content_html: fallbackHtml,
+        user_id: userId,
+      })
+      .select("id")
+      .single();
+    tip = res.data as { id: string } | null;
+    tipError = res.error;
+  }
 
   if (tipError || !tip) {
     const msg = tipError?.message ?? "";

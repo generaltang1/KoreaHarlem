@@ -174,13 +174,13 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
 
   if (orders.length === 0) {
     return (
-      <p className="border border-border p-8 text-center text-sm text-muted">주문이 없습니다.</p>
+      <p className="border border-[#262626] p-8 text-center text-sm text-[#6e6b65]">주문이 없습니다.</p>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="border border-border p-4">
+      <div className="border border-[#262626] p-4">
         <p className="text-[10px] uppercase tracking-widest text-muted">일괄 배송 상태</p>
         <p className="mt-1 text-xs text-muted">
           선택 주문만 배송준비중 → 배송중 → 배송완료 흐름으로 변경합니다. (CS·결제 상태는 상세에서
@@ -196,7 +196,7 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
               onChange={(e) =>
                 setTargetStatus(e.target.value as "preparing" | "shipped" | "delivered")
               }
-              className="border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+              className="border border-[#262626] px-3 py-2 text-sm outline-none focus:border-[#a8a49b]"
             >
               <option value="preparing">배송준비중</option>
               <option value="shipped">배송중</option>
@@ -212,7 +212,7 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
                 <select
                   value={bulkCourier}
                   onChange={(e) => setBulkCourier(e.target.value)}
-                  className="border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+                  className="border border-[#262626] px-3 py-2 text-sm outline-none focus:border-[#a8a49b]"
                 >
                   {SHIPPING_COURIERS.map((c) => (
                     <option key={c} value={c}>
@@ -228,7 +228,7 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
                 <input
                   value={bulkTracking}
                   onChange={(e) => setBulkTracking(e.target.value)}
-                  className="border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+                  className="border border-[#262626] px-3 py-2 text-sm outline-none focus:border-[#a8a49b]"
                   placeholder="공통 송장(선택 건 동일 적용)"
                 />
               </div>
@@ -238,16 +238,16 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
             type="button"
             disabled={loading || selected.size === 0}
             onClick={() => void runBulk()}
-            className="bg-foreground px-4 py-2 text-[10px] uppercase tracking-widest text-background disabled:opacity-50"
+            className="bg-[#f4f1ea] px-4 py-2 text-[10px] uppercase tracking-widest text-black disabled:opacity-50"
           >
             {loading ? "처리 중..." : `선택 ${selected.size}건 변경`}
           </button>
         </div>
         {error && <p className="mt-2 text-sm text-rose-500">{error}</p>}
-        {resultMsg && <p className="mt-2 text-sm text-muted">{resultMsg}</p>}
+        {resultMsg && <p className="mt-2 text-sm text-[#6e6b65]">{resultMsg}</p>}
       </div>
 
-      <div className="flex items-center gap-2 border border-border px-4 py-2 text-sm">
+      <div className="flex items-center gap-2 border border-[#262626] px-4 py-2 text-sm">
         <input type="checkbox" checked={allSelected} onChange={toggleAll} id="bulk-all" />
         <label htmlFor="bulk-all" className="cursor-pointer text-muted">
           현재 페이지 전체 선택
@@ -258,7 +258,7 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
         {orders.map((order) => {
           const draft = getDraft(order);
           return (
-            <div key={order.id} className="border border-border p-4">
+            <div key={order.id} className="border border-[#262626] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-3">
                   <input
@@ -288,7 +288,7 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
                 </div>
               </div>
 
-              <div className="mt-3 grid gap-3 border-t border-border pt-3 lg:grid-cols-2">
+              <div className="mt-3 grid gap-3 border-t border-[#262626] pt-3 lg:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[10px] uppercase tracking-widest text-muted">
                     관리자 메모
@@ -297,14 +297,14 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
                     <input
                       value={draft.admin_memo}
                       onChange={(e) => updateDraft(order.id, { admin_memo: e.target.value })}
-                      className="min-w-0 flex-1 border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+                      className="min-w-0 flex-1 border border-[#262626] px-3 py-2 text-sm outline-none focus:border-[#a8a49b]"
                       placeholder="내부 메모"
                     />
                     <button
                       type="button"
                       disabled={savingId === `${order.id}:memo`}
                       onClick={() => void saveMemo(order)}
-                      className="shrink-0 border border-border px-3 py-2 text-[10px] uppercase tracking-widest disabled:opacity-50"
+                      className="shrink-0 border border-[#262626] px-3 py-2 text-[10px] uppercase tracking-widest disabled:opacity-50"
                     >
                       저장
                     </button>
@@ -320,7 +320,7 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
                       onChange={(e) =>
                         updateDraft(order.id, { tracking_courier: e.target.value })
                       }
-                      className="border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+                      className="border border-[#262626] px-3 py-2 text-sm outline-none focus:border-[#a8a49b]"
                     >
                       <option value="">택배사</option>
                       {SHIPPING_COURIERS.map((c) => (
@@ -334,14 +334,14 @@ export function AdminOrdersBulkList({ orders }: AdminOrdersBulkListProps) {
                       onChange={(e) =>
                         updateDraft(order.id, { tracking_number: e.target.value })
                       }
-                      className="min-w-0 flex-1 border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+                      className="min-w-0 flex-1 border border-[#262626] px-3 py-2 text-sm outline-none focus:border-[#a8a49b]"
                       placeholder="송장번호"
                     />
                     <button
                       type="button"
                       disabled={savingId === `${order.id}:ship`}
                       onClick={() => void saveShipping(order)}
-                      className="shrink-0 border border-border px-3 py-2 text-[10px] uppercase tracking-widest disabled:opacity-50"
+                      className="shrink-0 border border-[#262626] px-3 py-2 text-[10px] uppercase tracking-widest disabled:opacity-50"
                     >
                       저장
                     </button>

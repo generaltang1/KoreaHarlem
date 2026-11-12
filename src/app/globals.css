@@ -49,6 +49,24 @@ html {
   padding-bottom: 80px;
 }
 
+/* Admin H 다크 셸 — 시안 톤 폼/테이블 보조 */
+.admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+.admin-shell select,
+.admin-shell textarea {
+  background-color: #0c0c0c;
+  border-color: #333;
+  color: #f4f1ea;
+}
+
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: #6e6b65;
+}
+
+.admin-shell table thead {
+  color: #6e6b65;
+}
+
 @keyframes wheel-roll-down {
   0% {
     transform: translateY(0);

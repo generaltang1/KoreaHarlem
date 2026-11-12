@@ -20,14 +20,14 @@ export function GenreSearchSelect({ value, onChange, required }: Props) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="장르 검색"
-        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+        className="w-full rounded-md border border-[#333] px-3 py-2 text-sm"
       />
       <select
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         size={Math.min(11, Math.max(6, options.length))}
-        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm"
+        className="w-full rounded-md border border-[#333] bg-[#151515] px-2 py-2 text-sm"
       >
         <option value="">대표 장르 선택</option>
         {options.map((g) => (
@@ -37,7 +37,7 @@ export function GenreSearchSelect({ value, onChange, required }: Props) {
         ))}
       </select>
       {value ? (
-        <p className="text-xs text-neutral-500">선택: {value}</p>
+        <p className="text-xs text-[#6e6b65]">선택: {value}</p>
       ) : null}
     </div>
   );

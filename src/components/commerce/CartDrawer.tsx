@@ -3,11 +3,30 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo } from "react";
-import { useCart } from "@/context/CartContext";
+import { useCart, type CartLine } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { formatMinorAmount } from "@/lib/currency";
+import { formatMinorAmount, convertKrwToMinor } from "@/lib/currency";
 import { isProductPurchasable } from "@/lib/cartAvailability";
 import { useCartProductAvailability } from "@/hooks/useCartProductAvailability";
+import { calcShippingFee } from "@/lib/shipping";
+
+/** 시안 기준 기본값 — 상품별 설정이 장바구니에 없을 때 */
+const DEFAULT_SHIPPING_FEE_KRW = 4000;
+const DEFAULT_FREE_THRESHOLD_KRW = 50000;
+
+function lineCategoryLabel(item: CartLine) {
+  if (item.kind === "digital_album") return "디지털 앨범";
+  if (item.kind === "digital_track") return "디지털 음원";
+  return "상품";
+}
+
+function lineOptionLabel(item: CartLine) {
+  if (item.kind === "digital_album" || item.kind === "digital_track") {
+    return item.kind === "digital_album" ? "디지털 앨범 · 1개" : "디지털 음원 · 1개";
+  }
+  const sizePart = item.size ? `사이즈 ${item.size}` : "옵션 없음";
+  return `${sizePart} · ${item.quantity}개`;
+}
 
 export function CartDrawer() {
   const {
@@ -19,7 +38,7 @@ export function CartDrawer() {
     subtotalMinor,
     itemCount,
   } = useCart();
-  const { currency } = useCurrency();
+  const { currency, formatKrw } = useCurrency();
 
   const productIds = useMemo(
     () => items.filter((item) => (item.kind ?? "product") === "product").map((item) => item.productId),
@@ -27,126 +46,189 @@ export function CartDrawer() {
   );
   const { availability, loading: availabilityLoading } = useCartProductAvailability(productIds, isOpen);
 
+  const physicalSubtotalKrw = useMemo(
+    () =>
+      items
+        .filter((i) => (i.kind ?? "product") === "product")
+        .reduce((sum, i) => sum + i.priceKrw * i.quantity, 0),
+    [items],
+  );
+
+  const hasPhysical = physicalSubtotalKrw > 0;
+  const shippingKrw = hasPhysical
+    ? calcShippingFee(physicalSubtotalKrw, DEFAULT_SHIPPING_FEE_KRW, DEFAULT_FREE_THRESHOLD_KRW)
+    : 0;
+  const shippingMinor = convertKrwToMinor(shippingKrw, currency);
+  const totalMinor = subtotalMinor + shippingMinor;
+  const freeProgress = hasPhysical
+    ? Math.min(1, physicalSubtotalKrw / DEFAULT_FREE_THRESHOLD_KRW)
+    : 0;
+  const freeApplied = hasPhysical && shippingKrw === 0;
+  const remainingToFree = Math.max(0, DEFAULT_FREE_THRESHOLD_KRW - physicalSubtotalKrw);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[80]">
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/60"
         aria-label="장바구니 닫기"
         onClick={closeCart}
       />
-      <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-background shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="text-sm font-medium uppercase tracking-widest">
-            Cart ({itemCount})
+      <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col border-l border-[#262626] bg-[#0a0a0a] text-neutral-100 shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-5">
+          <h2 className="flex items-baseline gap-2 text-xl font-bold tracking-tight">
+            장바구니
+            <span className="text-sm font-semibold text-[#FEE500]">{itemCount}</span>
           </h2>
           <button
             type="button"
             onClick={closeCart}
-            className="text-xs uppercase tracking-widest text-muted hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center text-neutral-400 transition-colors hover:text-white"
+            aria-label="닫기"
           >
-            Close
+            ✕
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        {hasPhysical && (
+          <div className="border-b border-[#262626] px-6 pb-4">
+            <p className="text-xs leading-relaxed text-[#FEE500]">
+              {freeApplied
+                ? `무료배송 적용됐어요 · 배송 상품 ${formatKrw(physicalSubtotalKrw)} (${formatKrw(DEFAULT_FREE_THRESHOLD_KRW)} 이상 무료)`
+                : `무료배송까지 ${formatKrw(remainingToFree)} 남았어요 · 배송 상품 ${formatKrw(physicalSubtotalKrw)}`}
+            </p>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-[#2a2a2a]">
+              <div
+                className="h-full rounded-full bg-[#FEE500] transition-all"
+                style={{ width: `${Math.round(freeProgress * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto">
           {items.length === 0 ? (
-            <p className="py-16 text-center text-sm text-muted">장바구니가 비어 있습니다.</p>
+            <p className="px-6 py-16 text-center text-sm text-neutral-500">장바구니가 비어 있습니다.</p>
           ) : (
-            <ul className="space-y-5">
+            <ul>
               {items.map((item) => {
                 const digital = item.kind === "digital_album" || item.kind === "digital_track";
                 const purchasable = digital || isProductPurchasable(availability.get(item.productId));
                 const showUnavailable = !availabilityLoading && !purchasable;
+                const lineMinor = item.unitPriceMinor * item.quantity;
                 return (
-                <li
-                  key={item.key}
-                  className={`flex gap-3 ${showUnavailable ? "opacity-50" : ""}`}
-                >
-                  <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-neutral-100">
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.title}
-                        fill
-                        className={`object-cover ${showUnavailable ? "grayscale" : ""}`}
-                      />
-                    ) : null}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-medium">{item.title}</p>
-                      {showUnavailable && (
-                        <span className="shrink-0 border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-neutral-600">
-                          구매 불가
-                        </span>
-                      )}
+                  <li
+                    key={item.key}
+                    className={`relative flex gap-4 border-b border-[#262626] px-6 py-5 ${
+                      showUnavailable ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div className="relative h-24 w-[72px] shrink-0 overflow-hidden bg-[#151515]">
+                      {item.imageUrl ? (
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.title}
+                          fill
+                          className={`object-cover ${showUnavailable ? "grayscale" : ""}`}
+                        />
+                      ) : null}
                     </div>
-                    {digital && (
-                      <p className="mt-0.5 text-xs text-muted">
-                        {item.kind === "digital_album" ? "디지털 앨범" : "디지털 음원"}
+                    <div className="min-w-0 flex-1 pr-6">
+                      <p className="text-[10px] font-medium tracking-wide text-[#FEE500]">
+                        {lineCategoryLabel(item)}
                       </p>
-                    )}
-                    {item.size && !digital && <p className="mt-0.5 text-xs text-muted">Size {item.size}</p>}
-                    <p className="mt-1 text-sm">
-                      {formatMinorAmount(item.unitPriceMinor, currency)}
-                    </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      {!digital && (
-                        <>
-                      <button
-                        type="button"
-                        className="h-7 w-7 border border-border text-xs"
-                        onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                      >
-                        −
-                      </button>
-                      <span className="w-6 text-center text-xs">{item.quantity}</span>
-                      <button
-                        type="button"
-                        className="h-7 w-7 border border-border text-xs"
-                        onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                      >
-                        +
-                      </button>
-                        </>
+                      <p className="mt-1 truncate text-sm font-semibold text-white">{item.title}</p>
+                      {showUnavailable && (
+                        <span className="mt-1 inline-block text-[10px] text-rose-400">구매 불가</span>
                       )}
-                      <button
-                        type="button"
-                        className="ml-auto text-[10px] uppercase tracking-widest text-rose-500"
-                        onClick={() => removeItem(item.key)}
-                      >
-                        Remove
-                      </button>
+                      <p className="mt-1 text-xs text-neutral-500">{lineOptionLabel(item)}</p>
+                      <div className="mt-3 flex items-center gap-3">
+                        {!digital ? (
+                          <div className="inline-flex items-center border border-[#333] bg-[#151515]">
+                            <button
+                              type="button"
+                              className="flex h-7 w-7 items-center justify-center text-sm text-neutral-300 hover:text-white"
+                              onClick={() => updateQuantity(item.key, item.quantity - 1)}
+                              aria-label="수량 감소"
+                            >
+                              −
+                            </button>
+                            <span className="w-6 text-center text-xs tabular-nums">{item.quantity}</span>
+                            <button
+                              type="button"
+                              className="flex h-7 w-7 items-center justify-center text-sm text-neutral-300 hover:text-white"
+                              onClick={() => updateQuantity(item.key, item.quantity + 1)}
+                              aria-label="수량 증가"
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-neutral-500">수량 1</span>
+                        )}
+                        <span className="text-sm font-medium tabular-nums">
+                          {formatMinorAmount(lineMinor, currency)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </li>
+                    <button
+                      type="button"
+                      className="absolute right-5 top-5 text-neutral-500 transition-colors hover:text-white"
+                      onClick={() => removeItem(item.key)}
+                      aria-label="삭제"
+                    >
+                      ✕
+                    </button>
+                  </li>
                 );
               })}
             </ul>
           )}
         </div>
 
-        <div className="border-t border-border px-5 py-4">
-          <div className="mb-4 flex items-center justify-between text-sm">
-            <span className="text-muted">Subtotal</span>
-            <span className="font-medium">
-              {formatMinorAmount(subtotalMinor, currency)} {currency.code}
+        <div className="border-t border-[#262626] px-6 py-5">
+          <div className="flex items-center justify-between text-sm text-neutral-400">
+            <span>상품 금액</span>
+            <span className="tabular-nums text-neutral-200">
+              {formatMinorAmount(subtotalMinor, currency)}
             </span>
           </div>
-          <p className="mb-3 text-[10px] leading-relaxed text-muted">
-            표시된 금액으로 결제됩니다. 통화 변경 시 장바구니 금액이 기준가(KRW)에서 다시 환산됩니다.
+          <div className="mt-2 flex items-center justify-between text-sm text-neutral-400">
+            <span>배송비</span>
+            <span className={`tabular-nums ${shippingKrw === 0 ? "text-[#FEE500]" : "text-neutral-200"}`}>
+              {hasPhysical
+                ? shippingKrw === 0
+                  ? formatMinorAmount(0, currency)
+                  : formatMinorAmount(shippingMinor, currency)
+                : "—"}
+            </span>
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-[#262626] pt-4">
+            <span className="text-sm font-medium">결제 예정 금액</span>
+            <span className="text-xl font-bold tabular-nums">
+              {formatMinorAmount(totalMinor, currency)}
+            </span>
+          </div>
+          <p className="mt-2 text-[10px] leading-relaxed text-neutral-600">
+            표시된 금액으로 결제됩니다. 통화 변경 시 기준가(KRW)에서 다시 환산됩니다.
           </p>
           <Link
             href="/checkout"
             onClick={closeCart}
-            className={`block w-full bg-foreground py-3 text-center text-xs uppercase tracking-widest text-background ${
+            className={`mt-4 flex w-full items-center justify-center bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 ${
               items.length === 0 ? "pointer-events-none opacity-40" : ""
             }`}
           >
-            Check out
+            주문하기
+          </Link>
+          <Link
+            href="/cart"
+            onClick={closeCart}
+            className="mt-3 flex w-full items-center justify-center border border-[#333] py-3 text-sm text-neutral-200 transition-colors hover:border-neutral-500"
+          >
+            장바구니 전체 보기
           </Link>
         </div>
       </aside>

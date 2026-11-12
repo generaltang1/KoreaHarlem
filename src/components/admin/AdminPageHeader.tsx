@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { admin } from "@/lib/adminTheme";
 
 type AdminPageHeaderProps = {
   eyebrow?: string;
@@ -14,11 +15,11 @@ export function AdminPageHeader({
   actions,
 }: AdminPageHeaderProps) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-neutral-200 pb-6">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[#262626] pb-6">
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-500">{eyebrow}</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-900">{title}</h1>
-        {description ? <p className="mt-2 text-sm text-neutral-500">{description}</p> : null}
+        <p className={admin.label}>{eyebrow}</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#F4F1EA]">{title}</h1>
+        {description ? <p className={`mt-2 text-sm ${admin.muted}`}>{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -33,13 +34,10 @@ export function AdminKpiRow({
   return (
     <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((item) => (
-        <div
-          key={item.label}
-          className="rounded-lg border border-neutral-200 bg-white px-4 py-4 shadow-sm"
-        >
-          <p className="text-[10px] uppercase tracking-widest text-neutral-500">{item.label}</p>
-          <p className="mt-2 text-2xl font-semibold tabular-nums text-neutral-900">{item.value}</p>
-          {item.hint ? <p className="mt-1 text-xs text-neutral-400">{item.hint}</p> : null}
+        <div key={item.label} className={`${admin.card} px-4 py-4`}>
+          <p className={admin.label}>{item.label}</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-[#F4F1EA]">{item.value}</p>
+          {item.hint ? <p className={`mt-1 text-xs ${admin.muted}`}>{item.hint}</p> : null}
         </div>
       ))}
     </div>
@@ -54,10 +52,21 @@ export function AdminPrimaryButton({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center rounded-md bg-neutral-900 px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-neutral-700"
-    >
+    <Link href={href} className={admin.btnPrimary}>
+      {children}
+    </Link>
+  );
+}
+
+export function AdminGhostButton({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link href={href} className={admin.btnGhost}>
       {children}
     </Link>
   );

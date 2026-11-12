@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -77,7 +77,7 @@ export function AdminArtistsList({ artists }: { artists: AdminArtistItem[] }) {
           className="flex flex-col gap-3 border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex min-w-0 items-center gap-4">
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden bg-neutral-100">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden bg-[#1c1c1c]">
               {artist.image_url ? (
                 <Image src={artist.image_url} alt={artist.name} fill className="object-cover" />
               ) : (
