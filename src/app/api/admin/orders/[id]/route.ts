@@ -60,7 +60,7 @@ export async function GET(_request: Request, context: RouteContext) {
   // table may not exist until add_order_cs_requests.sql is run
 
   const csIds = (csRequests ?? []).map((r) => r.id as string).filter(Boolean);
-  let attachmentsByCs = new Map<string, { id: string; file_url: string; file_name: string | null }[]>();
+  const attachmentsByCs = new Map<string, { id: string; file_url: string; file_name: string | null }[]>();
   if (csIds.length > 0) {
     const { data: atts } = await admin
       .from("order_cs_attachments")
