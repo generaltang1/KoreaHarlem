@@ -170,11 +170,21 @@ export async function POST(request: Request, context: RouteContext) {
           { status: 400 },
         );
       }
-      const cancelAmount = orderTotalToTossCancelAmount(order.total, order.currency);
+      const fullCancel = orderTotalToTossCancelAmount(order.total, order.currency);
+      const feeKrw = Number(csReq.return_shipping_fee_krw ?? 0);
+      // KRW만 반품비 차감 (단순 변심). 해외 통화는 관리자 수동 부분환불 권장.
+      const cancelAmount =
+        order.currency === "KRW" && feeKrw > 0
+          ? Math.max(0, fullCancel - feeKrw)
+          : fullCancel;
       const tossResult = await cancelTossPayment({
         paymentKey: order.toss_payment_key,
         settlementCurrency: order.currency,
-        cancelReason: adminNote || csReq.reason || "반품/환불 완료",
+        cancelReason:
+          adminNote ||
+          (feeKrw > 0
+            ? `${csReq.reason || "반품/환불 완료"} (반품비 ₩${feeKrw.toLocaleString("ko-KR")} 차감)`
+            : csReq.reason || "반품/환불 완료"),
         cancelAmount,
         idempotencyKey: `cs-complete-${csReq.id}`,
       });

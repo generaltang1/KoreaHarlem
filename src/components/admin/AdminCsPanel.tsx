@@ -13,6 +13,8 @@ export interface CsRequestItem {
   request_type: string;
   status: string;
   reason: string;
+  reason_code?: string | null;
+  return_shipping_fee_krw?: number | null;
   admin_note: string | null;
   exchange_size: string | null;
   order_item_id?: string | null;
@@ -23,6 +25,7 @@ export interface CsRequestItem {
   stock_completed_at?: string | null;
   item_title?: string | null;
   item_size?: string | null;
+  attachments?: { id: string; file_url: string; file_name: string | null }[];
   created_at: string;
   resolved_at: string | null;
 }
@@ -105,6 +108,12 @@ export function AdminCsPanel({ orderId, requests }: AdminCsPanelProps) {
                 </div>
               </div>
               <p className="mt-3">사유: {req.reason}</p>
+              {(req.return_shipping_fee_krw ?? 0) > 0 && (
+                <p className="mt-1 text-xs text-amber-700">
+                  고객 부담 반품비 ₩{Number(req.return_shipping_fee_krw).toLocaleString("ko-KR")}{" "}
+                  (처리 완료 시 환불액에서 차감)
+                </p>
+              )}
               {(req.item_title || req.item_size) && (
                 <p className="mt-1 text-muted">
                   대상 상품: {req.item_title ?? "상품"}
@@ -113,6 +122,30 @@ export function AdminCsPanel({ orderId, requests }: AdminCsPanelProps) {
               )}
               {req.exchange_size && (
                 <p className="mt-1 text-muted">희망 사이즈: {req.exchange_size}</p>
+              )}
+              {(req.attachments?.length ?? 0) > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-muted">증빙 사진</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {req.attachments!.map((att) => (
+                      <a
+                        key={att.id}
+                        href={att.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block h-20 w-20 overflow-hidden border border-border"
+                        title={att.file_name ?? "첨부"}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={att.file_url}
+                          alt={att.file_name ?? "증빙"}
+                          className="h-full w-full object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
               )}
               {isExchange && (req.stock_held_at || req.stock_completed_at) && (
                 <div className="mt-2 border border-dashed border-border p-2 text-xs text-muted">

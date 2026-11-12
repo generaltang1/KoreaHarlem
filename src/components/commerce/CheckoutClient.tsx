@@ -80,6 +80,38 @@ export function CheckoutClient() {
             (data.user.user_metadata?.name as string) ||
             "",
         );
+        void supabase
+          .from("profiles")
+          .select("phone, default_shipping, nickname")
+          .eq("id", data.user.id)
+          .maybeSingle()
+          .then(({ data: profile }) => {
+            if (profile?.nickname) setName((prev) => prev || profile.nickname);
+            if (profile?.phone) setPhone(profile.phone);
+            const ship = profile?.default_shipping as
+              | { postcode?: string; address?: string; addressDetail?: string; phone?: string }
+              | null;
+            if (ship) {
+              if (ship.postcode) setPostcode(ship.postcode);
+              if (ship.address) setAddress(ship.address);
+              if (ship.addressDetail) setAddressDetail(ship.addressDetail);
+              if (ship.phone) setPhone((prev) => prev || ship.phone || "");
+            }
+          });
+      } else {
+        try {
+          const raw = sessionStorage.getItem("kh_guest_checkout");
+          if (raw) {
+            const g = JSON.parse(raw) as { name?: string; password?: string };
+            if (g.name) setName(g.name);
+            if (g.password) {
+              setGuestPassword(g.password);
+              setGuestPasswordConfirm(g.password);
+            }
+          }
+        } catch {
+          /* ignore */
+        }
       }
       setUserReady(true);
     });
@@ -192,6 +224,7 @@ export function CheckoutClient() {
   const hasDigital = lines.some(
     (line) => line.kind === "digital_album" || line.kind === "digital_track",
   );
+  const hasPhysical = lines.some((line) => (line.kind ?? "product") === "product");
   const lineProductIds = useMemo(
     () =>
       lines
@@ -420,12 +453,12 @@ export function CheckoutClient() {
 
   if (lines.length === 0) {
     return (
-      <div className="py-20 text-center">
-        <p className="text-sm text-muted">장바구니가 비어 있습니다.</p>
+      <div className="py-20 text-center text-neutral-100">
+        <p className="text-sm text-neutral-400">장바구니가 비어 있습니다.</p>
         <button
           type="button"
           onClick={() => router.push("/sale")}
-          className="mt-4 text-xs uppercase tracking-widest underline"
+          className="mt-4 text-xs uppercase tracking-widest text-[#FEE500] underline"
         >
           Sale로 이동
         </button>
@@ -433,13 +466,25 @@ export function CheckoutClient() {
     );
   }
 
+  const memoPresets = [
+    "문 앞에 놓아주세요",
+    "경비실에 맡겨주세요",
+    "배송 전 연락주세요",
+    "직접 입력",
+  ];
+
   return (
-    <form ref={formRef} onSubmit={handlePay} className="mx-auto max-w-3xl space-y-10">
-      <h1 className="text-xl font-medium uppercase tracking-wider">주문 / 결제</h1>
+    <form
+      ref={formRef}
+      onSubmit={handlePay}
+      className="mx-auto grid max-w-5xl gap-8 text-neutral-100 lg:grid-cols-[1fr_360px]"
+    >
+      <div className="space-y-6">
+      <h1 className="text-2xl font-bold tracking-tight">주문 · 결제</h1>
 
       {/* 배송지 */}
-      <section className="border border-border p-5">
-        <h2 className="text-sm font-medium uppercase tracking-wider">배송지</h2>
+      <section className="border border-[#262626] bg-[#151515] p-5">
+        <h2 className="text-sm font-semibold">주문자 · 배송지</h2>
         <div className="mt-5 space-y-4">
           <Field label="받는사람 *">
             <input
@@ -450,7 +495,7 @@ export function CheckoutClient() {
             />
           </Field>
           {hasDigital && !isLoggedIn && (
-            <p className="text-xs text-rose-500">
+            <p className="text-xs text-rose-400">
               디지털 음원은{" "}
               <Link href="/login?next=/checkout" className="underline">
                 로그인
@@ -459,7 +504,7 @@ export function CheckoutClient() {
             </p>
           )}
           {digitalOnly && (
-            <p className="text-xs text-muted">디지털 음원만 담겨 있어 배송지는 필요하지 않습니다.</p>
+            <p className="text-xs text-neutral-500">디지털 음원만 담겨 있어 배송지는 필요하지 않습니다.</p>
           )}
           {!digitalOnly && (
             <>
@@ -473,6 +518,7 @@ export function CheckoutClient() {
                 className={inputClass}
               />
               <DaumPostcodeButton
+                className="shrink-0 border border-[#333] bg-[#1c1c1c] px-4 py-3 text-xs text-white disabled:opacity-50"
                 onComplete={(data) => {
                   setPostcode(data.postcode);
                   setAddress(data.address);
@@ -512,13 +558,35 @@ export function CheckoutClient() {
               className={inputClass}
             />
           </Field>
-          <Field label="배송메시지">
-            <input
-              value={shippingMessage}
-              onChange={(e) => setShippingMessage(e.target.value)}
-              placeholder="배송 시 요청사항"
+          <Field label="배송 메모">
+            <select
               className={inputClass}
-            />
+              value={
+                memoPresets.includes(shippingMessage) || shippingMessage === ""
+                  ? shippingMessage || ""
+                  : "직접 입력"
+              }
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "직접 입력") setShippingMessage("");
+                else setShippingMessage(v);
+              }}
+            >
+              <option value="">선택</option>
+              {memoPresets.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            {(shippingMessage === "" || !memoPresets.includes(shippingMessage)) && (
+              <input
+                value={shippingMessage}
+                onChange={(e) => setShippingMessage(e.target.value)}
+                placeholder="배송 시 요청사항"
+                className={`${inputClass} mt-2`}
+              />
+            )}
           </Field>
 
           {!isLoggedIn && (
@@ -551,78 +619,12 @@ export function CheckoutClient() {
         </div>
       </section>
 
-      {/* 주문상품 */}
-      <section className="border border-border p-5">
-        <h2 className="text-sm font-medium uppercase tracking-wider">주문상품</h2>
-        <ul className="mt-4 divide-y divide-border">
-          {lines.map((line) => {
-            const digital = line.kind === "digital_album" || line.kind === "digital_track";
-            const purchasable = digital || isProductPurchasable(availability.get(line.productId));
-            const showUnavailable = !availabilityLoading && !purchasable;
-            return (
-            <li
-              key={line.key}
-              className={`flex gap-4 py-4 text-sm ${showUnavailable ? "opacity-50" : ""}`}
-            >
-              {line.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={line.imageUrl}
-                  alt=""
-                  className={`h-20 w-20 shrink-0 object-cover ${showUnavailable ? "grayscale" : ""}`}
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{line.title}</p>
-                  {showUnavailable && (
-                    <span className="shrink-0 border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-neutral-600">
-                      구매 불가
-                    </span>
-                  )}
-                </div>
-                {line.size && <p className="text-xs text-muted">사이즈: {line.size}</p>}
-                <p className="text-xs text-muted">수량: {line.quantity}</p>
-              </div>
-              <p className="shrink-0">
-                {formatMinorAmount(line.unitPriceMinor * line.quantity, currency)}
-              </p>
-            </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      {/* 결제정보 */}
-      <section className="border border-border p-5">
-        <h2 className="text-sm font-medium uppercase tracking-wider">결제정보</h2>
-        <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-muted">상품금액</dt>
-            <dd>{formatMinorAmount(merchandiseMinor, settlement)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-muted">배송비</dt>
-            <dd>
-              {buyId
-                ? shippingKrw > 0
-                  ? formatKrw(shippingKrw)
-                  : "무료"
-                : "장바구니 결제 시 별도"}
-            </dd>
-          </div>
-          <div className="flex justify-between border-t border-border pt-3 font-medium">
-            <dt>총 결제금액</dt>
-            <dd>
-              {formatMinorAmount(settleMinor, settlement)} {settlement.code}
-            </dd>
-          </div>
-        </dl>
-      </section>
-
       {/* 결제수단 */}
-      <section className="border border-border p-5">
-        <h2 className="text-sm font-medium uppercase tracking-wider">결제수단</h2>
+      <section className="border border-[#262626] bg-[#151515] p-5">
+        <h2 className="text-sm font-semibold">결제수단</h2>
+        <p className="mt-2 text-xs text-neutral-500">
+          결제창부터는 토스페이먼츠 화면입니다. (디자인 변경 불가)
+        </p>
         <fieldset className="mt-4 space-y-2">
           <PayMethodOption
             checked={payMethod === "domestic_card"}
@@ -652,7 +654,7 @@ export function CheckoutClient() {
       </section>
 
       {/* 약관 */}
-      <section className="border border-border p-5">
+      <section className="border border-[#262626] bg-[#151515] p-5">
         <label className="flex cursor-pointer items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -673,28 +675,97 @@ export function CheckoutClient() {
         </label>
       </section>
 
-      {error && <p className="text-sm text-rose-500">{error}</p>}
+      {error && <p className="text-sm text-rose-400">{error}</p>}
+      </div>
 
-      <button
-        type="submit"
-        disabled={loading || ratesSource === "loading"}
-        className="w-full bg-foreground py-4 text-xs uppercase tracking-widest text-background disabled:opacity-50"
-      >
-        {loading
-          ? "결제 준비 중..."
-          : `결제하기 · ${formatMinorAmount(settleMinor, settlement)} ${settlement.code}`}
-      </button>
+      <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+        <section className="border border-[#262626] bg-[#151515] p-5">
+          <h2 className="text-sm font-semibold">주문 상품</h2>
+          <ul className="mt-4 divide-y divide-[#262626]">
+            {lines.map((line) => {
+              const digital = line.kind === "digital_album" || line.kind === "digital_track";
+              const purchasable = digital || isProductPurchasable(availability.get(line.productId));
+              const showUnavailable = !availabilityLoading && !purchasable;
+              return (
+                <li
+                  key={line.key}
+                  className={`flex gap-3 py-3 text-sm ${showUnavailable ? "opacity-50" : ""}`}
+                >
+                  {line.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={line.imageUrl}
+                      alt=""
+                      className={`h-16 w-12 shrink-0 object-cover ${showUnavailable ? "grayscale" : ""}`}
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{line.title}</p>
+                    {line.size && <p className="text-xs text-neutral-500">사이즈 {line.size}</p>}
+                    <p className="text-xs text-neutral-500">수량 {line.quantity}</p>
+                  </div>
+                  <p className="shrink-0 text-xs">
+                    {formatMinorAmount(line.unitPriceMinor * line.quantity, currency)}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section className="border border-[#262626] bg-[#151515] p-5">
+          <h2 className="text-sm font-semibold">결제 요약</h2>
+          <p className="mt-2 text-xs text-[#FEE500]">
+            실물 배송비 기본 ₩4,000 · 5만원 이상 무료배송
+          </p>
+          <dl className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-neutral-500">상품금액</dt>
+              <dd>{formatMinorAmount(merchandiseMinor, settlement)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-neutral-500">배송비</dt>
+              <dd>
+                {buyId
+                  ? shippingKrw > 0
+                    ? formatKrw(shippingKrw)
+                    : "무료"
+                  : shippingKrw > 0
+                    ? formatKrw(shippingKrw)
+                    : hasPhysical
+                      ? "무료"
+                      : "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between border-t border-[#262626] pt-3 font-semibold">
+              <dt>총 결제금액</dt>
+              <dd>
+                {formatMinorAmount(settleMinor, settlement)} {settlement.code}
+              </dd>
+            </div>
+          </dl>
+          <button
+            type="submit"
+            disabled={loading || ratesSource === "loading"}
+            className="mt-5 w-full bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black disabled:opacity-50"
+          >
+            {loading
+              ? "결제 준비 중..."
+              : `결제하기 · ${formatMinorAmount(settleMinor, settlement)}`}
+          </button>
+        </section>
+      </aside>
     </form>
   );
 }
 
 const inputClass =
-  "w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground";
+  "w-full border border-[#333] bg-[#0c0c0c] px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
+      <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-neutral-500">
         {label}
       </label>
       {children}
@@ -714,7 +785,11 @@ function PayMethodOption({
   desc: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 border border-border px-3 py-3 has-[:checked]:border-foreground">
+    <label
+      className={`flex cursor-pointer items-start gap-3 border px-3 py-3 ${
+        checked ? "border-[#FEE500] bg-[#FEE500]/10" : "border-[#333]"
+      }`}
+    >
       <input
         type="radio"
         name="payMethod"
@@ -724,7 +799,7 @@ function PayMethodOption({
       />
       <span>
         <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-[10px] text-muted">{desc}</span>
+        <span className="mt-0.5 block text-[10px] text-neutral-500">{desc}</span>
       </span>
     </label>
   );

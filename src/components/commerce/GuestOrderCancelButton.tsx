@@ -1,0 +1,106 @@
+"use client";
+
+import { useState } from "react";
+import { isMemberCancellableStatus } from "@/lib/orders";
+import { mp } from "@/lib/mypageTheme";
+
+interface GuestOrderCancelButtonProps {
+  orderId: string;
+  status: string;
+  password: string;
+  onSuccess?: () => void | Promise<void>;
+}
+
+export function GuestOrderCancelButton({
+  orderId,
+  status,
+  password,
+  onSuccess,
+}: GuestOrderCancelButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!isMemberCancellableStatus(status)) return null;
+
+  const needsRefund = status === "paid" || status === "preparing";
+
+  const handleCancel = async () => {
+    if (
+      !confirm(
+        needsRefund
+          ? "주문을 취소하고 결제 금액을 환불할까요?"
+          : "주문을 취소할까요? 예약된 재고가 복구됩니다.",
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/orders/${orderId}/guest-cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password,
+          reason: reason.trim() || "구매자 주문 취소",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "취소 실패");
+      setOpen(false);
+      if (onSuccess) await onSuccess();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "취소 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section id="cancel" className={`${mp.card} mt-8 p-5`}>
+      <h2 className="text-sm font-semibold">주문 취소</h2>
+      <p className={`mt-2 text-xs ${mp.muted}`}>
+        배송 시작 전(결제대기·결제완료·배송준비중)만 직접 취소할 수 있습니다.
+        {needsRefund ? " 결제 완료 주문은 토스를 통해 전액 환불됩니다." : ""}
+      </p>
+
+      {!open ? (
+        <button type="button" onClick={() => setOpen(true)} className={`mt-4 ${mp.ghostBtn}`}>
+          주문 취소하기
+        </button>
+      ) : (
+        <div className="mt-4 space-y-3">
+          <div>
+            <label className={mp.label}>취소 사유 (선택)</label>
+            <input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="단순 변심, 주문 실수 등"
+              className={mp.input}
+            />
+          </div>
+          {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={loading} onClick={handleCancel} className={mp.creamBtn}>
+              {loading ? "처리 중..." : needsRefund ? "취소 및 환불" : "취소 확정"}
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setOpen(false);
+                setError("");
+              }}
+              className={mp.ghostBtn}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { MypageShell } from "@/components/mypage/MypageShell";
 import { OrderDetailView } from "@/components/commerce/OrderDetailView";
 import { OrderCancelButton } from "@/components/commerce/OrderCancelButton";
 import { OrderCancelRefundSection } from "@/components/commerce/OrderCancelRefundSection";
 import { OrderCsRequestsSection, type OrderCsRequestItem } from "@/components/commerce/OrderCsRequestsSection";
-import { OrderCsRequestForm } from "@/components/commerce/OrderCsRequestForm";
 import { createClient } from "@/lib/supabase/server";
 import { orderStatusLabel, paymentMethodLabel } from "@/lib/orders";
 import { parseShippingAddress } from "@/lib/shippingAddress";
-import { OPEN_CS_STATUSES } from "@/lib/csRequests";
+import { canRequestCs, OPEN_CS_STATUSES } from "@/lib/csRequests";
+import { mp } from "@/lib/mypageTheme";
 
 interface MyOrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -56,7 +55,6 @@ export default async function MyOrderDetailPage({ params }: MyOrderDetailPagePro
     .order("created_at", { ascending: false });
 
   if (csError) {
-    // add_exchange_stock_hold.sql이 아직 실행되지 않은 경우 기본 컬럼으로 폴백
     const { data: basicRows } = await supabase
       .from("order_cs_requests")
       .select(BASIC_CS_SELECT)
@@ -82,31 +80,22 @@ export default async function MyOrderDetailPage({ params }: MyOrderDetailPagePro
   const hasOpenRequest = enrichedCsRequests.some((r) =>
     (OPEN_CS_STATUSES as readonly string[]).includes(r.status),
   );
-  const formItems = (items ?? []).map((item) => ({
-    id: item.id,
-    product_id: item.product_id,
-    title: item.title,
-    size: item.size,
-  }));
 
   return (
-    <>
-      <Header />
-      <main className="mx-auto max-w-3xl px-4 py-12 pb-24 md:px-6">
-        <div className="mb-8">
-          <Link
-            href="/mypage/orders"
-            className="text-[10px] uppercase tracking-widest text-muted underline"
-          >
-            ← 주문내역
-          </Link>
-          <h1 className="mt-2 text-xl font-medium uppercase tracking-wider">주문상세</h1>
-          <p className="mt-2 text-sm text-muted">
-            {orderStatusLabel(order.status)} ·{" "}
-            {new Date(order.created_at).toLocaleString("ko-KR")}
-          </p>
-        </div>
+    <MypageShell
+      title="주문 상세"
+      subtitle={`${orderStatusLabel(order.status)} · ${new Date(order.created_at).toLocaleString("ko-KR")}`}
+    >
+      <Link href="/mypage/orders" className={`mb-4 inline-block text-xs ${mp.muted} underline`}>
+        ← 주문 내역
+      </Link>
 
+      <div className="space-y-2 text-sm text-neutral-400">
+        <p>배송 전: 주문 전체 취소 가능 · 결제수단으로 환불 · 재고 복구</p>
+        <p>배송 후: 수령일부터 7일 이내 교환·반품 신청</p>
+      </div>
+
+      <div className="mt-6">
         <OrderDetailView
           order={{
             orderNumber: order.order_number,
@@ -127,26 +116,37 @@ export default async function MyOrderDetailPage({ params }: MyOrderDetailPagePro
           }}
           showActions={false}
         />
+      </div>
 
-        <OrderCancelRefundSection
-          cancelReason={order.cancel_reason}
-          cancelledAt={order.cancelled_at}
-          refundedAt={order.refunded_at}
-          refundedAmount={order.refunded_amount}
-          currency={order.currency}
-        />
+      <OrderCancelRefundSection
+        cancelReason={order.cancel_reason}
+        cancelledAt={order.cancelled_at}
+        refundedAt={order.refunded_at}
+        refundedAmount={order.refunded_amount}
+        currency={order.currency}
+      />
 
-        <OrderCsRequestsSection requests={enrichedCsRequests} />
+      <OrderCsRequestsSection requests={enrichedCsRequests} />
 
+      <div id="cancel">
         <OrderCancelButton orderId={order.id} status={order.status} />
-        <OrderCsRequestForm
-          orderId={order.id}
-          status={order.status}
-          hasOpenRequest={hasOpenRequest}
-          items={formItems}
-        />
-      </main>
-      <Footer />
-    </>
+      </div>
+
+      {canRequestCs(order.status) ? (
+        <section className={`${mp.card} mt-8 p-5`}>
+          <h2 className="text-sm font-semibold">교환 · 반품</h2>
+          <p className={`mt-2 text-xs ${mp.muted}`}>
+            배송 완료 후 교환·반품을 신청할 수 있습니다. 단순 변심 반품 배송비 ₩4,000.
+          </p>
+          {hasOpenRequest ? (
+            <p className="mt-3 text-xs text-amber-200">처리 중인 요청이 있습니다. 아래 진행 상태를 확인해 주세요.</p>
+          ) : (
+            <Link href={`/mypage/orders/${order.id}/claim`} className={`mt-4 ${mp.creamBtn}`}>
+              교환·반품 신청
+            </Link>
+          )}
+        </section>
+      ) : null}
+    </MypageShell>
   );
 }

@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { redirect } from "next/navigation";
+import { MypageShell } from "@/components/mypage/MypageShell";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { mp } from "@/lib/mypageTheme";
 
 type OwnedTrack = {
   id: string;
@@ -21,19 +21,7 @@ export default async function MyMusicPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return (
-      <>
-        <Header />
-        <main className="mx-auto max-w-3xl px-4 py-16">
-          <h1 className="text-2xl font-medium uppercase tracking-wider">My Music</h1>
-          <p className="mt-6 text-sm text-muted">로그인이 필요합니다.</p>
-          <Link href="/login?next=/mypage/music" className="mt-4 inline-block text-xs uppercase underline">
-            Sign In
-          </Link>
-        </main>
-        <Footer />
-      </>
-    );
+    redirect("/login?next=/mypage/music");
   }
 
   const admin = createServiceClient() ?? supabase;
@@ -96,60 +84,55 @@ export default async function MyMusicPage() {
   const tracks = [...tracksById.values()];
 
   return (
-    <>
-      <Header />
-      <main className="mx-auto max-w-3xl px-4 py-16 pb-24 md:px-6">
-        <p className="text-[10px] uppercase tracking-widest text-muted">Account</p>
-        <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">My Music</h1>
-        <p className="mt-2 text-sm text-muted">구매한 음원을 MP3 / WAV로 받을 수 있습니다. 스트리밍은 무료입니다.</p>
-
-        {tracks.length === 0 ? (
-          <p className="mt-10 text-sm text-muted">구매한 음원이 없습니다.</p>
-        ) : (
-          <ul className="mt-8 divide-y divide-border border border-border">
-            {tracks.map((track) => (
-              <li key={track.id} className="flex items-center gap-4 px-4 py-3">
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden bg-neutral-100">
-                  {track.cover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={track.cover} alt="" className="h-full w-full object-cover" />
-                  ) : null}
-                </div>
-                <p className="min-w-0 flex-1 truncate text-sm">
-                  {track.artist ? (
-                    <>
-                      <span className="text-muted">{track.artist}</span>
-                      <span className="text-muted"> · </span>
-                    </>
-                  ) : null}
-                  <span className="font-medium">{track.title}</span>
-                </p>
-                <div className="flex shrink-0 gap-2">
-                  {track.hasMp3 && (
-                    <a
-                      href={`/api/music/download?trackId=${track.id}&format=mp3`}
-                      download
-                      className="border border-border px-3 py-1.5 text-[10px] uppercase tracking-widest hover:border-foreground"
-                    >
-                      MP3 다운로드
-                    </a>
-                  )}
-                  {track.hasWav && (
-                    <a
-                      href={`/api/music/download?trackId=${track.id}&format=wav`}
-                      download
-                      className="border border-border px-3 py-1.5 text-[10px] uppercase tracking-widest hover:border-foreground"
-                    >
-                      WAV 다운로드
-                    </a>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
-      <Footer />
-    </>
+    <MypageShell
+      title="My Music"
+      subtitle="구매한 음원을 MP3 / WAV로 받을 수 있습니다. 스트리밍은 무료입니다."
+    >
+      {tracks.length === 0 ? (
+        <p className={`text-sm ${mp.muted}`}>구매한 음원이 없습니다.</p>
+      ) : (
+        <ul className={`${mp.card} divide-y divide-[#262626]`}>
+          {tracks.map((track) => (
+            <li key={track.id} className="flex items-center gap-4 px-4 py-3">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden bg-[#0c0c0c]">
+                {track.cover ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={track.cover} alt="" className="h-full w-full object-cover" />
+                ) : null}
+              </div>
+              <p className="min-w-0 flex-1 truncate text-sm">
+                {track.artist ? (
+                  <>
+                    <span className="text-neutral-500">{track.artist}</span>
+                    <span className="text-neutral-500"> · </span>
+                  </>
+                ) : null}
+                <span className="font-medium">{track.title}</span>
+              </p>
+              <div className="flex shrink-0 gap-2">
+                {track.hasMp3 && (
+                  <a
+                    href={`/api/music/download?trackId=${track.id}&format=mp3`}
+                    download
+                    className="border border-[#333] px-3 py-1.5 text-[10px] uppercase tracking-widest hover:border-neutral-500"
+                  >
+                    MP3
+                  </a>
+                )}
+                {track.hasWav && (
+                  <a
+                    href={`/api/music/download?trackId=${track.id}&format=wav`}
+                    download
+                    className="border border-[#333] px-3 py-1.5 text-[10px] uppercase tracking-widest hover:border-neutral-500"
+                  >
+                    WAV
+                  </a>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </MypageShell>
   );
 }

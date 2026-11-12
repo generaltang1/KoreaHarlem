@@ -139,7 +139,7 @@ export default function CartPage() {
                   <span>{formatMinorAmount(totalMinor, currency)}</span>
                 </div>
                 <Link
-                  href="/checkout"
+                  href="/checkout/auth"
                   className="mt-5 flex w-full items-center justify-center bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black"
                 >
                   주문하기

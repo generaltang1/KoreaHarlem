@@ -215,7 +215,7 @@ export function CartDrawer() {
             표시된 금액으로 결제됩니다. 통화 변경 시 기준가(KRW)에서 다시 환산됩니다.
           </p>
           <Link
-            href="/checkout"
+            href="/checkout/auth"
             onClick={closeCart}
             className={`mt-4 flex w-full items-center justify-center bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 ${
               items.length === 0 ? "pointer-events-none opacity-40" : ""

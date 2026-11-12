@@ -7,12 +7,17 @@ import {
 } from "@/lib/csRequests";
 import { normalizeSize } from "@/lib/stock";
 
+export type CsReasonCode = "change_mind" | "defect" | "wrong";
+
 export interface CreateCsRequestInput {
   orderId: string;
   type: CsRequestType;
   reason: string;
   exchangeSize?: string;
   orderItemId?: string;
+  reasonCode?: CsReasonCode;
+  /** 단순 변심 반품 시 고객 부담 배송비(원). 환불 시 차감 */
+  returnShippingFeeKrw?: number;
   /** 회원 요청이면 user.id, 비회원이면 null */
   actorUserId: string | null;
 }
@@ -37,8 +42,16 @@ export async function createOrderCsRequest(
   admin: SupabaseClient,
   input: CreateCsRequestInput,
 ): Promise<CreateCsRequestResult> {
-  const { orderId, type, reason, exchangeSize, orderItemId: rawOrderItemId, actorUserId } =
-    input;
+  const {
+    orderId,
+    type,
+    reason,
+    exchangeSize,
+    orderItemId: rawOrderItemId,
+    reasonCode,
+    returnShippingFeeKrw,
+    actorUserId,
+  } = input;
 
   const { data: order } = await admin
     .from("orders")
@@ -107,6 +120,11 @@ export async function createOrderCsRequest(
   const previousStatus = order.status;
   const nextOrderStatus = orderStatusForCsRequest(type);
 
+  const fee =
+    type === "return" && reasonCode === "change_mind"
+      ? Math.max(0, Math.floor(returnShippingFeeKrw ?? 4000))
+      : 0;
+
   const { data: csReq, error: insertError } = await admin
     .from("order_cs_requests")
     .insert({
@@ -115,11 +133,13 @@ export async function createOrderCsRequest(
       request_type: type,
       status: "requested",
       reason,
+      reason_code: reasonCode ?? null,
+      return_shipping_fee_krw: fee,
       exchange_size: type === "exchange" ? exchangeSize?.trim() : null,
       previous_status: previousStatus,
       ...(orderItemId ? { order_item_id: orderItemId } : {}),
     })
-    .select("id, request_type, status, reason, exchange_size, created_at")
+    .select("id, request_type, status, reason, exchange_size, reason_code, return_shipping_fee_krw, created_at")
     .single();
 
   if (insertError || !csReq) {
@@ -151,10 +171,21 @@ export function parseCsRequestBody(body: {
   reason?: string;
   exchangeSize?: string;
   orderItemId?: string;
-}): { ok: true; type: CsRequestType; reason: string; exchangeSize?: string; orderItemId?: string } | {
-  ok: false;
-  message: string;
-} {
+  reasonCode?: string;
+  returnShippingFeeKrw?: number;
+  attachments?: { name: string; mimeType: string }[];
+}):
+  | {
+      ok: true;
+      type: CsRequestType;
+      reason: string;
+      exchangeSize?: string;
+      orderItemId?: string;
+      reasonCode?: CsReasonCode;
+      returnShippingFeeKrw?: number;
+      attachments: { name: string; mimeType: string }[];
+    }
+  | { ok: false; message: string } {
   const type = body.type;
   const reason = body.reason?.trim();
   if (!type || !["return", "exchange", "refund"].includes(type)) {
@@ -164,16 +195,104 @@ export function parseCsRequestBody(body: {
     return { ok: false, message: "사유를 입력해주세요." };
   }
   if (type === "exchange" && !body.exchangeSize?.trim()) {
-    return { ok: false, message: "교환 희망 사이즈를 입력해주세요." };
+    return { ok: false, message: "교환 희망 사이즈를 선택해주세요." };
   }
   if (type === "exchange" && !body.orderItemId) {
     return { ok: false, message: "교환할 주문 상품을 선택해주세요." };
   }
+
+  const reasonCodeRaw = body.reasonCode?.trim();
+  const reasonCode =
+    reasonCodeRaw === "change_mind" || reasonCodeRaw === "defect" || reasonCodeRaw === "wrong"
+      ? reasonCodeRaw
+      : undefined;
+
+  if ((reasonCode === "defect" || reasonCode === "wrong") && (body.attachments?.length ?? 0) < 1) {
+    return { ok: false, message: "불량·오배송은 증빙 사진을 1장 이상 첨부해 주세요." };
+  }
+
   return {
     ok: true,
     type,
     reason,
     exchangeSize: body.exchangeSize,
     orderItemId: body.orderItemId,
+    reasonCode,
+    returnShippingFeeKrw: body.returnShippingFeeKrw,
+    attachments: body.attachments ?? [],
   };
+}
+
+export async function createCsAttachmentUploadSlots(
+  admin: SupabaseClient,
+  csRequestId: string,
+  attachments: { name: string; mimeType: string }[],
+): Promise<
+  | { ok: true; uploads: { path: string; token: string; signedUrl: string; fileName: string; mimeType: string }[] }
+  | { ok: false; message: string }
+> {
+  const uploads: {
+    path: string;
+    token: string;
+    signedUrl: string;
+    fileName: string;
+    mimeType: string;
+  }[] = [];
+
+  for (let i = 0; i < attachments.length; i++) {
+    const meta = attachments[i];
+    if (!meta.mimeType.startsWith("image/")) {
+      return { ok: false, message: "이미지 파일만 첨부할 수 있습니다." };
+    }
+    const ext = meta.name.includes(".")
+      ? meta.name.split(".").pop()?.toLowerCase() || "jpg"
+      : "jpg";
+    const path = `${csRequestId}/${crypto.randomUUID()}.${ext}`;
+    const { data, error } = await admin.storage.from("cs-claims").createSignedUploadUrl(path);
+    if (error || !data) {
+      return {
+        ok: false,
+        message: error?.message?.includes("Bucket")
+          ? "supabase/add_cs_claim_attachments.sql을 실행해주세요. (cs-claims 버킷)"
+          : `업로드 URL 생성 실패: ${error?.message ?? "unknown"}`,
+      };
+    }
+    uploads.push({
+      path: data.path,
+      token: data.token,
+      signedUrl: data.signedUrl,
+      fileName: meta.name,
+      mimeType: meta.mimeType,
+    });
+  }
+
+  return { ok: true, uploads };
+}
+
+export async function finalizeCsAttachments(
+  admin: SupabaseClient,
+  csRequestId: string,
+  uploads: { path: string; fileName: string; mimeType: string }[],
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const rows = uploads.map((u, i) => {
+    const { data } = admin.storage.from("cs-claims").getPublicUrl(u.path);
+    return {
+      cs_request_id: csRequestId,
+      file_url: data.publicUrl,
+      file_name: u.fileName,
+      mime_type: u.mimeType,
+      sort_order: i,
+    };
+  });
+  if (rows.length === 0) return { ok: true };
+  const { error } = await admin.from("order_cs_attachments").insert(rows);
+  if (error) {
+    return {
+      ok: false,
+      message: error.message.includes("order_cs_attachments")
+        ? "supabase/add_cs_claim_attachments.sql을 실행해주세요."
+        : error.message,
+    };
+  }
+  return { ok: true };
 }

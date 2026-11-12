@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { CsRequestType } from "@/lib/csRequests";
-import { createOrderCsRequest, parseCsRequestBody } from "@/lib/createOrderCsRequest";
+import {
+  createCsAttachmentUploadSlots,
+  createOrderCsRequest,
+  parseCsRequestBody,
+} from "@/lib/createOrderCsRequest";
 import { verifyGuestPassword } from "@/lib/guestPassword";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -16,6 +20,9 @@ export async function POST(request: Request, context: RouteContext) {
       reason?: string;
       exchangeSize?: string;
       orderItemId?: string;
+      reasonCode?: string;
+      returnShippingFeeKrw?: number;
+      attachments?: { name: string; mimeType: string }[];
     };
 
     if (!body.password) {
@@ -60,6 +67,8 @@ export async function POST(request: Request, context: RouteContext) {
       reason: parsed.reason,
       exchangeSize: parsed.exchangeSize,
       orderItemId: parsed.orderItemId,
+      reasonCode: parsed.reasonCode,
+      returnShippingFeeKrw: parsed.returnShippingFeeKrw,
       actorUserId: null,
     });
 
@@ -67,10 +76,32 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ message: result.message }, { status: result.status });
     }
 
+    let uploads: {
+      path: string;
+      token: string;
+      signedUrl: string;
+      fileName: string;
+      mimeType: string;
+    }[] = [];
+
+    if (parsed.attachments.length > 0) {
+      const slots = await createCsAttachmentUploadSlots(
+        admin,
+        result.request.id,
+        parsed.attachments,
+      );
+      if (!slots.ok) {
+        await admin.from("order_cs_requests").delete().eq("id", result.request.id);
+        return NextResponse.json({ message: slots.message }, { status: 500 });
+      }
+      uploads = slots.uploads;
+    }
+
     return NextResponse.json({
       ok: true,
       request: result.request,
       orderStatus: result.orderStatus,
+      uploads,
     });
   } catch (error: unknown) {
     return NextResponse.json(

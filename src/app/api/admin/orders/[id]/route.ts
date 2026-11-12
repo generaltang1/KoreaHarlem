@@ -8,7 +8,7 @@ import { parseShippingAddress } from "@/lib/shippingAddress";
 type RouteContext = { params: Promise<{ id: string }> };
 
 const EXTENDED_CS_SELECT =
-  "id, request_type, status, reason, admin_note, exchange_size, order_item_id, hold_product_id, hold_size, hold_quantity, stock_held_at, stock_released_at, stock_completed_at, created_at, resolved_at";
+  "id, request_type, status, reason, reason_code, return_shipping_fee_krw, admin_note, exchange_size, order_item_id, hold_product_id, hold_size, hold_quantity, stock_held_at, stock_released_at, stock_completed_at, created_at, resolved_at";
 const BASIC_CS_SELECT =
   "id, request_type, status, reason, admin_note, exchange_size, created_at, resolved_at";
 
@@ -59,14 +59,31 @@ export async function GET(_request: Request, context: RouteContext) {
   }
   // table may not exist until add_order_cs_requests.sql is run
 
+  const csIds = (csRequests ?? []).map((r) => r.id as string).filter(Boolean);
+  let attachmentsByCs = new Map<string, { id: string; file_url: string; file_name: string | null }[]>();
+  if (csIds.length > 0) {
+    const { data: atts } = await admin
+      .from("order_cs_attachments")
+      .select("id, cs_request_id, file_url, file_name, sort_order")
+      .in("cs_request_id", csIds)
+      .order("sort_order", { ascending: true });
+    for (const a of atts ?? []) {
+      const list = attachmentsByCs.get(a.cs_request_id) ?? [];
+      list.push({ id: a.id, file_url: a.file_url, file_name: a.file_name });
+      attachmentsByCs.set(a.cs_request_id, list);
+    }
+  }
+
   const itemsById = new Map((items ?? []).map((item) => [item.id, item]));
   const enrichedCsRequests = (csRequests ?? []).map((req) => {
     const orderItemId = req.order_item_id as string | undefined;
     const item = orderItemId ? itemsById.get(orderItemId) : undefined;
+    const csId = req.id as string;
     return {
       ...req,
       item_title: item?.title ?? null,
       item_size: item?.size ?? null,
+      attachments: attachmentsByCs.get(csId) ?? [],
     };
   });
 
