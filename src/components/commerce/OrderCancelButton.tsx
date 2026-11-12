@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { isMemberCancellableStatus } from "@/lib/orders";
+import { mp } from "@/lib/mypageTheme";
 
 interface OrderCancelButtonProps {
   orderId: string;
@@ -53,32 +54,26 @@ export function OrderCancelButton({ orderId, status }: OrderCancelButtonProps) {
   };
 
   return (
-    <section className="mt-8 border border-[#262626] bg-[#151515] p-5 text-neutral-100">
+    <section className={`${mp.card} mt-8 p-5 text-[#f4f1ea]`}>
       <h2 className="text-sm font-semibold">주문 취소</h2>
-      <p className="mt-2 text-xs text-neutral-500">
+      <p className={`mt-2 text-xs ${mp.muted}`}>
         배송 시작 전(결제대기·결제완료·배송준비중)만 직접 취소할 수 있습니다.
         {needsRefund && " 결제 완료 주문은 토스를 통해 전액 환불됩니다."}
       </p>
 
       {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="mt-4 border border-[#333] px-4 py-2 text-xs tracking-widest hover:border-neutral-500"
-        >
+        <button type="button" onClick={() => setOpen(true)} className={`${mp.ghostBtn} mt-4`}>
           주문 취소하기
         </button>
       ) : (
         <div className="mt-4 space-y-3">
           <div>
-            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-neutral-500">
-              취소 사유 (선택)
-            </label>
+            <label className={mp.label}>취소 사유 (선택)</label>
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="단순 변심, 주문 실수 등"
-              className="w-full border border-[#333] bg-[#0c0c0c] px-4 py-3 text-sm outline-none focus:border-white"
+              className={mp.input}
             />
           </div>
           {error && <p className="text-sm text-rose-400">{error}</p>}
@@ -87,7 +82,7 @@ export function OrderCancelButton({ orderId, status }: OrderCancelButtonProps) {
               type="button"
               disabled={loading}
               onClick={handleCancel}
-              className="bg-[#f4f1ea] px-4 py-2 text-xs font-semibold tracking-widest text-black disabled:opacity-50"
+              className={mp.creamBtn}
             >
               {loading ? "처리 중..." : needsRefund ? "취소 및 환불" : "취소 확정"}
             </button>
@@ -98,7 +93,7 @@ export function OrderCancelButton({ orderId, status }: OrderCancelButtonProps) {
                 setOpen(false);
                 setError("");
               }}
-              className="border border-[#333] px-4 py-2 text-xs tracking-widest disabled:opacity-50"
+              className={mp.ghostBtn}
             >
               닫기
             </button>

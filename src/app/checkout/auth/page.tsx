@@ -62,15 +62,15 @@ function CheckoutAuthInner() {
   };
 
   if (checking) {
-    return <p className="text-sm text-neutral-500">확인 중...</p>;
+    return <p className={`text-sm ${mp.muted}`}>확인 중...</p>;
   }
 
   return (
-    <div className="w-full max-w-md text-neutral-100">
+    <div className="w-full max-w-md text-[#f4f1ea]">
       <div className="mb-8 text-center">
-        <p className="text-[10px] uppercase tracking-widest text-neutral-500">Checkout</p>
-        <h1 className="mt-1 text-2xl font-bold">주문하기</h1>
-        <p className="mt-2 text-xs text-neutral-400">
+        <p className={`text-[10px] uppercase tracking-widest ${mp.tertiary}`}>Checkout</p>
+        <h1 className="mt-1 text-[28px] font-bold tracking-tight">주문하기</h1>
+        <p className={`mt-2 text-xs ${mp.muted}`}>
           로그인하면 마이페이지·배송·교환/반품을 한눈에 볼 수 있습니다.
         </p>
       </div>
@@ -81,7 +81,7 @@ function CheckoutAuthInner() {
           onClick={async () => {
             await signInWithKakao(supabase);
           }}
-          className="flex w-full items-center justify-center gap-3 bg-[#FEE500] py-3 text-sm font-semibold text-[#191919]"
+          className="flex w-full items-center justify-center gap-3 rounded-[8px] bg-[#FEE500] py-3 text-sm font-semibold text-[#191919]"
         >
           <KakaoMark />
           Kakao로 로그인
@@ -91,76 +91,64 @@ function CheckoutAuthInner() {
           onClick={async () => {
             await signInWithGoogle(supabase);
           }}
-          className="flex w-full items-center justify-center gap-3 border border-[#333] py-3 text-sm"
+          className={`${mp.ghostBtn} w-full gap-3 py-3`}
         >
           <GoogleMark />
           Google로 로그인
         </button>
         <Link
           href={`/login?next=${encodeURIComponent(autopayUrl)}`}
-          className="block w-full border border-[#333] bg-[#1c1c1c] py-3 text-center text-sm"
+          className={`${mp.ghostBtn} block w-full py-3 text-center`}
         >
           이메일로 로그인
         </Link>
       </div>
 
-      <form
-        onSubmit={handleGuest}
-        className={`mt-6 space-y-3 ${mp.card} p-6`}
-      >
+      <form onSubmit={handleGuest} className={`mt-6 space-y-3 ${mp.card} p-6`}>
         <h2 className="text-sm font-semibold">비회원으로 주문하기</h2>
         <p className="text-xs text-amber-200/90">
           비회원은 마이페이지·MY MUSIC을 이용할 수 없고, 음원 구매는 회원만 가능합니다.
         </p>
         <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-neutral-500">
-            주문자 이름
-          </label>
+          <label className={mp.label}>주문자 이름</label>
           <input
             value={guestName}
             onChange={(e) => setGuestName(e.target.value)}
-            className="w-full border border-[#333] bg-[#0c0c0c] px-3 py-3 text-sm outline-none focus:border-white"
+            className={mp.input}
             required
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-neutral-500">
-            주문 비밀번호
-          </label>
+          <label className={mp.label}>주문 비밀번호</label>
           <input
             type="password"
             value={guestPassword}
             onChange={(e) => setGuestPassword(e.target.value)}
-            className="w-full border border-[#333] bg-[#0c0c0c] px-3 py-3 text-sm outline-none focus:border-white"
+            className={mp.input}
             minLength={8}
             required
           />
-          <p className="mt-1 text-[10px] text-neutral-500">8자 이상 · 주문조회 시 사용</p>
+          <p className={`mt-1 text-[10px] ${mp.tertiary}`}>8자 이상 · 주문조회 시 사용</p>
         </div>
         <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-neutral-500">
-            비밀번호 확인
-          </label>
+          <label className={mp.label}>비밀번호 확인</label>
           <input
             type="password"
             value={guestPasswordConfirm}
             onChange={(e) => setGuestPasswordConfirm(e.target.value)}
-            className="w-full border border-[#333] bg-[#0c0c0c] px-3 py-3 text-sm outline-none focus:border-white"
+            className={mp.input}
             required
           />
         </div>
         {guestError ? <p className="text-sm text-rose-400">{guestError}</p> : null}
-        <button
-          type="submit"
-          className="w-full bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black"
-        >
+        <button type="submit" className={`${mp.creamBtn} w-full`}>
           비회원으로 주문하기
         </button>
       </form>
 
-      <p className="mt-6 text-center text-xs text-neutral-500">
+      <p className={`mt-6 text-center text-xs ${mp.muted}`}>
         계정이 없으신가요?{" "}
-        <Link href={`/signup?next=${encodeURIComponent(autopayUrl)}`} className="text-[#FEE500] underline">
+        <Link href={`/signup?next=${encodeURIComponent(autopayUrl)}`} className={`${mp.accent} underline`}>
           회원가입
         </Link>
       </p>
@@ -173,7 +161,7 @@ export default function CheckoutAuthPage() {
     <>
       <Header />
       <CommerceAtmosphere className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-        <Suspense fallback={<p className="text-sm text-neutral-500">불러오는 중...</p>}>
+        <Suspense fallback={<p className={`text-sm ${mp.muted}`}>불러오는 중...</p>}>
           <CheckoutAuthInner />
         </Suspense>
       </CommerceAtmosphere>

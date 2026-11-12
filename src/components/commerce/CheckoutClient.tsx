@@ -483,8 +483,8 @@ export function CheckoutClient() {
       <h1 className="text-2xl font-bold tracking-tight">주문 · 결제</h1>
 
       {/* 배송지 */}
-      <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-        <h2 className="text-sm font-semibold">주문자 · 배송지</h2>
+      <section className="rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-6 backdrop-blur-[6px]">
+        <h2 className="text-sm font-semibold text-[#f4f1ea]">주문자 · 배송지</h2>
         <div className="mt-5 space-y-4">
           <Field label="받는사람 *">
             <input
@@ -518,7 +518,7 @@ export function CheckoutClient() {
                 className={inputClass}
               />
               <DaumPostcodeButton
-                className="shrink-0 border border-[#333] bg-[#1c1c1c] px-4 py-3 text-xs text-white disabled:opacity-50"
+                className="shrink-0 rounded-[6px] border border-[rgba(244,241,234,0.12)] bg-transparent px-4 py-3 text-xs text-[#f4f1ea] transition-colors hover:bg-[rgba(244,241,234,0.06)] disabled:opacity-50"
                 onComplete={(data) => {
                   setPostcode(data.postcode);
                   setAddress(data.address);
@@ -620,8 +620,8 @@ export function CheckoutClient() {
       </section>
 
       {/* 결제수단 */}
-      <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-        <h2 className="text-sm font-semibold">결제수단</h2>
+      <section className="rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-6 backdrop-blur-[6px]">
+        <h2 className="text-sm font-semibold text-[#f4f1ea]">결제수단</h2>
         <p className="mt-2 text-xs text-neutral-500">
           결제창부터는 토스페이먼츠 화면입니다. (디자인 변경 불가)
         </p>
@@ -654,8 +654,8 @@ export function CheckoutClient() {
       </section>
 
       {/* 약관 */}
-      <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-        <label className="flex cursor-pointer items-start gap-3 text-sm">
+      <section className="rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-6 backdrop-blur-[6px]">
+        <label className="flex cursor-pointer items-start gap-3 text-sm text-[#f4f1ea]">
           <input
             type="checkbox"
             checked={agreed}
@@ -679,9 +679,9 @@ export function CheckoutClient() {
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-        <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-          <h2 className="text-sm font-semibold">주문 상품</h2>
-          <ul className="mt-4 divide-y divide-white/10">
+        <section className="rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-6 backdrop-blur-[6px]">
+          <h2 className="text-sm font-semibold text-[#f4f1ea]">주문 상품</h2>
+          <ul className="mt-4 divide-y divide-[rgba(244,241,234,0.12)]">
             {lines.map((line) => {
               const digital = line.kind === "digital_album" || line.kind === "digital_track";
               const purchasable = digital || isProductPurchasable(availability.get(line.productId));
@@ -713,8 +713,8 @@ export function CheckoutClient() {
           </ul>
         </section>
 
-        <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-          <h2 className="text-sm font-semibold">결제 요약</h2>
+        <section className="rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-6 backdrop-blur-[6px]">
+          <h2 className="text-sm font-semibold text-[#f4f1ea]">결제 요약</h2>
           <p className="mt-2 text-xs text-[#FEE500]">
             실물 배송비 기본 ₩4,000 · 5만원 이상 무료배송
           </p>
@@ -737,7 +737,7 @@ export function CheckoutClient() {
                       : "—"}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-white/10 pt-3 font-semibold">
+            <div className="flex justify-between border-t border-[rgba(244,241,234,0.12)] pt-3 font-semibold">
               <dt>총 결제금액</dt>
               <dd>
                 {formatMinorAmount(settleMinor, settlement)} {settlement.code}
@@ -747,7 +747,7 @@ export function CheckoutClient() {
           <button
             type="submit"
             disabled={loading || ratesSource === "loading"}
-            className="mt-5 w-full bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black disabled:opacity-50"
+            className="mt-5 w-full rounded-[8px] bg-[#f4f1ea] py-3.5 text-sm font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {loading
               ? "결제 준비 중..."
@@ -760,12 +760,12 @@ export function CheckoutClient() {
 }
 
 const inputClass =
-  "w-full border border-[#333] bg-[#0c0c0c] px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white";
+  "w-full rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] px-4 py-3 text-[13px] text-[#f4f1ea] outline-none placeholder:text-[#6e6b65] focus:border-[rgba(244,241,234,0.35)]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-neutral-500">
+      <label className="mb-1.5 block text-[11px] font-medium tracking-wide text-[#a8a49b]">
         {label}
       </label>
       {children}
@@ -786,8 +786,10 @@ function PayMethodOption({
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-start gap-3 border px-3 py-3 ${
-        checked ? "border-[#FEE500] bg-[#FEE500]/10" : "border-[#333]"
+      className={`flex cursor-pointer items-start gap-3 rounded-[8px] border px-3 py-3 ${
+        checked
+          ? "border-[#fbc201] bg-[rgba(251,194,1,0.08)]"
+          : "border-[rgba(244,241,234,0.12)]"
       }`}
     >
       <input

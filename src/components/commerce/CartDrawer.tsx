@@ -76,7 +76,7 @@ export function CartDrawer() {
         aria-label="장바구니 닫기"
         onClick={closeCart}
       />
-      <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col border-l border-[#262626] bg-[#0a0a0a] text-neutral-100 shadow-2xl">
+      <aside className="absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col border-l border-[rgba(244,241,234,0.12)] bg-[#0a0a0a]/95 text-[#f4f1ea] shadow-2xl backdrop-blur-[6px] [font-family:var(--font-f-sans),var(--font-geist-sans),sans-serif]">
         <div className="flex items-center justify-between px-6 py-5">
           <h2 className="flex items-baseline gap-2 text-xl font-bold tracking-tight">
             장바구니
@@ -93,13 +93,13 @@ export function CartDrawer() {
         </div>
 
         {hasPhysical && (
-          <div className="border-b border-[#262626] px-6 pb-4">
+          <div className="border-b border-[rgba(244,241,234,0.12)] px-6 pb-4">
             <p className="text-xs leading-relaxed text-[#FEE500]">
               {freeApplied
                 ? `무료배송 적용됐어요 · 배송 상품 ${formatKrw(physicalSubtotalKrw)} (${formatKrw(DEFAULT_FREE_THRESHOLD_KRW)} 이상 무료)`
                 : `무료배송까지 ${formatKrw(remainingToFree)} 남았어요 · 배송 상품 ${formatKrw(physicalSubtotalKrw)}`}
             </p>
-            <div className="mt-2 h-1 overflow-hidden rounded-full bg-[#2a2a2a]">
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-[rgba(244,241,234,0.12)]">
               <div
                 className="h-full rounded-full bg-[#FEE500] transition-all"
                 style={{ width: `${Math.round(freeProgress * 100)}%` }}
@@ -121,11 +121,11 @@ export function CartDrawer() {
                 return (
                   <li
                     key={item.key}
-                    className={`relative flex gap-4 border-b border-[#262626] px-6 py-5 ${
+                    className={`relative flex gap-4 border-b border-[rgba(244,241,234,0.12)] px-6 py-5 ${
                       showUnavailable ? "opacity-50" : ""
                     }`}
                   >
-                    <div className="relative h-24 w-[72px] shrink-0 overflow-hidden bg-[#151515]">
+                    <div className="relative h-24 w-[72px] shrink-0 overflow-hidden rounded-[6px] bg-[rgba(244,241,234,0.05)]">
                       {item.imageUrl ? (
                         <Image
                           src={item.imageUrl}
@@ -139,17 +139,17 @@ export function CartDrawer() {
                       <p className="text-[10px] font-medium tracking-wide text-[#FEE500]">
                         {lineCategoryLabel(item)}
                       </p>
-                      <p className="mt-1 truncate text-sm font-semibold text-white">{item.title}</p>
+                      <p className="mt-1 truncate text-sm font-semibold text-[#f4f1ea]">{item.title}</p>
                       {showUnavailable && (
                         <span className="mt-1 inline-block text-[10px] text-rose-400">구매 불가</span>
                       )}
-                      <p className="mt-1 text-xs text-neutral-500">{lineOptionLabel(item)}</p>
+                      <p className="mt-1 text-xs text-[#a8a49b]">{lineOptionLabel(item)}</p>
                       <div className="mt-3 flex items-center gap-3">
                         {!digital ? (
-                          <div className="inline-flex items-center border border-[#333] bg-[#151515]">
+                          <div className="inline-flex items-center overflow-hidden rounded-[6px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)]">
                             <button
                               type="button"
-                              className="flex h-7 w-7 items-center justify-center text-sm text-neutral-300 hover:text-white"
+                              className="flex h-7 w-7 items-center justify-center text-sm text-[#a8a49b] hover:text-[#f4f1ea]"
                               onClick={() => updateQuantity(item.key, item.quantity - 1)}
                               aria-label="수량 감소"
                             >
@@ -158,7 +158,7 @@ export function CartDrawer() {
                             <span className="w-6 text-center text-xs tabular-nums">{item.quantity}</span>
                             <button
                               type="button"
-                              className="flex h-7 w-7 items-center justify-center text-sm text-neutral-300 hover:text-white"
+                              className="flex h-7 w-7 items-center justify-center text-sm text-[#a8a49b] hover:text-[#f4f1ea]"
                               onClick={() => updateQuantity(item.key, item.quantity + 1)}
                               aria-label="수량 증가"
                             >
@@ -166,7 +166,7 @@ export function CartDrawer() {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-xs text-neutral-500">수량 1</span>
+                          <span className="text-xs text-[#a8a49b]">수량 1</span>
                         )}
                         <span className="text-sm font-medium tabular-nums">
                           {formatMinorAmount(lineMinor, currency)}
@@ -188,16 +188,16 @@ export function CartDrawer() {
           )}
         </div>
 
-        <div className="border-t border-[#262626] px-6 py-5">
-          <div className="flex items-center justify-between text-sm text-neutral-400">
+        <div className="border-t border-[rgba(244,241,234,0.12)] px-6 py-5">
+          <div className="flex items-center justify-between text-sm text-[#a8a49b]">
             <span>상품 금액</span>
-            <span className="tabular-nums text-neutral-200">
+            <span className="tabular-nums text-[#f4f1ea]">
               {formatMinorAmount(subtotalMinor, currency)}
             </span>
           </div>
-          <div className="mt-2 flex items-center justify-between text-sm text-neutral-400">
+          <div className="mt-2 flex items-center justify-between text-sm text-[#a8a49b]">
             <span>배송비</span>
-            <span className={`tabular-nums ${shippingKrw === 0 ? "text-[#FEE500]" : "text-neutral-200"}`}>
+            <span className={`tabular-nums ${shippingKrw === 0 ? "text-[#FEE500]" : "text-[#f4f1ea]"}`}>
               {hasPhysical
                 ? shippingKrw === 0
                   ? formatMinorAmount(0, currency)
@@ -205,19 +205,19 @@ export function CartDrawer() {
                 : "—"}
             </span>
           </div>
-          <div className="mt-4 flex items-center justify-between border-t border-[#262626] pt-4">
+          <div className="mt-4 flex items-center justify-between border-t border-[rgba(244,241,234,0.12)] pt-4">
             <span className="text-sm font-medium">결제 예정 금액</span>
             <span className="text-xl font-bold tabular-nums">
               {formatMinorAmount(totalMinor, currency)}
             </span>
           </div>
-          <p className="mt-2 text-[10px] leading-relaxed text-neutral-600">
+          <p className="mt-2 text-[10px] leading-relaxed text-[#6e6b65]">
             표시된 금액으로 결제됩니다. 통화 변경 시 기준가(KRW)에서 다시 환산됩니다.
           </p>
           <Link
             href="/checkout/auth"
             onClick={closeCart}
-            className={`mt-4 flex w-full items-center justify-center bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black transition-opacity hover:opacity-90 ${
+            className={`mt-4 flex w-full items-center justify-center rounded-[8px] bg-[#f4f1ea] py-3.5 text-sm font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90 ${
               items.length === 0 ? "pointer-events-none opacity-40" : ""
             }`}
           >
@@ -226,7 +226,7 @@ export function CartDrawer() {
           <Link
             href="/cart"
             onClick={closeCart}
-            className="mt-3 flex w-full items-center justify-center border border-[#333] py-3 text-sm text-neutral-200 transition-colors hover:border-neutral-500"
+            className="mt-3 flex w-full items-center justify-center rounded-[6px] border border-[rgba(244,241,234,0.12)] py-3 text-sm text-[#f4f1ea] transition-colors hover:bg-[rgba(244,241,234,0.06)]"
           >
             장바구니 전체 보기
           </Link>

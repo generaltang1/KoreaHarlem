@@ -1,45 +1,49 @@
 import type { CSSProperties } from "react";
 
-/** 마이페이지·커머스 F 섹션 — Figma 우주/네뷸라 + 글래스 카드 톤 */
+/**
+ * F 섹션 시안 토큰 (Figma Website F-06/F-10)
+ * glass/fill: rgba(244,241,234,0.05)
+ * glass/line: rgba(244,241,234,0.12)
+ * fg/primary: #f4f1ea
+ * accent: #fbc201 / #FEE500
+ * card radius: 12px · button radius: 6px
+ */
 
-/** AuthDarkShell과 동일 계열 + 별/안개 레이어 */
 export const mpAtmosphereStyle: CSSProperties = {
   backgroundImage: [
-    // 별
-    "radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.55), transparent)",
-    "radial-gradient(1px 1px at 28% 42%, rgba(255,255,255,0.35), transparent)",
-    "radial-gradient(1.5px 1.5px at 48% 12%, rgba(255,255,255,0.45), transparent)",
-    "radial-gradient(1px 1px at 72% 28%, rgba(255,255,255,0.4), transparent)",
-    "radial-gradient(1px 1px at 88% 58%, rgba(255,255,255,0.3), transparent)",
-    "radial-gradient(1px 1px at 18% 72%, rgba(255,255,255,0.35), transparent)",
-    "radial-gradient(1.5px 1.5px at 62% 78%, rgba(255,255,255,0.5), transparent)",
-    "radial-gradient(1px 1px at 40% 88%, rgba(255,255,255,0.25), transparent)",
-    "radial-gradient(1px 1px at 55% 48%, rgba(255,255,255,0.3), transparent)",
-    "radial-gradient(1px 1px at 8% 52%, rgba(255,255,255,0.28), transparent)",
-    // 네뷸라
-    "radial-gradient(ellipse 55% 40% at 75% 15%, rgba(55,75,130,0.4), transparent 70%)",
-    "radial-gradient(ellipse 45% 45% at 18% 75%, rgba(70,45,110,0.35), transparent 65%)",
-    "radial-gradient(ellipse 40% 30% at 50% 40%, rgba(30,45,70,0.35), transparent 70%)",
-    "radial-gradient(ellipse 35% 35% at 90% 80%, rgba(40,55,90,0.3), transparent 60%)",
+    "radial-gradient(ellipse 55% 35% at 50% 18%, rgba(30,41,59,0.45), transparent 70%)",
+    "radial-gradient(ellipse 40% 35% at 15% 72%, rgba(20,25,35,0.55), transparent 65%)",
+    "radial-gradient(ellipse 35% 30% at 88% 62%, rgba(25,20,40,0.45), transparent 60%)",
   ].join(", "),
 };
 
 export const mp = {
-  page: "relative min-h-[70vh] overflow-hidden bg-[#050508] text-neutral-100",
-  /** 시안 글래스 카드 */
+  page: "relative min-h-[70vh] overflow-hidden bg-[#0a0a0a] text-[#f4f1ea] [font-family:var(--font-f-sans),var(--font-geist-sans),sans-serif]",
   card:
-    "rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md",
+    "rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] backdrop-blur-[6px]",
   input:
-    "w-full rounded-md border border-white/15 bg-[rgba(8,8,12,0.85)] px-3 py-3 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white/50 disabled:opacity-60",
-  label: "mb-1.5 block text-[10px] uppercase tracking-widest text-neutral-500",
-  muted: "text-neutral-500",
+    "w-full rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] px-3.5 py-3 text-[13px] text-[#f4f1ea] outline-none placeholder:text-[#6e6b65] focus:border-[rgba(244,241,234,0.35)] disabled:opacity-60",
+  label: "mb-1.5 block text-[11px] font-medium tracking-wide text-[#a8a49b]",
+  muted: "text-[#a8a49b]",
+  tertiary: "text-[#6e6b65]",
   creamBtn:
-    "inline-flex items-center justify-center rounded-md bg-[#f4f1ea] px-5 py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50",
+    "inline-flex items-center justify-center rounded-[8px] bg-[#f4f1ea] px-6 py-3 text-sm font-semibold text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-50",
   ghostBtn:
-    "inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-5 py-3 text-sm text-white transition-colors hover:border-white/30 disabled:opacity-50",
-  yellow: "text-[#FEE500]",
+    "inline-flex items-center justify-center rounded-[6px] border border-[rgba(244,241,234,0.12)] bg-transparent px-3.5 py-2 text-sm text-[#f4f1ea] transition-colors hover:bg-[rgba(244,241,234,0.06)] disabled:opacity-50",
+  yellow: "text-[#fbc201]",
+  accent: "text-[#FEE500]",
+  divide: "divide-[rgba(244,241,234,0.12)]",
+  chip:
+    "rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] px-3 py-3 text-center transition-colors hover:border-[rgba(251,194,1,0.45)]",
+  pill:
+    "inline-flex items-center justify-center rounded-[6px] border border-[rgba(244,241,234,0.12)] bg-transparent px-3 py-1.5 text-xs text-[#f4f1ea] transition-colors hover:bg-[rgba(244,241,234,0.06)]",
+  pillActive:
+    "inline-flex items-center justify-center rounded-[6px] border border-[#fbc201] bg-[rgba(251,194,1,0.08)] px-3 py-1.5 text-xs font-medium text-[#fbc201]",
+  badge:
+    "inline-flex items-center rounded-[2px] bg-[#FEE500] px-2.5 py-1 text-xs font-semibold text-[#191919]",
+  thumb: "relative shrink-0 overflow-hidden rounded-[6px] bg-[rgba(244,241,234,0.05)]",
   navActive:
-    "rounded-r-md border-l-2 border-[#FEE500] bg-white/10 pl-3 font-medium text-white",
+    "border-l-2 border-[#fbc201] pl-3.5 py-3 text-sm font-bold text-[#f4f1ea]",
   navIdle:
-    "rounded-r-md border-l-2 border-transparent pl-3 text-neutral-400 hover:bg-white/5 hover:text-white",
+    "border-l-2 border-transparent pl-3.5 py-3 text-sm font-medium text-[#a8a49b] transition-colors hover:text-[#f4f1ea]",
 } as const;

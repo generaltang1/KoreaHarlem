@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { mpAtmosphereStyle } from "@/lib/mypageTheme";
 
 interface AuthDarkShellProps {
   children: React.ReactNode;
@@ -19,15 +21,26 @@ export function AuthDarkShell({
   return (
     <>
       <Header />
-      <main className="relative flex min-h-[70vh] items-center justify-center overflow-hidden bg-[#0a0a0a] px-4 py-16 text-neutral-100 sm:px-8">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 60% 40% at 50% 20%, rgba(30,41,59,0.45), transparent 70%), radial-gradient(ellipse 40% 35% at 15% 70%, rgba(20,25,35,0.5), transparent 60%), radial-gradient(ellipse 35% 30% at 85% 60%, rgba(25,20,35,0.4), transparent 55%)",
-          }}
-        />
+      <main className="relative flex min-h-[70vh] items-center justify-center overflow-hidden bg-[#0a0a0a] px-4 py-16 text-[#f4f1ea] sm:px-8 [font-family:var(--font-f-sans),var(--font-geist-sans),sans-serif]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0" style={mpAtmosphereStyle} />
+          <Image
+            src="/figma/f-atmosphere/pin-prick-stars.svg"
+            alt=""
+            fill
+            className="object-cover opacity-80"
+            unoptimized
+          />
+          <Image
+            src="/figma/f-atmosphere/anamorphic-lights.svg"
+            alt=""
+            fill
+            className="object-cover opacity-70"
+            unoptimized
+          />
+          <div className="absolute left-[10%] top-[22%] h-[1.5px] w-[200px] rotate-[-18deg] bg-gradient-to-r from-transparent via-[rgba(255,255,255,0.25)] to-[rgba(255,255,255,0.9)] shadow-[0_0_6px_rgba(199,214,245,0.6)]" />
+          <div className="absolute left-[58%] top-[40%] h-[1.5px] w-[140px] rotate-[-22deg] bg-gradient-to-r from-transparent via-[rgba(255,255,255,0.2)] to-[rgba(255,255,255,0.65)] shadow-[0_0_6px_rgba(199,214,245,0.6)]" />
+        </div>
         <div className={`relative w-full ${width}`}>{children}</div>
       </main>
       <Footer />
@@ -44,7 +57,7 @@ export function AuthCard({
 }) {
   return (
     <div
-      className={`rounded-xl border border-[#262626] bg-[#151515] p-7 shadow-[0_0_60px_rgba(0,0,0,0.45)] sm:p-8 ${className}`}
+      className={`rounded-[12px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-7 shadow-[0_0_60px_rgba(0,0,0,0.45)] backdrop-blur-[6px] sm:p-8 ${className}`}
     >
       {children}
     </div>
@@ -52,10 +65,10 @@ export function AuthCard({
 }
 
 export const authInputClass =
-  "w-full border border-[#333] bg-[#0c0c0c] px-3 py-3.5 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-white";
+  "w-full rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] px-3 py-3.5 text-sm text-[#f4f1ea] outline-none placeholder:text-[#6e6b65] focus:border-[rgba(244,241,234,0.35)]";
 
 export const authPrimaryBtnClass =
-  "w-full bg-[#FEE500] py-3.5 text-sm font-semibold text-[#191919] transition-opacity hover:opacity-90 disabled:opacity-50";
+  "w-full rounded-[8px] bg-[#FEE500] py-3.5 text-sm font-semibold text-[#191919] transition-opacity hover:opacity-90 disabled:opacity-50";
 
 export const authSecondaryBtnClass =
-  "w-full border border-[#333] bg-[#1c1c1c] py-3.5 text-sm text-white transition-colors hover:border-neutral-500 disabled:opacity-50";
+  "w-full rounded-[6px] border border-[rgba(244,241,234,0.12)] bg-transparent py-3.5 text-sm text-[#f4f1ea] transition-colors hover:bg-[rgba(244,241,234,0.06)] disabled:opacity-50";

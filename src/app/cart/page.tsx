@@ -45,43 +45,40 @@ export default function CartPage() {
       <Header />
       <CommerceAtmosphere className="px-4 py-12 sm:px-8">
         <div className="mx-auto max-w-3xl">
-          <h1 className="flex items-baseline gap-2 text-2xl font-bold">
+          <h1 className="flex items-baseline gap-2 text-[28px] font-bold tracking-tight text-[#f4f1ea]">
             장바구니
-            <span className="text-base text-[#FEE500]">{itemCount}</span>
+            <span className={`text-base ${mp.accent}`}>{itemCount}</span>
           </h1>
 
           {items.length === 0 ? (
             <div className={`${mp.card} mt-12 px-6 py-16 text-center`}>
-              <p className="text-sm text-neutral-400">장바구니가 비어 있습니다.</p>
+              <p className={`text-sm ${mp.muted}`}>장바구니가 비어 있습니다.</p>
               <Link href="/sale" className={`mt-6 ${mp.creamBtn}`}>
                 쇼핑하러 가기
               </Link>
             </div>
           ) : (
             <>
-              <ul className={`${mp.card} mt-8 divide-y divide-white/10`}>
+              <ul className={`${mp.card} mt-8 ${mp.divide} divide-y`}>
                 {items.map((item) => {
                   const digital =
                     item.kind === "digital_album" || item.kind === "digital_track";
                   return (
-                    <li
-                      key={item.key}
-                      className="flex gap-4 border-b border-[#262626] px-5 py-5 last:border-b-0"
-                    >
-                      <div className="relative h-24 w-[72px] shrink-0 overflow-hidden bg-[#0c0c0c]">
+                    <li key={item.key} className="flex gap-4 px-5 py-5">
+                      <div className={`${mp.thumb} h-24 w-[72px]`}>
                         {item.imageUrl ? (
                           <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
                         ) : null}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">{item.title}</p>
-                        <p className="mt-1 text-xs text-neutral-500">{lineOptionLabel(item)}</p>
+                        <p className={`mt-1 text-xs ${mp.muted}`}>{lineOptionLabel(item)}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-3">
                           {!digital && (
-                            <div className="inline-flex items-center border border-[#333]">
+                            <div className="inline-flex items-center overflow-hidden rounded-[6px] border border-[rgba(244,241,234,0.12)]">
                               <button
                                 type="button"
-                                className="h-7 w-7"
+                                className="h-7 w-7 text-sm"
                                 onClick={() => updateQuantity(item.key, item.quantity - 1)}
                               >
                                 −
@@ -89,7 +86,7 @@ export default function CartPage() {
                               <span className="w-6 text-center text-xs">{item.quantity}</span>
                               <button
                                 type="button"
-                                className="h-7 w-7"
+                                className="h-7 w-7 text-sm"
                                 onClick={() => updateQuantity(item.key, item.quantity + 1)}
                               >
                                 +
@@ -102,7 +99,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             onClick={() => removeItem(item.key)}
-                            className="ml-auto text-xs text-neutral-500 hover:text-white"
+                            className={`ml-auto text-xs ${mp.tertiary} hover:text-[#f4f1ea]`}
                           >
                             삭제
                           </button>
@@ -115,25 +112,25 @@ export default function CartPage() {
 
               <div className={`${mp.card} mt-6 p-6`}>
                 {hasPhysical && (
-                  <p className="mb-4 text-xs text-[#FEE500]">
+                  <p className={`mb-4 text-xs ${mp.accent}`}>
                     {shippingKrw === 0
                       ? `무료배송 적용 · 배송 상품 ${formatKrw(physicalSubtotalKrw)}`
                       : `무료배송까지 ${formatKrw(DEFAULT_FREE_THRESHOLD_KRW - physicalSubtotalKrw)} · 배송 상품 ${formatKrw(physicalSubtotalKrw)}`}
                   </p>
                 )}
-                <div className="flex justify-between text-sm text-neutral-400">
+                <div className={`flex justify-between text-sm ${mp.muted}`}>
                   <span>상품 금액</span>
                   <span>{formatMinorAmount(subtotalMinor, currency)}</span>
                 </div>
-                <div className="mt-2 flex justify-between text-sm text-neutral-400">
+                <div className={`mt-2 flex justify-between text-sm ${mp.muted}`}>
                   <span>배송비</span>
-                  <span className={shippingKrw === 0 ? "text-[#FEE500]" : ""}>
+                  <span className={shippingKrw === 0 ? mp.accent : ""}>
                     {hasPhysical
                       ? formatMinorAmount(convertKrwToMinor(shippingKrw, currency), currency)
                       : "—"}
                   </span>
                 </div>
-                <div className="mt-4 flex justify-between border-t border-white/10 pt-4 text-base font-semibold">
+                <div className="mt-4 flex justify-between border-t border-[rgba(244,241,234,0.12)] pt-4 text-base font-semibold">
                   <span>결제 예정 금액</span>
                   <span>{formatMinorAmount(totalMinor, currency)}</span>
                 </div>

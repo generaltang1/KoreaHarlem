@@ -122,7 +122,7 @@ export function ProfileForm({ initial }: { initial: ProfileFormInitial }) {
         <div className="mt-4 space-y-4">
           <div>
             <span className={mp.label}>로그인 수단</span>
-            <span className="inline-flex items-center bg-[#FEE500] px-2.5 py-1 text-xs font-semibold text-[#191919]">
+            <span className={mp.badge}>
               {authProviderLabel(initial.provider)}
             </span>
           </div>
@@ -206,7 +206,7 @@ export function ProfileForm({ initial }: { initial: ProfileFormInitial }) {
           <div className="flex gap-2">
             <input className={mp.input} value={postcode} readOnly placeholder="우편번호" />
             <DaumPostcodeButton
-              className="shrink-0 border border-[#333] bg-[#1c1c1c] px-4 text-xs text-white"
+              className={`${mp.ghostBtn} shrink-0 px-4 text-xs`}
               onComplete={(data) => {
                 setPostcode(data.postcode);
                 setAddress(data.address);
@@ -264,7 +264,7 @@ export function ProfileForm({ initial }: { initial: ProfileFormInitial }) {
             <button
               type="button"
               onClick={() => setWithdrawOpen(true)}
-              className="border border-rose-500/60 px-4 py-2 text-xs text-rose-300"
+              className="rounded-[6px] border border-rose-500/60 px-4 py-2 text-xs text-rose-300"
             >
               회원 탈퇴
             </button>
@@ -273,7 +273,7 @@ export function ProfileForm({ initial }: { initial: ProfileFormInitial }) {
               type="button"
               disabled={loading}
               onClick={handleWithdraw}
-              className="bg-rose-600 px-4 py-2 text-xs text-white disabled:opacity-50"
+              className="rounded-[6px] bg-rose-600 px-4 py-2 text-xs text-white disabled:opacity-50"
             >
               탈퇴 확인
             </button>

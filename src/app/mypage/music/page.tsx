@@ -91,10 +91,10 @@ export default async function MyMusicPage() {
       {tracks.length === 0 ? (
         <p className={`text-sm ${mp.muted}`}>구매한 음원이 없습니다.</p>
       ) : (
-        <ul className={`${mp.card} divide-y divide-[#262626]`}>
+        <ul className={`${mp.card} ${mp.divide} divide-y`}>
           {tracks.map((track) => (
             <li key={track.id} className="flex items-center gap-4 px-4 py-3">
-              <div className="relative h-12 w-12 shrink-0 overflow-hidden bg-[#0c0c0c]">
+              <div className={`${mp.thumb} h-12 w-12`}>
                 {track.cover ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={track.cover} alt="" className="h-full w-full object-cover" />
@@ -103,8 +103,8 @@ export default async function MyMusicPage() {
               <p className="min-w-0 flex-1 truncate text-sm">
                 {track.artist ? (
                   <>
-                    <span className="text-neutral-500">{track.artist}</span>
-                    <span className="text-neutral-500"> · </span>
+                    <span className={mp.muted}>{track.artist}</span>
+                    <span className={mp.muted}> · </span>
                   </>
                 ) : null}
                 <span className="font-medium">{track.title}</span>
@@ -114,7 +114,7 @@ export default async function MyMusicPage() {
                   <a
                     href={`/api/music/download?trackId=${track.id}&format=mp3`}
                     download
-                    className="border border-[#333] px-3 py-1.5 text-[10px] uppercase tracking-widest hover:border-neutral-500"
+                    className={`${mp.pill} uppercase tracking-widest`}
                   >
                     MP3
                   </a>
@@ -123,7 +123,7 @@ export default async function MyMusicPage() {
                   <a
                     href={`/api/music/download?trackId=${track.id}&format=wav`}
                     download
-                    className="border border-[#333] px-3 py-1.5 text-[10px] uppercase tracking-widest hover:border-neutral-500"
+                    className={`${mp.pill} uppercase tracking-widest`}
                   >
                     WAV
                   </a>

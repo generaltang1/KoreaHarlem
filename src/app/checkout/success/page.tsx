@@ -109,46 +109,37 @@ function SuccessClient() {
     <div>
       <div className={`${mp.card} mb-8 p-8 text-center`}>
         <h1 className="text-2xl font-bold">주문이 완료됐어요</h1>
-        <p className="mt-3 text-sm text-neutral-400">
+        <p className={`mt-3 text-sm ${mp.muted}`}>
           실물 상품은 평일 기준 매일 오후 3시 전후 우체국택배로 출고됩니다.
         </p>
         {order?.orderNumber ? (
           <p className="mt-4 text-sm">
-            주문번호 <strong className="text-[#FEE500]">{order.orderNumber}</strong>
+            주문번호 <strong className={mp.accent}>{order.orderNumber}</strong>
           </p>
         ) : null}
         {!isLoggedIn ? (
-          <div className="mt-5 border border-[#333] bg-[#0c0c0c] p-4 text-left text-xs text-neutral-400">
-            <p className="font-medium text-neutral-200">비회원 주문 안내</p>
+          <div className="mt-5 rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] p-4 text-left text-xs text-[#a8a49b]">
+            <p className="font-medium text-[#f4f1ea]">비회원 주문 안내</p>
             <p className="mt-2">
               주문자 이름 · 주문번호 · 주문 비밀번호를 꼭 저장해 두세요. (별도 문자/메일 발송은 하지
               않습니다.)
             </p>
-            <Link href="/order-inquiry" className="mt-3 inline-block text-[#FEE500] underline">
+            <Link href="/order-inquiry" className={`mt-3 inline-block ${mp.accent} underline`}>
               주문조회 바로가기
             </Link>
           </div>
         ) : null}
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {isLoggedIn ? (
-            <Link
-              href="/mypage/orders"
-              className="bg-[#f4f1ea] px-5 py-3 text-sm font-semibold text-black"
-            >
+            <Link href="/mypage/orders" className={mp.creamBtn}>
               주문 상세 보기
             </Link>
           ) : (
-            <Link
-              href="/order-inquiry"
-              className="bg-[#f4f1ea] px-5 py-3 text-sm font-semibold text-black"
-            >
+            <Link href="/order-inquiry" className={mp.creamBtn}>
               주문 조회하기
             </Link>
           )}
-          <Link
-            href="/sale"
-            className="border border-[#333] px-5 py-3 text-sm text-white"
-          >
+          <Link href="/sale" className={mp.ghostBtn}>
             쇼핑 계속
           </Link>
         </div>

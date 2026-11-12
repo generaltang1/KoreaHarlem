@@ -270,10 +270,10 @@ export function ClaimRequestForm({
                   setSelectedItemIds(selectedItemIds.slice(0, 1));
                 }
               }}
-              className={`border px-4 py-4 text-left transition-colors ${
+              className={`rounded-[8px] border px-4 py-4 text-left transition-colors ${
                 type === opt.value
-                  ? "border-[#FEE500] bg-[#FEE500]/10"
-                  : "border-[#333] bg-[#0c0c0c]"
+                  ? "border-[#fbc201] bg-[rgba(251,194,1,0.08)]"
+                  : "border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)]"
               }`}
             >
               <p className="text-sm font-semibold">{opt.title}</p>
@@ -293,13 +293,17 @@ export function ClaimRequestForm({
                 <button
                   type="button"
                   onClick={() => toggleItem(item.id)}
-                  className={`flex w-full items-start gap-3 border px-3 py-3 text-left ${
-                    checked ? "border-[#FEE500]" : "border-[#333]"
+                  className={`flex w-full items-start gap-3 rounded-[8px] border px-3 py-3 text-left ${
+                    checked
+                      ? "border-[#fbc201] bg-[rgba(251,194,1,0.08)]"
+                      : "border-[rgba(244,241,234,0.12)]"
                   }`}
                 >
                   <span
-                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border ${
-                      checked ? "border-[#FEE500] bg-[#FEE500] text-black" : "border-[#555]"
+                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border ${
+                      checked
+                        ? "border-[#fbc201] bg-[#FEE500] text-black"
+                        : "border-[rgba(244,241,234,0.35)]"
                     }`}
                   >
                     {checked ? "✓" : ""}
@@ -330,10 +334,10 @@ export function ClaimRequestForm({
                     key={s}
                     type="button"
                     onClick={() => setExchangeSize(s)}
-                    className={`min-w-[48px] border px-3 py-2 text-sm ${
+                    className={`min-w-[48px] rounded-[6px] border px-3 py-2 text-sm ${
                       exchangeSize === s
-                        ? "border-[#FEE500] bg-[#FEE500] text-black"
-                        : "border-[#333] text-white"
+                        ? "border-[#fbc201] bg-[#FEE500] text-black"
+                        : "border-[rgba(244,241,234,0.12)] text-[#f4f1ea]"
                     }`}
                   >
                     {s}
@@ -356,10 +360,10 @@ export function ClaimRequestForm({
               key={r.id}
               type="button"
               onClick={() => setReasonPreset(r.id)}
-              className={`border px-3 py-3 text-left ${
+              className={`rounded-[8px] border px-3 py-3 text-left ${
                 reasonPreset === r.id
-                  ? "border-[#FEE500] bg-[#FEE500]/10"
-                  : "border-[#333] bg-[#0c0c0c]"
+                  ? "border-[#fbc201] bg-[rgba(251,194,1,0.08)]"
+                  : "border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)]"
               }`}
             >
               <p className="text-sm font-medium">{r.label}</p>
@@ -382,20 +386,23 @@ export function ClaimRequestForm({
             <label className={mp.label}>증빙 사진 (최대 {MAX_PHOTOS}장 · 필수)</label>
             <div className="mt-2 grid grid-cols-3 gap-2">
               {photoPreviews.map((p, idx) => (
-                <div key={p.url} className="relative aspect-square overflow-hidden border border-[#333]">
+                <div
+                  key={p.url}
+                  className="relative aspect-square overflow-hidden rounded-[8px] border border-[rgba(244,241,234,0.12)]"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.url} alt={p.name} className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setPhotos((prev) => prev.filter((_, i) => i !== idx))}
-                    className="absolute right-1 top-1 bg-black/70 px-1.5 text-xs"
+                    className="absolute right-1 top-1 rounded-[4px] bg-black/70 px-1.5 text-xs"
                   >
                     ×
                   </button>
                 </div>
               ))}
               {photos.length < MAX_PHOTOS ? (
-                <label className="flex aspect-square cursor-pointer items-center justify-center border border-dashed border-[#555] text-2xl text-neutral-500 hover:border-[#FEE500]">
+                <label className="flex aspect-square cursor-pointer items-center justify-center rounded-[8px] border border-dashed border-[rgba(244,241,234,0.25)] text-2xl text-[#6e6b65] hover:border-[#fbc201]">
                   +
                   <input
                     type="file"

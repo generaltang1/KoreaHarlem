@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
 import { createClient } from "@/lib/supabase/client";
-import { mp, mpAtmosphereStyle } from "@/lib/mypageTheme";
+import { mp } from "@/lib/mypageTheme";
 
 const NAV = [
   { href: "/mypage", label: "마이페이지 홈", exact: true },
@@ -46,51 +47,48 @@ export function MypageShell({
   return (
     <>
       <Header />
-      <main className={`${mp.page} px-4 py-10 sm:px-8`}>
-        <div aria-hidden className="pointer-events-none absolute inset-0" style={mpAtmosphereStyle} />
-        <div className="relative mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row lg:gap-10">
+      <CommerceAtmosphere className="px-4 py-10 sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row lg:gap-12">
           <aside className="w-full shrink-0 lg:w-[220px]">
-            <div className={`${mp.card} p-4`}>
-              <p className="mb-3 text-[10px] uppercase tracking-widest text-neutral-500">My Page</p>
-              <nav className="flex flex-col gap-0.5">
-                {NAV.map((item) => {
-                  const active = isActive(
-                    pathname,
-                    item.href,
-                    "exact" in item ? item.exact : false,
-                  );
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`py-2.5 text-sm transition-colors ${active ? mp.navActive : mp.navIdle}`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className={`mt-1 py-2.5 text-left text-sm ${mp.navIdle}`}
-                >
-                  로그아웃
-                </button>
-              </nav>
-            </div>
+            <p className="mb-3 text-[11px] font-medium text-[#fbc201]">마이페이지</p>
+            <nav className="flex flex-col">
+              {NAV.map((item) => {
+                const active = isActive(
+                  pathname,
+                  item.href,
+                  "exact" in item ? item.exact : false,
+                );
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={active ? mp.navActive : mp.navIdle}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={`${mp.navIdle} mt-1 text-left text-[#6e6b65]`}
+              >
+                로그아웃
+              </button>
+            </nav>
           </aside>
 
           <div className="min-w-0 flex-1">
             {title ? (
               <div className="mb-6">
-                <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-                {subtitle ? <p className={`mt-1 text-sm ${mp.muted}`}>{subtitle}</p> : null}
+                <h1 className="text-[28px] font-bold tracking-tight text-[#f4f1ea]">{title}</h1>
+                {subtitle ? <p className={`mt-1.5 text-sm ${mp.muted}`}>{subtitle}</p> : null}
               </div>
             ) : null}
             {children}
           </div>
         </div>
-      </main>
+      </CommerceAtmosphere>
       <Footer />
     </>
   );

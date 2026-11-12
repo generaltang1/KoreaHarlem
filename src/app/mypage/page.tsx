@@ -120,20 +120,16 @@ export default async function MyPage() {
         <h2 className="text-sm font-semibold">주문 · 배송 현황</h2>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {statusChips.map((chip) => (
-            <Link
-              key={chip.label}
-              href="/mypage/orders"
-              className="border border-[#262626] bg-[#0c0c0c] px-3 py-3 text-center transition-colors hover:border-[#FEE500]/40"
-            >
-              <p className="text-lg font-semibold text-[#FEE500]">{chip.count}</p>
-              <p className="mt-1 text-[11px] text-neutral-400">{chip.label}</p>
+            <Link key={chip.label} href="/mypage/orders" className={mp.chip}>
+              <p className={`text-lg font-semibold ${mp.accent}`}>{chip.count}</p>
+              <p className={`mt-1 text-[11px] ${mp.muted}`}>{chip.label}</p>
             </Link>
           ))}
         </div>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-neutral-500">
+        <div className={`mt-3 flex flex-wrap gap-3 text-xs ${mp.tertiary}`}>
           {claimChips.map((c) => (
             <span key={c.label}>
-              {c.label} <span className="text-neutral-300">{c.count}</span>
+              {c.label} <span className="text-[#f4f1ea]">{c.count}</span>
             </span>
           ))}
         </div>
@@ -147,7 +143,7 @@ export default async function MyPage() {
           </Link>
         </div>
         {recent.length === 0 ? (
-          <div className={`${mp.card} px-5 py-10 text-center text-sm text-neutral-500`}>
+          <div className={`${mp.card} px-5 py-10 text-center text-sm ${mp.muted}`}>
             최근 주문이 없습니다.
           </div>
         ) : (
@@ -164,15 +160,15 @@ export default async function MyPage() {
               const currency = getCurrency(order.currency ?? "KRW");
               return (
                 <li key={order.id} className={`${mp.card} p-4`}>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-500">
+                  <div className={`flex flex-wrap items-center justify-between gap-2 text-xs ${mp.muted}`}>
                     <span>
                       {new Date(order.created_at).toLocaleDateString("ko-KR")} ·{" "}
                       {order.order_number ?? order.id.slice(0, 8)}
                     </span>
-                    <span className="text-[#FEE500]">{orderStatusLabel(order.status)}</span>
+                    <span className={mp.accent}>{orderStatusLabel(order.status)}</span>
                   </div>
                   <div className="mt-3 flex gap-3">
-                    <div className="relative h-16 w-12 shrink-0 overflow-hidden bg-[#0c0c0c]">
+                    <div className={`${mp.thumb} h-16 w-12`}>
                       {first?.image_url ? (
                         <Image src={first.image_url} alt="" fill className="object-cover" />
                       ) : null}
@@ -182,23 +178,20 @@ export default async function MyPage() {
                         {first?.title ?? "주문 상품"}
                         {items.length > 1 ? ` 외 ${items.length - 1}건` : ""}
                       </p>
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className={`mt-1 text-xs ${mp.muted}`}>
                         {first?.size ? `사이즈 ${first.size} · ` : ""}
                         {first ? `${first.quantity}개` : ""}
                         {" · "}
                         {formatMinorAmount(order.total ?? 0, currency)}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <Link
-                          href={`/mypage/orders/${order.id}`}
-                          className="border border-[#333] px-3 py-1 text-xs hover:border-neutral-500"
-                        >
+                        <Link href={`/mypage/orders/${order.id}`} className={mp.pill}>
                           주문 상세
                         </Link>
                         {isMemberCancellableStatus(order.status) ? (
                           <Link
                             href={`/mypage/orders/${order.id}#cancel`}
-                            className="border border-[#333] px-3 py-1 text-xs text-neutral-400 hover:border-neutral-500"
+                            className={`${mp.pill} ${mp.muted}`}
                           >
                             주문 취소
                           </Link>
@@ -214,15 +207,21 @@ export default async function MyPage() {
       </section>
 
       <section className="mt-5 grid gap-3 sm:grid-cols-3">
-        <Link href="/mypage/music" className={`${mp.card} p-5 transition-colors hover:border-[#FEE500]/40`}>
+        <Link
+          href="/mypage/music"
+          className={`${mp.card} p-5 transition-colors hover:border-[rgba(251,194,1,0.45)]`}
+        >
           <p className="text-sm font-semibold">My Music</p>
           <p className={`mt-2 text-xs ${mp.muted}`}>구매 음원 {musicCount ?? 0}</p>
-          <p className="mt-3 text-xs text-[#FEE500]">다운로드 →</p>
+          <p className={`mt-3 text-xs ${mp.accent}`}>다운로드 →</p>
         </Link>
-        <Link href="/mypage/wishlist" className={`${mp.card} p-5 transition-colors hover:border-[#FEE500]/40`}>
+        <Link
+          href="/mypage/wishlist"
+          className={`${mp.card} p-5 transition-colors hover:border-[rgba(251,194,1,0.45)]`}
+        >
           <p className="text-sm font-semibold">위시리스트</p>
           <p className={`mt-2 text-xs ${mp.muted}`}>찜한 상품 {wishCount ?? 0}</p>
-          <p className="mt-3 text-xs text-[#FEE500]">보기 →</p>
+          <p className={`mt-3 text-xs ${mp.accent}`}>보기 →</p>
         </Link>
         <MypageCartShortcut />
       </section>

@@ -51,7 +51,7 @@ export default async function WishlistPage() {
           </Link>
         </div>
       ) : (
-        <ul className={`${mp.card} divide-y divide-[#262626]`}>
+        <ul className={`${mp.card} ${mp.divide} divide-y`}>
           {items.map((row) => {
             const product = row.products!;
             const images = [...(product.product_images ?? [])].sort(
@@ -62,7 +62,7 @@ export default async function WishlistPage() {
               <li key={row.id} className="flex gap-4 px-4 py-4 sm:px-5">
                 <Link
                   href={`/sale/${product.id}`}
-                  className="relative h-24 w-[72px] shrink-0 overflow-hidden bg-[#0c0c0c]"
+                  className={`${mp.thumb} h-24 w-[72px]`}
                 >
                   {imageUrl ? (
                     <Image src={imageUrl} alt={product.title} fill className="object-cover" />
@@ -70,7 +70,7 @@ export default async function WishlistPage() {
                 </Link>
                 <div className="min-w-0 flex-1">
                   {product.category ? (
-                    <p className="text-[10px] uppercase tracking-widest text-neutral-500">
+                    <p className={`text-[10px] uppercase tracking-widest ${mp.tertiary}`}>
                       {product.category}
                     </p>
                   ) : null}
@@ -78,14 +78,11 @@ export default async function WishlistPage() {
                     {product.title}
                   </Link>
                   {product.title_en ? (
-                    <p className="mt-0.5 truncate text-xs text-neutral-500">{product.title_en}</p>
+                    <p className={`mt-0.5 truncate text-xs ${mp.muted}`}>{product.title_en}</p>
                   ) : null}
                   <p className="mt-2 text-sm">₩{Number(product.price).toLocaleString("ko-KR")}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Link
-                      href={`/sale/${product.id}`}
-                      className="border border-[#333] px-3 py-1.5 text-xs text-neutral-200 hover:border-neutral-500"
-                    >
+                    <Link href={`/sale/${product.id}`} className={mp.pill}>
                       상품 보기
                     </Link>
                     <WishlistRemoveButton wishlistId={row.id} />

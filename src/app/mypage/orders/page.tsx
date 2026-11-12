@@ -90,11 +90,7 @@ export default async function MyOrdersPage({ searchParams }: MyOrdersPageProps) 
               1,
               listParams({ pageSize, status: f.value || undefined }),
             )}
-            className={`border px-3 py-1.5 tracking-widest ${
-              status === f.value
-                ? "border-[#FEE500] text-[#FEE500]"
-                : "border-[#333] text-neutral-400"
-            }`}
+            className={status === f.value ? mp.pillActive : mp.pill}
           >
             {f.label}
           </Link>
@@ -125,17 +121,17 @@ export default async function MyOrdersPage({ searchParams }: MyOrdersPageProps) 
               <article key={order.id} className={`${mp.card} p-4`}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-neutral-500">
+                    <p className={`text-[10px] uppercase tracking-widest ${mp.tertiary}`}>
                       {order.order_number ?? order.id.slice(0, 8)}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500">
+                    <p className={`mt-1 text-xs ${mp.muted}`}>
                       {new Date(order.created_at).toLocaleString("ko-KR")}
                       {order.payment_method
                         ? ` · ${paymentMethodLabel(order.payment_method)}`
                         : ""}
                     </p>
                   </div>
-                  <p className="text-sm font-medium text-[#FEE500]">
+                  <p className={`text-sm font-medium ${mp.accent}`}>
                     {orderStatusLabel(order.status)}
                   </p>
                 </div>
@@ -143,7 +139,7 @@ export default async function MyOrdersPage({ searchParams }: MyOrdersPageProps) 
                 <div className="mt-3 flex gap-3">
                   <Link
                     href={`/mypage/orders/${order.id}`}
-                    className="relative h-20 w-14 shrink-0 overflow-hidden bg-[#0c0c0c]"
+                    className={`${mp.thumb} h-20 w-14`}
                   >
                     {first?.image_url ? (
                       <Image src={first.image_url} alt="" fill className="object-cover" />
@@ -168,35 +164,21 @@ export default async function MyOrdersPage({ searchParams }: MyOrdersPageProps) 
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    href={`/mypage/orders/${order.id}`}
-                    className="border border-[#333] px-3 py-1.5 text-xs hover:border-neutral-500"
-                  >
+                  <Link href={`/mypage/orders/${order.id}`} className={mp.pill}>
                     상세
                   </Link>
                   {isMemberCancellableStatus(order.status) ? (
-                    <Link
-                      href={`/mypage/orders/${order.id}#cancel`}
-                      className="border border-[#333] px-3 py-1.5 text-xs hover:border-neutral-500"
-                    >
+                    <Link href={`/mypage/orders/${order.id}#cancel`} className={mp.pill}>
                       취소 신청
                     </Link>
                   ) : null}
                   {track ? (
-                    <a
-                      href={track}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="border border-[#333] px-3 py-1.5 text-xs hover:border-neutral-500"
-                    >
+                    <a href={track} target="_blank" rel="noreferrer" className={mp.pill}>
                       배송 조회
                     </a>
                   ) : null}
                   {canRequestCs(order.status) ? (
-                    <Link
-                      href={`/mypage/orders/${order.id}/claim`}
-                      className="border border-[#333] px-3 py-1.5 text-xs hover:border-neutral-500"
-                    >
+                    <Link href={`/mypage/orders/${order.id}/claim`} className={mp.pill}>
                       교환·반품 신청
                     </Link>
                   ) : null}

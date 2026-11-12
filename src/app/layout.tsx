@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/context/PlayerContext";
 import { DjSetProvider } from "@/context/DjSetContext";
@@ -20,6 +20,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/** Figma Website F/G 시안 — 한글 Noto Sans KR + 영문 Archivo */
+const fSans = Noto_Sans_KR({
+  variable: "--font-f-sans",
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+});
+
+const fDisplay = Archivo({
+  variable: "--font-f-display",
+  weight: ["500", "700"],
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "KoreaHarlem — 종합 예술 플랫폼",
   description:
@@ -33,7 +46,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${fSans.variable} ${fDisplay.variable} antialiased`}
+      >
         <CurrencyProvider>
           <CartProvider>
             <LoginModalProvider>

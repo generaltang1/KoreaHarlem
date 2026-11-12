@@ -39,21 +39,18 @@ function FailClient() {
 
   return (
     <div className={`w-full max-w-lg ${mp.card} p-8 text-center`}>
-      <h1 className="text-2xl font-bold">결제가 완료되지 않았어요</h1>
-      <p className="mt-3 text-sm text-neutral-400">
+      <h1 className="text-[28px] font-bold tracking-tight">결제가 완료되지 않았어요</h1>
+      <p className={`mt-3 text-sm ${mp.muted}`}>
         {message || code || "다시 시도해 주세요."}
       </p>
-      <p className="mt-4 text-xs text-neutral-500">
+      <p className={`mt-4 text-xs ${mp.tertiary}`}>
         장바구니 상품은 그대로 남아 있습니다.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link
-          href="/checkout/auth"
-          className="bg-[#f4f1ea] px-5 py-3 text-sm font-semibold text-black"
-        >
+        <Link href="/checkout/auth" className={mp.creamBtn}>
           다시 결제하기
         </Link>
-        <Link href="/cart" className="border border-[#333] px-5 py-3 text-sm">
+        <Link href="/cart" className={mp.ghostBtn}>
           장바구니로
         </Link>
       </div>
