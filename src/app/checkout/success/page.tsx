@@ -5,21 +5,23 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
 import { OrderDetailView, type OrderDetailData } from "@/components/commerce/OrderDetailView";
 import { useCart } from "@/context/CartContext";
 import { createClient } from "@/lib/supabase/client";
+import { mp } from "@/lib/mypageTheme";
 
 export default function CheckoutSuccessPage() {
   return (
     <>
       <Header />
-      <main className="min-h-[70vh] bg-[#0a0a0a] px-4 py-12 text-neutral-100 sm:px-8">
+      <CommerceAtmosphere className="px-4 py-12 sm:px-8">
         <div className="mx-auto max-w-3xl">
           <Suspense fallback={<p className="text-sm text-neutral-500">결제 확인 중...</p>}>
             <SuccessClient />
           </Suspense>
         </div>
-      </main>
+      </CommerceAtmosphere>
       <Footer />
     </>
   );
@@ -93,7 +95,7 @@ function SuccessClient() {
 
   if (status === "error") {
     return (
-      <div className="border border-[#262626] bg-[#151515] p-8 text-center">
+      <div className={`${mp.card} p-8 text-center`}>
         <h1 className="text-xl font-bold">결제 확인 실패</h1>
         <p className="mt-3 text-sm text-rose-400">{message}</p>
         <Link href="/checkout" className="mt-6 inline-block text-xs text-[#FEE500] underline">
@@ -105,7 +107,7 @@ function SuccessClient() {
 
   return (
     <div>
-      <div className="mb-8 border border-[#262626] bg-[#151515] p-8 text-center">
+      <div className={`${mp.card} mb-8 p-8 text-center`}>
         <h1 className="text-2xl font-bold">주문이 완료됐어요</h1>
         <p className="mt-3 text-sm text-neutral-400">
           실물 상품은 평일 기준 매일 오후 3시 전후 우체국택배로 출고됩니다.

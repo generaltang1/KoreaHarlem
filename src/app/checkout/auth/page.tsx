@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
 import { createClient } from "@/lib/supabase/client";
 import { signInWithGoogle, signInWithKakao } from "@/lib/auth/oauth";
 import { GoogleMark, KakaoMark } from "@/components/auth/OAuthIcons";
+import { mp } from "@/lib/mypageTheme";
 
 function CheckoutAuthInner() {
   const router = useRouter();
@@ -73,7 +75,7 @@ function CheckoutAuthInner() {
         </p>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-[#262626] bg-[#151515] p-6">
+      <div className={`space-y-3 ${mp.card} p-6`}>
         <button
           type="button"
           onClick={async () => {
@@ -104,7 +106,7 @@ function CheckoutAuthInner() {
 
       <form
         onSubmit={handleGuest}
-        className="mt-6 space-y-3 rounded-xl border border-[#262626] bg-[#151515] p-6"
+        className={`mt-6 space-y-3 ${mp.card} p-6`}
       >
         <h2 className="text-sm font-semibold">비회원으로 주문하기</h2>
         <p className="text-xs text-amber-200/90">
@@ -170,11 +172,11 @@ export default function CheckoutAuthPage() {
   return (
     <>
       <Header />
-      <main className="flex min-h-[70vh] items-center justify-center bg-[#0a0a0a] px-4 py-16">
+      <CommerceAtmosphere className="flex min-h-[70vh] items-center justify-center px-4 py-16">
         <Suspense fallback={<p className="text-sm text-neutral-500">불러오는 중...</p>}>
           <CheckoutAuthInner />
         </Suspense>
-      </main>
+      </CommerceAtmosphere>
       <Footer />
     </>
   );

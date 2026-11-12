@@ -5,10 +5,12 @@ import Image from "next/image";
 import { useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
 import { useCart, type CartLine } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { formatMinorAmount, convertKrwToMinor } from "@/lib/currency";
 import { calcShippingFee } from "@/lib/shipping";
+import { mp } from "@/lib/mypageTheme";
 
 const DEFAULT_SHIPPING_FEE_KRW = 4000;
 const DEFAULT_FREE_THRESHOLD_KRW = 50000;
@@ -41,7 +43,7 @@ export default function CartPage() {
   return (
     <>
       <Header />
-      <main className="min-h-[70vh] bg-[#0a0a0a] px-4 py-12 text-neutral-100 sm:px-8">
+      <CommerceAtmosphere className="px-4 py-12 sm:px-8">
         <div className="mx-auto max-w-3xl">
           <h1 className="flex items-baseline gap-2 text-2xl font-bold">
             장바구니
@@ -49,18 +51,15 @@ export default function CartPage() {
           </h1>
 
           {items.length === 0 ? (
-            <div className="mt-12 border border-[#262626] bg-[#151515] px-6 py-16 text-center">
+            <div className={`${mp.card} mt-12 px-6 py-16 text-center`}>
               <p className="text-sm text-neutral-400">장바구니가 비어 있습니다.</p>
-              <Link
-                href="/sale"
-                className="mt-6 inline-block bg-[#f4f1ea] px-6 py-3 text-sm font-semibold text-black"
-              >
+              <Link href="/sale" className={`mt-6 ${mp.creamBtn}`}>
                 쇼핑하러 가기
               </Link>
             </div>
           ) : (
             <>
-              <ul className="mt-8 border border-[#262626] bg-[#151515]">
+              <ul className={`${mp.card} mt-8 divide-y divide-white/10`}>
                 {items.map((item) => {
                   const digital =
                     item.kind === "digital_album" || item.kind === "digital_track";
@@ -114,7 +113,7 @@ export default function CartPage() {
                 })}
               </ul>
 
-              <div className="mt-6 border border-[#262626] bg-[#151515] p-6">
+              <div className={`${mp.card} mt-6 p-6`}>
                 {hasPhysical && (
                   <p className="mb-4 text-xs text-[#FEE500]">
                     {shippingKrw === 0
@@ -134,21 +133,18 @@ export default function CartPage() {
                       : "—"}
                   </span>
                 </div>
-                <div className="mt-4 flex justify-between border-t border-[#262626] pt-4 text-base font-semibold">
+                <div className="mt-4 flex justify-between border-t border-white/10 pt-4 text-base font-semibold">
                   <span>결제 예정 금액</span>
                   <span>{formatMinorAmount(totalMinor, currency)}</span>
                 </div>
-                <Link
-                  href="/checkout/auth"
-                  className="mt-5 flex w-full items-center justify-center bg-[#f4f1ea] py-3.5 text-sm font-semibold text-black"
-                >
+                <Link href="/checkout/auth" className={`mt-5 flex w-full ${mp.creamBtn}`}>
                   주문하기
                 </Link>
               </div>
             </>
           )}
         </div>
-      </main>
+      </CommerceAtmosphere>
       <Footer />
     </>
   );

@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
 import { OrderDetailView, type OrderDetailData } from "@/components/commerce/OrderDetailView";
 import { OrderCancelRefundSection } from "@/components/commerce/OrderCancelRefundSection";
 import {
@@ -93,7 +94,7 @@ export default function OrderInquiryPage() {
   return (
     <>
       <Header />
-      <main className={`${mp.page} px-4 py-12 sm:px-8`}>
+      <CommerceAtmosphere className="px-4 py-12 sm:px-8">
         <div className="mx-auto max-w-3xl">
           <h1 className="text-2xl font-bold">비회원 주문조회</h1>
           <p className={`mt-2 text-sm ${mp.muted}`}>
@@ -189,7 +190,7 @@ export default function OrderInquiryPage() {
             </div>
           ) : null}
         </div>
-      </main>
+      </CommerceAtmosphere>
       <Footer />
     </>
   );

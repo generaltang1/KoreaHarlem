@@ -483,7 +483,7 @@ export function CheckoutClient() {
       <h1 className="text-2xl font-bold tracking-tight">주문 · 결제</h1>
 
       {/* 배송지 */}
-      <section className="border border-[#262626] bg-[#151515] p-5">
+      <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
         <h2 className="text-sm font-semibold">주문자 · 배송지</h2>
         <div className="mt-5 space-y-4">
           <Field label="받는사람 *">
@@ -620,7 +620,7 @@ export function CheckoutClient() {
       </section>
 
       {/* 결제수단 */}
-      <section className="border border-[#262626] bg-[#151515] p-5">
+      <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
         <h2 className="text-sm font-semibold">결제수단</h2>
         <p className="mt-2 text-xs text-neutral-500">
           결제창부터는 토스페이먼츠 화면입니다. (디자인 변경 불가)
@@ -654,7 +654,7 @@ export function CheckoutClient() {
       </section>
 
       {/* 약관 */}
-      <section className="border border-[#262626] bg-[#151515] p-5">
+      <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
         <label className="flex cursor-pointer items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -679,9 +679,9 @@ export function CheckoutClient() {
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-        <section className="border border-[#262626] bg-[#151515] p-5">
+        <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
           <h2 className="text-sm font-semibold">주문 상품</h2>
-          <ul className="mt-4 divide-y divide-[#262626]">
+          <ul className="mt-4 divide-y divide-white/10">
             {lines.map((line) => {
               const digital = line.kind === "digital_album" || line.kind === "digital_track";
               const purchasable = digital || isProductPurchasable(availability.get(line.productId));
@@ -713,7 +713,7 @@ export function CheckoutClient() {
           </ul>
         </section>
 
-        <section className="border border-[#262626] bg-[#151515] p-5">
+        <section className="rounded-xl border border-white/10 bg-[rgba(18,18,22,0.72)] p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
           <h2 className="text-sm font-semibold">결제 요약</h2>
           <p className="mt-2 text-xs text-[#FEE500]">
             실물 배송비 기본 ₩4,000 · 5만원 이상 무료배송
@@ -737,7 +737,7 @@ export function CheckoutClient() {
                       : "—"}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-[#262626] pt-3 font-semibold">
+            <div className="flex justify-between border-t border-white/10 pt-3 font-semibold">
               <dt>총 결제금액</dt>
               <dd>
                 {formatMinorAmount(settleMinor, settlement)} {settlement.code}

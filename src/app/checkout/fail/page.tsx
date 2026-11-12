@@ -5,16 +5,18 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
+import { mp } from "@/lib/mypageTheme";
 
 export default function CheckoutFailPage() {
   return (
     <>
       <Header />
-      <main className="flex min-h-[70vh] items-center justify-center bg-[#0a0a0a] px-4 py-20 text-neutral-100">
+      <CommerceAtmosphere className="flex min-h-[70vh] items-center justify-center px-4 py-20">
         <Suspense fallback={null}>
           <FailClient />
         </Suspense>
-      </main>
+      </CommerceAtmosphere>
       <Footer />
     </>
   );
@@ -36,7 +38,7 @@ function FailClient() {
   }, [orderId]);
 
   return (
-    <div className="w-full max-w-lg border border-[#262626] bg-[#151515] p-8 text-center">
+    <div className={`w-full max-w-lg ${mp.card} p-8 text-center`}>
       <h1 className="text-2xl font-bold">결제가 완료되지 않았어요</h1>
       <p className="mt-3 text-sm text-neutral-400">
         {message || code || "다시 시도해 주세요."}

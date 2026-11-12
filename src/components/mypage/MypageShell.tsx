@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/client";
-import { mp } from "@/lib/mypageTheme";
+import { mp, mpAtmosphereStyle } from "@/lib/mypageTheme";
 
 const NAV = [
   { href: "/mypage", label: "마이페이지 홈", exact: true },
@@ -47,30 +47,37 @@ export function MypageShell({
     <>
       <Header />
       <main className={`${mp.page} px-4 py-10 sm:px-8`}>
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row lg:gap-10">
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={mpAtmosphereStyle} />
+        <div className="relative mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row lg:gap-10">
           <aside className="w-full shrink-0 lg:w-[220px]">
-            <p className="mb-4 text-[10px] uppercase tracking-widest text-neutral-500">My Page</p>
-            <nav className="flex flex-col gap-1">
-              {NAV.map((item) => {
-                const active = isActive(pathname, item.href, "exact" in item ? item.exact : false);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`py-2.5 text-sm transition-colors ${active ? mp.navActive : mp.navIdle}`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={`mt-2 py-2.5 text-left text-sm ${mp.navIdle}`}
-              >
-                로그아웃
-              </button>
-            </nav>
+            <div className={`${mp.card} p-4`}>
+              <p className="mb-3 text-[10px] uppercase tracking-widest text-neutral-500">My Page</p>
+              <nav className="flex flex-col gap-0.5">
+                {NAV.map((item) => {
+                  const active = isActive(
+                    pathname,
+                    item.href,
+                    "exact" in item ? item.exact : false,
+                  );
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`py-2.5 text-sm transition-colors ${active ? mp.navActive : mp.navIdle}`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={`mt-1 py-2.5 text-left text-sm ${mp.navIdle}`}
+                >
+                  로그아웃
+                </button>
+              </nav>
+            </div>
           </aside>
 
           <div className="min-w-0 flex-1">
