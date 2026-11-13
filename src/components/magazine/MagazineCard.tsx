@@ -27,7 +27,9 @@ export function MagazineCard({ post }: { post: MagazineListItem }) {
       <div className="flex flex-1 flex-col gap-2 p-3.5">
         <div className={`flex items-center justify-between text-[10px] ${mag.tertiary}`}>
           <span>{formatMagDate(post.published_at)}</span>
-          <span className="uppercase tracking-wider">떠돌이말</span>
+          <span className="uppercase tracking-wider">
+            {post.category === "news" ? "News" : "Culture"}
+          </span>
         </div>
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-[#f4f1ea] group-hover:text-[#FBC201]">
           {post.title}

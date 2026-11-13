@@ -34,6 +34,8 @@ export const navLinks: NavItem[] = [
     label: "MAGAZINE",
     children: [
       { label: "떠돌이말", href: "/magazine" },
+      { label: "Culture", href: "/magazine/culture" },
+      { label: "News", href: "/magazine/news" },
       { label: "전체 기사", href: "/magazine/all" },
     ],
   },
@@ -65,5 +67,7 @@ export const footerMusicLinks = [
 
 export const footerMagazineLinks = [
   { label: "떠돌이말", href: "/magazine" },
+  { label: "Culture", href: "/magazine/culture" },
+  { label: "News", href: "/magazine/news" },
   { label: "전체 기사", href: "/magazine/all" },
 ];

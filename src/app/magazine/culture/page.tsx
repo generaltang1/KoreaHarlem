@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+import { MagazineListPage } from "@/components/magazine/MagazineListPage";
 
-export default function MagazineCultureRedirect() {
-  redirect("/magazine");
+export const dynamic = "force-dynamic";
+
+export default function MagazineCulturePage() {
+  return <MagazineListPage category="culture" />;
 }

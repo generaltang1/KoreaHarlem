@@ -30,17 +30,22 @@ function toLocalInputValue(iso: string | null | undefined): string {
 export function MagazineEditorClient({
   initial,
   mode,
+  defaultCategory,
 }: {
   initial?: MagazinePost | null;
   mode: "new" | "edit";
+  defaultCategory?: MagazineCategory;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
-  const [category, setCategory] = useState<MagazineCategory>(
-    initial?.category === "news" ? "news" : "culture",
-  );
+  const [category, setCategory] = useState<MagazineCategory>(() => {
+    if (initial?.category === "news" || initial?.category === "culture") {
+      return initial.category;
+    }
+    return defaultCategory === "news" ? "news" : "culture";
+  });
   const [blocks, setBlocks] = useState<MagazineBlock[]>(() =>
     parseBlocks(initial?.content_blocks, initial?.content_html ?? ""),
   );

@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/tips", label: "제보" },
   { href: "/admin/think", label: "THINK" },
   { href: "/admin/magazine", label: "매거진" },
+  { href: "/admin/magazine/new", label: "매거진 글쓰기" },
   { href: "/admin/members", label: "회원" },
   { href: "/admin/events/new", label: "이벤트" },
 ] as const;
