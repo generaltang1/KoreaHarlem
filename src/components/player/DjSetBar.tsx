@@ -375,7 +375,7 @@ export function DjSetBar() {
               </p>
               <div className="h-px min-w-px flex-1" />
               <Link
-                href="/music"
+                href="/music/dj-set"
                 className="rounded-full bg-[#FBC201] px-3.5 py-1.5 text-xs font-medium text-[#0a0a0a] transition hover:bg-[#ffd84a]"
                 onClick={() => setPlaylistOpen(false)}
               >

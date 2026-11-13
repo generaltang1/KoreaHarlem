@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("albums")
-    .select("id, artist_name, cover_url, album_tracks(*)")
+    .select("id, title, artist_name, cover_url, album_tracks(*)")
     .limit(80);
 
   if (error) {
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
 
   type AlbumRow = {
     id: string;
+    title: string;
     artist_name?: string | null;
     cover_url?: string | null;
     album_tracks: {
@@ -54,6 +55,7 @@ export async function GET(request: Request) {
   const tracks: Track[] = sortedTracks.map((row) =>
     mapAlbumTrackToPlayerTrack(row, {
       id: picked.id,
+      title: picked.title,
       artist_name: picked.artist_name,
       cover_url: picked.cover_url,
     }),

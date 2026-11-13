@@ -31,11 +31,12 @@ export interface AlbumWithTracks extends DbAlbum {
 
 export function mapAlbumTrackToPlayerTrack(
   track: DbAlbumTrack,
-  album: Pick<DbAlbum, "id" | "artist_name" | "cover_url">,
+  album: Pick<DbAlbum, "id" | "title" | "artist_name" | "cover_url">,
 ): Track {
   return {
     id: track.id,
     albumId: album.id,
+    albumTitle: album.title,
     title: track.title,
     artist: album.artist_name?.trim() || "Unknown",
     audio_url: track.audio_url,

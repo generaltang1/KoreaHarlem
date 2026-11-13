@@ -15,7 +15,9 @@ function safeFilename(name: string, ext: string) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const trackId = searchParams.get("trackId");
-  const format = searchParams.get("format") === "wav" ? "wav" : "mp3";
+  const rawFormat = searchParams.get("format");
+  const format =
+    rawFormat === "wav" ? "wav" : rawFormat === "file" ? "file" : "mp3";
 
   if (!trackId) {
     return NextResponse.json({ message: "trackId가 필요합니다." }, { status: 400 });
@@ -62,7 +64,10 @@ export async function GET(request: Request) {
 
   if (!url) {
     return NextResponse.json(
-      { message: format === "wav" ? "WAV 파일이 등록되지 않았습니다." : "다운로드 파일이 없습니다." },
+      {
+        message:
+          format === "wav" ? "WAV 파일이 등록되지 않았습니다." : "다운로드 파일이 없습니다.",
+      },
       { status: 404 },
     );
   }
@@ -74,10 +79,16 @@ export async function GET(request: Request) {
 
   void incrementTrackDownload(track.id);
 
-  const filename = safeFilename(track.title, format);
+  const guessedExt = url.includes(".wav")
+    ? "wav"
+    : url.includes(".flac")
+      ? "flac"
+      : "mp3";
+  const ext = format === "wav" ? "wav" : format === "file" ? guessedExt : "mp3";
+  const filename = safeFilename(track.title, ext);
   const contentType =
     fileRes.headers.get("content-type") ||
-    (format === "wav" ? "audio/wav" : "audio/mpeg");
+    (ext === "wav" ? "audio/wav" : ext === "flac" ? "audio/flac" : "audio/mpeg");
 
   return new NextResponse(fileRes.body, {
     headers: {

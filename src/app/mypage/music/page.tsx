@@ -1,18 +1,8 @@
 import { redirect } from "next/navigation";
 import { MypageShell } from "@/components/mypage/MypageShell";
+import { MyMusicClient, type OwnedAlbumRow } from "@/components/mypage/MyMusicClient";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { mp } from "@/lib/mypageTheme";
-
-type OwnedTrack = {
-  id: string;
-  title: string;
-  albumTitle: string;
-  artist: string;
-  cover: string | null;
-  hasWav: boolean;
-  hasMp3: boolean;
-};
 
 export default async function MyMusicPage() {
   const supabase = await createClient();
@@ -31,108 +21,65 @@ export default async function MyMusicPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const albumIds = [...new Set((entitlements ?? []).map((e) => e.album_id).filter(Boolean))] as string[];
-  const trackIds = [...new Set((entitlements ?? []).filter((e) => e.kind === "track").map((e) => e.track_id).filter(Boolean))] as string[];
+  const albumIds = [
+    ...new Set(
+      (entitlements ?? [])
+        .filter((e) => e.kind === "album" && e.album_id)
+        .map((e) => e.album_id as string),
+    ),
+  ];
 
-  const tracksById = new Map<string, OwnedTrack>();
+  const albums: OwnedAlbumRow[] = [];
 
   if (albumIds.length > 0) {
-    const { data: albums } = await admin
+    const { data: rows } = await admin
       .from("albums")
-      .select("id, title, artist_name, cover_url, album_tracks(id, title, audio_url, download_mp3_url, download_wav_url)")
+      .select(
+        "id, title, artist_name, cover_url, digital_price_krw, album_tracks(id, title, track_order, duration, audio_url, download_mp3_url, download_wav_url)",
+      )
       .in("id", albumIds);
 
-    for (const album of albums ?? []) {
-      const ownedAlbum = (entitlements ?? []).some((e) => e.kind === "album" && e.album_id === album.id);
-      for (const track of album.album_tracks ?? []) {
-        if (!ownedAlbum && !trackIds.includes(track.id)) continue;
-        tracksById.set(track.id, {
-          id: track.id,
-          title: track.title,
-          albumTitle: album.title,
-          artist: album.artist_name ?? "",
-          cover: album.cover_url,
-          hasMp3: Boolean(track.download_mp3_url || track.audio_url),
-          hasWav: Boolean(track.download_wav_url),
-        });
-      }
+    for (const album of rows ?? []) {
+      const tracks = [...(album.album_tracks ?? [])]
+        .sort(
+          (a: { track_order: number }, b: { track_order: number }) =>
+            a.track_order - b.track_order,
+        )
+        .map((t: {
+          id: string;
+          title: string;
+          duration?: number | null;
+          audio_url?: string | null;
+          download_mp3_url?: string | null;
+          download_wav_url?: string | null;
+        }) => ({
+          id: t.id,
+          title: t.title,
+          duration: t.duration ?? null,
+          hasFile: Boolean(t.download_mp3_url || t.audio_url || t.download_wav_url),
+          hasWav: Boolean(t.download_wav_url),
+        }));
+
+      albums.push({
+        id: album.id,
+        title: album.title,
+        artist: album.artist_name ?? "",
+        cover: album.cover_url,
+        trackCount: tracks.length,
+        priceKrw: album.digital_price_krw ?? null,
+        tracks,
+      });
     }
   }
-
-  if (trackIds.length > 0) {
-    const missing = trackIds.filter((id) => !tracksById.has(id));
-    if (missing.length > 0) {
-      const { data: extra } = await admin
-        .from("album_tracks")
-        .select("id, title, audio_url, download_mp3_url, download_wav_url, albums(title, artist_name, cover_url)")
-        .in("id", missing);
-      for (const track of extra ?? []) {
-        const album = Array.isArray(track.albums) ? track.albums[0] : track.albums;
-        tracksById.set(track.id, {
-          id: track.id,
-          title: track.title,
-          albumTitle: album?.title ?? "",
-          artist: album?.artist_name ?? "",
-          cover: album?.cover_url ?? null,
-          hasMp3: Boolean(track.download_mp3_url || track.audio_url),
-          hasWav: Boolean(track.download_wav_url),
-        });
-      }
-    }
-  }
-
-  const tracks = [...tracksById.values()];
 
   return (
     <MypageShell
+      variant="music"
       title="My Music"
-      subtitle="구매한 음원을 MP3 / WAV로 받을 수 있습니다. 스트리밍은 무료입니다."
+      subtitle={`구매한 음원 ${String(albums.length).padStart(2, "0")}`}
+      headRight={<span className="text-[12px] font-medium text-[#a8a49b]">최근 구매순 ▾</span>}
     >
-      {tracks.length === 0 ? (
-        <p className={`text-sm ${mp.muted}`}>구매한 음원이 없습니다.</p>
-      ) : (
-        <ul className={`${mp.card} ${mp.divide} divide-y`}>
-          {tracks.map((track) => (
-            <li key={track.id} className="flex items-center gap-4 px-4 py-3">
-              <div className={`${mp.thumb} h-12 w-12`}>
-                {track.cover ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={track.cover} alt="" className="h-full w-full object-cover" />
-                ) : null}
-              </div>
-              <p className="min-w-0 flex-1 truncate text-sm">
-                {track.artist ? (
-                  <>
-                    <span className={mp.muted}>{track.artist}</span>
-                    <span className={mp.muted}> · </span>
-                  </>
-                ) : null}
-                <span className="font-medium">{track.title}</span>
-              </p>
-              <div className="flex shrink-0 gap-2">
-                {track.hasMp3 && (
-                  <a
-                    href={`/api/music/download?trackId=${track.id}&format=mp3`}
-                    download
-                    className={`${mp.pill} uppercase tracking-widest`}
-                  >
-                    MP3
-                  </a>
-                )}
-                {track.hasWav && (
-                  <a
-                    href={`/api/music/download?trackId=${track.id}&format=wav`}
-                    download
-                    className={`${mp.pill} uppercase tracking-widest`}
-                  >
-                    WAV
-                  </a>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <MyMusicClient albums={albums} />
     </MypageShell>
   );
 }

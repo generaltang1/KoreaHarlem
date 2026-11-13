@@ -20,6 +20,7 @@ import { notifyCollectionPause, notifyMusicTakeover } from "@/lib/playbackFocus"
 export interface Track {
   id: string;
   albumId?: string;
+  albumTitle?: string | null;
   title: string;
   artist: string;
   audio_url: string;

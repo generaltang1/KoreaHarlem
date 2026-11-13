@@ -13,11 +13,9 @@ import { writeAdminAudit } from "@/lib/adminAudit";
 import { createClient } from "@/lib/supabase/client";
 import { loadDurationFromFile } from "@/lib/audioDuration";
 import { buildCroppedCover } from "@/lib/image/cropCover";
-
-interface ArtistOption {
-  id: string;
-  name: string;
-}
+import { ArtistMultiSelect, type ArtistOption } from "@/components/admin/ArtistMultiSelect";
+import { adminLight as admin } from "@/lib/siteTheme";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface TrackFormRow {
   key: string;
@@ -54,8 +52,10 @@ export default function NewAlbumPage() {
   const [artists, setArtists] = useState<ArtistOption[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(true);
   const [title, setTitle] = useState("");
-  const [artistId, setArtistId] = useState("");
+  const [artistIds, setArtistIds] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverZoom, setCoverZoom] = useState(1);
@@ -113,11 +113,13 @@ export default function NewAlbumPage() {
     e.preventDefault();
     setError("");
 
-    const selectedArtist = artists.find((a) => a.id === artistId);
-    if (!selectedArtist) {
-      setError("아티스트를 선택해주세요. 아티스트 등록이 먼저 필요합니다.");
+    const selectedArtists = artists.filter((a) => artistIds.includes(a.id));
+    if (selectedArtists.length === 0) {
+      setError("아티스트를 1명 이상 선택해주세요. 아티스트 등록이 먼저 필요합니다.");
       return;
     }
+    const primaryArtist = selectedArtists[0];
+    const artistNameJoined = selectedArtists.map((a) => a.name).join(", ");
 
     const validTracks = tracks.filter((row) => row.title.trim() && row.audioFile);
     if (validTracks.length === 0) {
@@ -149,8 +151,8 @@ export default function NewAlbumPage() {
         .from("albums")
         .insert({
           title,
-          artist_id: selectedArtist.id,
-          artist_name: selectedArtist.name,
+          artist_id: primaryArtist.id,
+          artist_name: artistNameJoined,
           description: description.trim() || null,
           cover_url,
           digital_price_krw: parsePrice(digitalPrice),
@@ -233,150 +235,192 @@ export default function NewAlbumPage() {
     }
   };
 
+  const stopPreview = () => {
+    previewAudio?.pause();
+    setPreviewAudio(null);
+    setPreviewUrl(null);
+  };
+
+  const playPreviewFile = async (file: File | null) => {
+    if (!file) return;
+    stopPreview();
+    // 하단/상단 플레이어와 무관 — 등록 확인용. 기존 재생은 멈춤.
+    const { notifyMusicTakeover, notifyDjTakeover } = await import("@/lib/playbackFocus");
+    notifyMusicTakeover();
+    notifyDjTakeover();
+    const url = URL.createObjectURL(file);
+    const audio = new Audio(url);
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      setPreviewAudio(null);
+      setPreviewUrl(null);
+    };
+    setPreviewAudio(audio);
+    setPreviewUrl(url);
+    void audio.play().catch(() => stopPreview());
+  };
+
   return (
-    <div>
-      <div className="mb-8 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted">Admin</p>
-          <h1 className="mt-1 text-xl font-medium uppercase tracking-wider">앨범 등록</h1>
-          <p className="mt-2 text-xs text-muted">아티스트 등록 → 아티스트 선택 → 앨범/수록곡 등록</p>
-        </div>
-        <Link href="/admin/music" className="text-[10px] uppercase tracking-widest text-muted underline">
-          목록으로
-        </Link>
+    <div className={admin.page}>
+      <AdminPageHeader
+        eyebrow="E-08 · H-xx Admin"
+        title="앨범 등록"
+        description="시안 경로 /admin/music/albums/new · 입력 시 Music·앨범·아티스트 공개면에 반영됩니다."
+        actions={
+          <Link href="/admin/music" className={admin.btnGhost}>
+            목록
+          </Link>
+        }
+      />
+
+      <div className={`${admin.cardPad} mb-6 border-dashed`}>
+        <p className={`text-xs font-semibold uppercase tracking-widest ${admin.muted}`}>시안 대기 필드</p>
+        <p className={`mt-2 text-sm ${admin.muted}`}>
+          LP/카세트 SKU · Supported by · 장르 해시태그 · 암시장(머천) 연동 · 카탈로그 번호 — DB/정책 확정 후
+          이어서 붙입니다. 아래는 동작하는 핵심 등록 흐름입니다.
+        </p>
       </div>
 
       {!artistsLoading && artists.length === 0 && (
-        <div className="mb-6 border border-border p-5">
+        <div className={`${admin.cardPad} mb-6`}>
           <p className="text-sm">등록된 아티스트가 없습니다.</p>
-          <p className="mt-1 text-xs text-muted">음악을 올리려면 아티스트를 먼저 등록해야 합니다.</p>
-          <Link
-            href="/admin/artists"
-            className="mt-4 inline-block text-xs uppercase tracking-widest underline"
-          >
-            아티스트 관리하러 가기 →
+          <p className={`mt-1 text-xs ${admin.muted}`}>음악을 올리려면 아티스트를 먼저 등록해야 합니다.</p>
+          <Link href="/admin/artists/new" className={`${admin.link} mt-4 inline-block text-xs uppercase tracking-widest`}>
+            아티스트 등록 →
           </Link>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">아티스트 *</label>
-          <select
-            value={artistId}
-            onChange={(e) => setArtistId(e.target.value)}
-            required
-            disabled={artists.length === 0}
-            className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground disabled:opacity-50"
-          >
-            <option value="">{artistsLoading ? "불러오는 중..." : "아티스트 선택"}</option>
-            {artists.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 제목 *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
+        <section className={`${admin.cardPad} space-y-5`}>
+          <h2 className="text-sm font-bold tracking-tight">01 · 기본 정보</h2>
           <div>
-            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 유형</label>
-            <select
-              value={albumType}
-              onChange={(e) => setAlbumType(e.target.value as AlbumType | "")}
-              className="w-full border border-border bg-background px-4 py-3 text-sm outline-none focus:border-foreground"
-            >
-              {ALBUM_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">발매일</label>
-            <input
-              type="date"
-              value={releaseDate}
-              onChange={(e) => setReleaseDate(e.target.value)}
-              className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+            <label className={admin.label}>아티스트 * (검색 · 다중 선택)</label>
+            <ArtistMultiSelect
+              artists={artists}
+              selectedIds={artistIds}
+              onChange={setArtistIds}
+              loading={artistsLoading}
             />
           </div>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">공개 설정</label>
-          <div className="flex flex-wrap gap-4 text-sm">
-            {(
-              [
-                { value: "public", label: "공개 즉시" },
-                { value: "scheduled", label: "예약 공개" },
-                { value: "private", label: "비공개" },
-              ] as const
-            ).map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="publishMode"
-                  checked={publishMode === opt.value}
-                  onChange={() => setPublishMode(opt.value)}
-                />
-                {opt.label}
-              </label>
-            ))}
-          </div>
-          {publishMode === "scheduled" ? (
+          <div>
+            <label className={admin.label}>앨범 제목 *</label>
             <input
-              type="datetime-local"
-              value={scheduledAt}
-              onChange={(e) => setScheduledAt(e.target.value)}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               required
-              className="mt-3 w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+              className={admin.input}
             />
-          ) : null}
-        </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={admin.label}>앨범 유형</label>
+              <select
+                value={albumType}
+                onChange={(e) => setAlbumType(e.target.value as AlbumType | "")}
+                className={admin.input}
+              >
+                {ALBUM_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={admin.label}>발매일</label>
+              <input
+                type="date"
+                value={releaseDate}
+                onChange={(e) => setReleaseDate(e.target.value)}
+                className={admin.input}
+              />
+            </div>
+          </div>
+          <div>
+            <label className={admin.label}>공개 설정</label>
+            <div className="flex flex-wrap gap-4 text-sm">
+              {(
+                [
+                  { value: "public", label: "공개 즉시" },
+                  { value: "scheduled", label: "예약 공개" },
+                  { value: "private", label: "비공개" },
+                ] as const
+              ).map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="publishMode"
+                    checked={publishMode === opt.value}
+                    onChange={() => setPublishMode(opt.value)}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+            {publishMode === "scheduled" ? (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className={admin.label}>예약 날짜</label>
+                  <input
+                    type="date"
+                    value={scheduledAt.slice(0, 10)}
+                    onChange={(e) => {
+                      const time = scheduledAt.includes("T") ? scheduledAt.slice(11, 16) : "12:00";
+                      setScheduledAt(`${e.target.value}T${time}`);
+                    }}
+                    required
+                    className={admin.input}
+                  />
+                </div>
+                <div>
+                  <label className={admin.label}>예약 시간</label>
+                  <input
+                    type="time"
+                    value={scheduledAt.includes("T") ? scheduledAt.slice(11, 16) : ""}
+                    onChange={(e) => {
+                      const day = scheduledAt.slice(0, 10) || new Date().toISOString().slice(0, 10);
+                      setScheduledAt(`${day}T${e.target.value}`);
+                    }}
+                    required
+                    className={admin.input}
+                  />
+                </div>
+                <p className={`sm:col-span-2 text-xs ${admin.muted}`}>
+                  해당 시각이 되면 공개 앨범으로 전환되어 Music / 앨범 상세에 노출됩니다.
+                </p>
+              </div>
+            ) : null}
+          </div>
+          <div>
+            <label className={admin.label}>디지털 앨범 판매가 (KRW)</label>
+            <input
+              type="number"
+              min={0}
+              value={digitalPrice}
+              onChange={(e) => setDigitalPrice(e.target.value)}
+              placeholder="비워두면 판매 안 함 · 스트리밍은 무료"
+              className={admin.input}
+            />
+          </div>
+          <div>
+            <label className={admin.label}>앨범 설명</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              className={`${admin.input} min-h-[100px] resize-y`}
+            />
+          </div>
+        </section>
 
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">
-            디지털 앨범 판매가 (KRW)
-          </label>
-          <input
-            type="number"
-            min={0}
-            value={digitalPrice}
-            onChange={(e) => setDigitalPrice(e.target.value)}
-            placeholder="비워두면 판매 안 함 · 스트리밍은 무료"
-            className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 설명</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={4}
-            className="w-full resize-none border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-widest text-muted">앨범 커버</label>
-          <input type="file" accept="image/*" onChange={handleCover} className="w-full border border-border px-4 py-3 text-sm" />
+        <section className={`${admin.cardPad} space-y-4`}>
+          <h2 className="text-sm font-bold tracking-tight">02 · 커버</h2>
+          <input type="file" accept="image/*" onChange={handleCover} className={admin.input} />
           {coverPreview && (
-            <div className="mt-4 space-y-3">
-              <div className="relative h-48 w-48 overflow-hidden border border-border bg-black">
+            <div className="space-y-3">
+              <div className="relative h-48 w-48 overflow-hidden rounded-[8px] border border-[#e5e7eb] bg-black">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={coverPreview}
@@ -388,37 +432,39 @@ export default function NewAlbumPage() {
                   }}
                 />
               </div>
+              <label className={admin.label}>줌</label>
               <input type="range" min="1" max="3" step="0.01" value={coverZoom} onChange={(e) => setCoverZoom(Number(e.target.value))} className="w-full" />
+              <label className={admin.label}>가로</label>
               <input type="range" min="-100" max="100" step="1" value={coverOffsetX} onChange={(e) => setCoverOffsetX(Number(e.target.value))} className="w-full" />
+              <label className={admin.label}>세로</label>
               <input type="range" min="-100" max="100" step="1" value={coverOffsetY} onChange={(e) => setCoverOffsetY(Number(e.target.value))} className="w-full" />
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="space-y-4 border-t border-border pt-6">
+        <section className={`${admin.cardPad} space-y-4`}>
           <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-widest text-muted">수록곡</p>
-            <button
-              type="button"
-              onClick={addTrackRow}
-              className="border border-border px-3 py-1.5 text-[10px] uppercase tracking-widest hover:border-foreground"
-            >
-              + 수록곡 추가
+            <h2 className="text-sm font-bold tracking-tight">03 · 수록곡</h2>
+            <button type="button" onClick={addTrackRow} className={admin.btnGhost}>
+              + 행 추가
             </button>
           </div>
+          <p className={`text-xs ${admin.muted}`}>
+            행 추가/삭제 · 미리듣기 · Title 표시 · 예약 발행은 위 공개 설정과 함께 동작합니다.
+          </p>
 
           {tracks.map((row, index) => (
-            <div key={row.key} className="space-y-3 border border-border p-4">
+            <div key={row.key} className="space-y-3 rounded-[8px] border border-[#e5e7eb] bg-white p-4">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-xs font-medium">수록곡 {index + 1}</p>
+                <p className="text-xs font-semibold">트랙 {String(index + 1).padStart(2, "0")}</p>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => toggleTitleTrack(row.key)}
-                    className={`border px-3 py-1.5 text-[10px] uppercase tracking-widest transition-colors ${
+                    className={`rounded-[6px] border px-3 py-1.5 text-[10px] uppercase tracking-widest transition-colors ${
                       row.isTitleTrack
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted hover:border-foreground hover:text-foreground"
+                        ? "border-[#111] bg-[#111] text-white"
+                        : "border-[#e5e7eb] text-[#6b7280] hover:border-[#111]"
                     }`}
                   >
                     Title
@@ -439,47 +485,57 @@ export default function NewAlbumPage() {
                 placeholder="곡 제목 *"
                 value={row.title}
                 onChange={(e) => updateTrack(row.key, { title: e.target.value })}
-                className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
+                className={admin.input}
               />
-              <label className="block text-[10px] uppercase tracking-widest text-muted">스트리밍/MP3 *</label>
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={(e) => updateTrack(row.key, { audioFile: e.target.files?.[0] ?? null })}
-                className="w-full border border-border px-4 py-3 text-sm"
-              />
-              <input
-                type="number"
-                min={0}
-                placeholder="트랙 디지털 판매가 (비워두면 미판매)"
-                value={row.digitalPrice}
-                onChange={(e) => updateTrack(row.key, { digitalPrice: e.target.value })}
-                className="w-full border border-border bg-transparent px-4 py-3 text-sm outline-none focus:border-foreground"
-              />
-              <label className="block text-[10px] uppercase tracking-widest text-muted">WAV 원본 (구매 다운로드용, 선택)</label>
+              <label className={admin.label}>음원 첨부 * (스트리밍/MP3)</label>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => updateTrack(row.key, { audioFile: e.target.files?.[0] ?? null })}
+                  className={`min-w-0 flex-1 ${admin.input}`}
+                />
+                <button
+                  type="button"
+                  className={admin.btnGhost}
+                  disabled={!row.audioFile}
+                  onClick={() => void playPreviewFile(row.audioFile)}
+                >
+                  {previewUrl && row.audioFile ? "미리듣기 중" : "미리듣기"}
+                </button>
+                {previewAudio && (
+                  <button type="button" className={admin.btnGhost} onClick={stopPreview}>
+                    STOP
+                  </button>
+                )}
+              </div>
+              <p className={`text-[10px] ${admin.muted}`}>
+                길이는 첨부 파일에서 자동 측정됩니다. 미리듣기는 등록 확인용이며 다른 재생을 멈춥니다.
+              </p>
+              <label className={admin.label}>WAV (선택 · My Music ZIP)</label>
               <input
                 type="file"
                 accept="audio/wav,audio/x-wav,.wav"
                 onChange={(e) => updateTrack(row.key, { wavFile: e.target.files?.[0] ?? null })}
-                className="w-full border border-border px-4 py-3 text-sm"
+                className={admin.input}
               />
               <textarea
                 placeholder="곡 설명 (선택)"
                 value={row.description}
                 onChange={(e) => updateTrack(row.key, { description: e.target.value })}
-                rows={8}
-                className="min-h-[200px] w-full resize-y border border-border bg-transparent px-4 py-3 text-sm leading-relaxed outline-none focus:border-foreground"
+                rows={4}
+                className={`${admin.input} min-h-[120px] resize-y`}
               />
             </div>
           ))}
-        </div>
+        </section>
 
         {error && <p className="text-xs text-rose-500">{error}</p>}
 
         <button
           type="submit"
           disabled={loading || artists.length === 0}
-          className="w-full bg-foreground py-3 text-xs uppercase tracking-widest text-background disabled:opacity-50"
+          className={`${admin.btnPrimary} w-full disabled:opacity-50`}
         >
           {loading ? "등록 중..." : "앨범 등록"}
         </button>

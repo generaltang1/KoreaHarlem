@@ -114,6 +114,10 @@ export async function searchArtistsPaged(
     from: number;
     to: number;
     select?: string;
+    /** 장르 필터 (정확히 일치) */
+    genre?: string;
+    /** 인덱스 점프: 영문 한 글자(A-Z) 또는 "ko"(한글 색인) */
+    initial?: string;
   },
 ): Promise<{ data: ArtistSearchRow[]; count: number }> {
   const select = options.select ?? "*";
@@ -122,13 +126,26 @@ export async function searchArtistsPaged(
   let query = supabase
     .from("artists")
     .select(select, { count: "exact" })
-    .order("created_at", { ascending: false });
+    .order("name", { ascending: true });
 
   if (q) {
     const pattern = toIlikePattern(q);
     query = query.or(
       `name.ilike."${pattern}",name_en.ilike."${pattern}",genre.ilike."${pattern}",bio.ilike."${pattern}"`,
     );
+  }
+
+  const genre = options.genre?.trim();
+  if (genre) {
+    query = query.eq("genre", genre);
+  }
+
+  const initial = options.initial?.trim();
+  if (initial === "ko") {
+    query = query.gte("name", "가").lte("name", "힣\uffff");
+  } else if (initial && /^[a-z]$/i.test(initial)) {
+    const prefix = `${initial}%`;
+    query = query.or(`name_en.ilike."${prefix}",name.ilike."${prefix}"`);
   }
 
   const { data, count, error } = await query.range(options.from, options.to);

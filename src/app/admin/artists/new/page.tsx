@@ -109,25 +109,26 @@ export default function NewArtistPage() {
   };
 
   const inputClass =
-    "w-full border border-border bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-foreground";
-  const labelClass = "mb-1.5 block text-[10px] uppercase tracking-widest text-muted";
+    "w-full rounded-[8px] border border-[#d4d4d4] bg-white px-3 py-2.5 text-sm text-[#0a0a0a] outline-none placeholder:text-[#a3a3a3] focus:border-[#0a0a0a]";
+  const labelClass = "mb-1.5 block text-[10px] font-medium uppercase tracking-[0.18em] text-[#737373]";
 
   return (
     <div>
       <AdminPageHeader
+        eyebrow="E-08 톤 · Artists"
         title="아티스트 등록"
-        description="프로필 · 장르 · SNS · 공개 설정"
+        description="앨범 등록 화면과 같은 운영 톤 · 등록 후 앨범에서 검색·다중 선택"
         actions={
           <Link
             href="/admin/artists"
-            className="text-[10px] uppercase tracking-widest text-muted underline"
+            className="rounded-[8px] border border-[#d4d4d4] bg-white px-4 py-2 text-xs uppercase tracking-widest text-[#0a0a0a]"
           >
-            목록으로
+            목록
           </Link>
         }
       />
 
-      <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-5">
+      <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-5 rounded-[12px] border border-[#e8e8e8] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <div>
           <label className={labelClass}>아티스트명 *</label>
           <input
