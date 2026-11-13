@@ -9,10 +9,10 @@ import { MagazineViewTracker } from "@/components/magazine/MagazineViewTracker";
 import { isCurrentUserAdmin } from "@/lib/auth/session";
 import { magazinePublicPath } from "@/lib/magazine";
 import { parseBlocks, parseRelatedLinks } from "@/lib/magazineBlocks";
+import { formatMagDate } from "@/lib/magazine";
 import {
   fetchMagazineBySlugOrId,
   fetchPublishedMagazine,
-  formatMagDate,
 } from "@/lib/magazineQueries";
 import { mag } from "@/lib/magazineTheme";
 

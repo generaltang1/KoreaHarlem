@@ -7,11 +7,9 @@ import { isCurrentUserAdmin } from "@/lib/auth/session";
 import {
   magazineCategoryLabel,
   type MagazineCategory,
-} from "@/lib/magazine";
-import {
-  fetchPublishedMagazine,
   type MagazineListItem,
-} from "@/lib/magazineQueries";
+} from "@/lib/magazine";
+import { fetchPublishedMagazine } from "@/lib/magazineQueries";
 import { mag } from "@/lib/magazineTheme";
 
 export async function MagazineListPage({ category }: { category: MagazineCategory }) {

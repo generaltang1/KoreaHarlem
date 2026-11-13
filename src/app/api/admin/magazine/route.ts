@@ -17,7 +17,7 @@ async function uniqueSlug(
   desired: string,
   excludeId?: string,
 ): Promise<string> {
-  let base = slugifyTitle(desired);
+  const base = slugifyTitle(desired);
   let candidate = base;
   for (let i = 0; i < 20; i++) {
     let q = admin.from("magazine_posts").select("id").eq("slug", candidate).limit(1);

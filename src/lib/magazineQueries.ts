@@ -1,38 +1,14 @@
-import type { MagazinePost } from "@/lib/magazine";
-import { normalizeHashtags } from "@/lib/magazineBlocks";
+import type { MagazineListItem, MagazinePost } from "@/lib/magazine";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { publishDueScheduledMagazine } from "@/lib/magazinePublish";
+
+export type { MagazineListItem } from "@/lib/magazine";
 
 export const MAGAZINE_LIST_SELECT =
   "id, title, slug, excerpt, cover_url, cover_credit, category, status, show_on_music, is_cover_story, hashtags, credit_text, credit_photo, credit_edit, related_links, view_count, published_at, scheduled_at, author_id, created_at, updated_at";
 
 export const MAGAZINE_DETAIL_SELECT = `${MAGAZINE_LIST_SELECT}, content_html, content_blocks`;
-
-export type MagazineListItem = Pick<
-  MagazinePost,
-  | "id"
-  | "title"
-  | "slug"
-  | "excerpt"
-  | "cover_url"
-  | "cover_credit"
-  | "category"
-  | "status"
-  | "show_on_music"
-  | "is_cover_story"
-  | "hashtags"
-  | "credit_text"
-  | "credit_photo"
-  | "credit_edit"
-  | "related_links"
-  | "view_count"
-  | "published_at"
-  | "scheduled_at"
-  | "author_id"
-  | "created_at"
-  | "updated_at"
->;
 
 export async function ensureMagazinePublished() {
   const service = createServiceClient();
@@ -87,34 +63,4 @@ export async function fetchMagazineAdminById(id: string): Promise<MagazinePost |
     .maybeSingle();
   if (error || !data) return null;
   return data as MagazinePost;
-}
-
-export function collectTagCounts(posts: MagazineListItem[]): { tag: string; count: number }[] {
-  const map = new Map<string, number>();
-  for (const p of posts) {
-    for (const t of normalizeHashtags(p.hashtags ?? [])) {
-      map.set(t, (map.get(t) ?? 0) + 1);
-    }
-  }
-  return [...map.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "ko"));
-}
-
-export function filterByTag(posts: MagazineListItem[], tag: string | null): MagazineListItem[] {
-  if (!tag) return posts;
-  const needle = tag.replace(/^#/, "").toLowerCase();
-  return posts.filter((p) =>
-    (p.hashtags ?? []).some((t) => t.replace(/^#/, "").toLowerCase() === needle),
-  );
-}
-
-export function formatMagDate(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}.${m}.${day}`;
 }

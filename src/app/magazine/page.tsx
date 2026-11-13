@@ -3,11 +3,8 @@ import { Footer } from "@/components/layout/Footer";
 import { MagazineHomeClient } from "@/components/magazine/MagazineHomeClient";
 import { MagazineShell } from "@/components/magazine/MagazineShell";
 import { isCurrentUserAdmin } from "@/lib/auth/session";
-import {
-  collectTagCounts,
-  fetchPublishedMagazine,
-  type MagazineListItem,
-} from "@/lib/magazineQueries";
+import { collectTagCounts, type MagazineListItem } from "@/lib/magazine";
+import { fetchPublishedMagazine } from "@/lib/magazineQueries";
 
 export const dynamic = "force-dynamic";
 

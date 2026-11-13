@@ -5,11 +5,8 @@ import { MagazineCard } from "@/components/magazine/MagazineCard";
 import { MagazineShell } from "@/components/magazine/MagazineShell";
 import { MagazineTagBar } from "@/components/magazine/MagazineTagBar";
 import { isCurrentUserAdmin } from "@/lib/auth/session";
-import {
-  collectTagCounts,
-  fetchPublishedMagazine,
-  filterByTag,
-} from "@/lib/magazineQueries";
+import { collectTagCounts, filterByTag } from "@/lib/magazine";
+import { fetchPublishedMagazine } from "@/lib/magazineQueries";
 import { mag } from "@/lib/magazineTheme";
 
 export const dynamic = "force-dynamic";

@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MagazineCard } from "@/components/magazine/MagazineCard";
 import { MagazineTagBar } from "@/components/magazine/MagazineTagBar";
-import { magazinePublicPath } from "@/lib/magazine";
 import {
   formatMagDate,
+  magazinePublicPath,
   type MagazineListItem,
-} from "@/lib/magazineQueries";
+} from "@/lib/magazine";
 import { mag } from "@/lib/magazineTheme";
 
 const INITIAL_LATEST = 8;

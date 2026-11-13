@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { magazinePublicPath } from "@/lib/magazine";
-import { formatMagDate, type MagazineListItem } from "@/lib/magazineQueries";
+import {
+  formatMagDate,
+  magazinePublicPath,
+  type MagazineListItem,
+} from "@/lib/magazine";
 import { mag } from "@/lib/magazineTheme";
 
 export function MagazineCard({ post }: { post: MagazineListItem }) {
