@@ -1,3 +1,5 @@
+import type { MagazineBlock, MagazineRelatedLink } from "@/lib/magazineBlocks";
+
 export type MagazineCategory = "culture" | "news";
 export type MagazineStatus = "draft" | "scheduled" | "published" | "archived";
 
@@ -7,10 +9,19 @@ export type MagazinePost = {
   slug: string | null;
   excerpt: string;
   content_html: string;
+  content_blocks?: MagazineBlock[] | unknown;
   cover_url: string | null;
+  cover_credit?: string;
   category: MagazineCategory;
   status: MagazineStatus;
   show_on_music: boolean;
+  is_cover_story?: boolean;
+  hashtags?: string[];
+  credit_text?: string;
+  credit_photo?: string;
+  credit_edit?: string;
+  related_links?: MagazineRelatedLink[] | unknown;
+  view_count?: number;
   published_at: string | null;
   scheduled_at: string | null;
   author_id: string | null;
@@ -42,4 +53,15 @@ export function magazineStatusLabel(status: string): string {
     default:
       return status;
   }
+}
+
+export function magazinePublicPath(post: {
+  slug?: string | null;
+  id?: string;
+  category?: string | null;
+}): string {
+  const slug = (post.slug ?? "").trim();
+  if (slug) return `/magazine/${encodeURIComponent(slug)}`;
+  if (post.id) return `/magazine/${encodeURIComponent(post.id)}`;
+  return "/magazine";
 }

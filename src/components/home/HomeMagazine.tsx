@@ -50,7 +50,7 @@ export function HomeMagazine() {
         </div>
         <div className="mt-8 text-right">
           <Link
-            href="/magazine/culture"
+            href="/magazine"
             className="text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white"
           >
             View More →

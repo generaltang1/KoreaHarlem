@@ -42,6 +42,7 @@ export type ArtistMagazineCard = {
   cover_url: string | null;
   published_at: string | null;
   category: string | null;
+  slug?: string | null;
 };
 
 export type ArtistMerchCard = {
@@ -609,7 +610,7 @@ export function ArtistDetailClient({
               }
               title="관련 매거진"
               meta={`${artist.name} 태그 글 →`}
-              href="/magazine/culture"
+              href="/magazine"
             />
             {magazine.length === 0 ? (
               <p className="text-sm text-[#6e6b65]">관련 매거진 글이 없습니다.</p>
@@ -618,7 +619,11 @@ export function ArtistDetailClient({
                 {magazine.slice(0, 2).map((post) => (
                   <Link
                     key={post.id}
-                    href={`/magazine/${post.category || "culture"}`}
+                    href={
+                      post.slug
+                        ? `/magazine/${encodeURIComponent(post.slug)}`
+                        : `/magazine/${encodeURIComponent(post.id)}`
+                    }
                     className="flex flex-col border border-[#3d3d3d] px-2 pb-[14px] pt-2 transition-colors hover:border-[#a8a49b]"
                   >
                     <div className="relative h-[246px] w-full overflow-hidden bg-[#151515]">

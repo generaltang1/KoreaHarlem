@@ -1,5 +1,5 @@
-import { MagazineListPage } from "@/components/magazine/MagazineListPage";
+import { redirect } from "next/navigation";
 
-export default function MagazineNewsPage() {
-  return <MagazineListPage category="news" />;
+export default function MagazineNewsRedirect() {
+  redirect("/magazine");
 }

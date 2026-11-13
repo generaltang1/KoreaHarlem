@@ -100,7 +100,7 @@ export default async function ArtistDetailPage({ params }: ArtistDetailPageProps
     const pattern = toIlikePattern(artist.name);
     const mag = await supabase
       .from("magazine_posts")
-      .select("id, title, cover_url, published_at, category")
+      .select("id, title, cover_url, published_at, category, slug")
       .eq("status", "published")
       .or(`title.ilike."${pattern}",excerpt.ilike."${pattern}"`)
       .order("published_at", { ascending: false })

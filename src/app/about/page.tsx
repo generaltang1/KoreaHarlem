@@ -18,7 +18,7 @@ const pillars = [
   {
     title: "Kulture · 떠돌이말",
     body: "음악 패션 미술 타투 · 해시태그 게시판",
-    href: "/magazine/culture",
+    href: "/magazine",
   },
   {
     title: "THINK",

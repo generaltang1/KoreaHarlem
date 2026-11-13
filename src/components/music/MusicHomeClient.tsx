@@ -17,6 +17,7 @@ import { music as m } from "@/lib/musicTheme";
 import type { ProductWithImages } from "@/lib/products";
 import { getProductImages } from "@/lib/products";
 import type { DbArtist } from "@/lib/artists";
+import { magazinePublicPath } from "@/lib/magazine";
 
 export type MusicHomeMagazine = {
   id: string;
@@ -664,19 +665,20 @@ function MagazineMusicStrip({ posts }: { posts: MusicHomeMagazine[] }) {
       <SectionHead
         kicker="04  /  떠돌이말 · 음악"
         title="음악 이야기"
-        href="/magazine/culture"
+        href="/magazine/all?tag=%EC%9D%8C%EC%95%85"
         linkLabel="음악 글 더보기 →"
       />
       {posts.length === 0 ? (
         <p className={`text-sm ${m.muted}`}>
-          show_on_music 으로 표시된 매거진이 아직 없습니다. (상세 딥링크는 C 작업에서 연결)
+          show_on_music 으로 표시된 매거진이 아직 없습니다.
         </p>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.slice(0, 3).map((post) => (
-            <article
+            <Link
               key={post.id}
-              className="flex flex-col overflow-hidden border border-[#3d3d3d] px-2 pb-3.5 pt-2"
+              href={magazinePublicPath(post)}
+              className="flex flex-col overflow-hidden border border-[#3d3d3d] px-2 pb-3.5 pt-2 transition-colors hover:border-[#a8a49b]"
             >
               <div className="relative mb-3 aspect-[16/10] w-full overflow-hidden bg-[#151515]">
                 {post.cover_url ? (
@@ -691,8 +693,7 @@ function MagazineMusicStrip({ posts }: { posts: MusicHomeMagazine[] }) {
               {post.excerpt ? (
                 <p className="mt-2 line-clamp-2 text-[12px] text-[#a8a49b]">{post.excerpt}</p>
               ) : null}
-              <p className="mt-3 text-[10px] text-[#6e6b65]">상세 라우트는 C 매거진 작업에서 연결</p>
-            </article>
+            </Link>
           ))}
         </div>
       )}
