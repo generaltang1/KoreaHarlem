@@ -32,8 +32,8 @@ export const navLinks: NavItem[] = [
   { label: "THINK", href: "/think" },
   {
     label: "MAGAZINE",
+    href: "/magazine",
     children: [
-      { label: "떠돌이말", href: "/magazine" },
       { label: "Culture", href: "/magazine/culture" },
       { label: "News", href: "/magazine/news" },
       { label: "전체 기사", href: "/magazine/all" },

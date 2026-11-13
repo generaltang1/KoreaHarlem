@@ -104,6 +104,7 @@ function DesktopSubMenu({
 
 function DesktopDropdown({
   label,
+  href,
   items,
   open,
   onToggle,
@@ -111,6 +112,7 @@ function DesktopDropdown({
   variant,
 }: {
   label: string;
+  href?: string;
   items: NavItem[];
   open: boolean;
   onToggle: () => void;
@@ -119,6 +121,9 @@ function DesktopDropdown({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const dark = variant === "dark";
+  const triggerCls = dark
+    ? "font-mono text-xs uppercase tracking-wider text-neutral-300 transition-colors hover:text-white"
+    : "text-xs uppercase tracking-widest transition-opacity hover:opacity-60";
 
   useEffect(() => {
     if (!open) return;
@@ -137,20 +142,29 @@ function DesktopDropdown({
   }, [open, onClose]);
 
   return (
-    <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        onClick={onToggle}
-        className={
-          dark
-            ? "font-mono text-xs uppercase tracking-wider text-neutral-300 transition-colors hover:text-white"
-            : "text-xs uppercase tracking-widest transition-opacity hover:opacity-60"
-        }
-        aria-expanded={open}
-        aria-haspopup="menu"
-      >
-        {label}
-      </button>
+    <div
+      ref={rootRef}
+      className="relative"
+      onMouseEnter={() => {
+        if (!open) onToggle();
+      }}
+      onMouseLeave={onClose}
+    >
+      {href ? (
+        <Link href={href} className={triggerCls} aria-expanded={open} aria-haspopup="menu">
+          {label}
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={onToggle}
+          className={triggerCls}
+          aria-expanded={open}
+          aria-haspopup="menu"
+        >
+          {label}
+        </button>
+      )}
       <DesktopSubMenu items={items} open={open} onNavigate={onClose} variant={variant} />
     </div>
   );
@@ -173,15 +187,29 @@ function MobileNavItems({
       {items.map((item) =>
         item.children ? (
           <div key={item.label} className={depth === 0 ? "mb-4" : "mb-2"}>
-            <p
-              className={
-                depth === 0
-                  ? `mb-2 text-[10px] uppercase tracking-widest ${dark ? "text-neutral-500" : "text-muted"}`
-                  : `mb-1 pl-2 text-[10px] uppercase tracking-widest ${dark ? "text-neutral-500" : "text-muted"}`
-              }
-            >
-              {item.label}
-            </p>
+            {item.href ? (
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className={
+                  depth === 0
+                    ? `mb-2 block text-[10px] uppercase tracking-widest ${dark ? "text-neutral-300" : "text-muted"}`
+                    : `mb-1 block pl-2 text-[10px] uppercase tracking-widest ${dark ? "text-neutral-300" : "text-muted"}`
+                }
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <p
+                className={
+                  depth === 0
+                    ? `mb-2 text-[10px] uppercase tracking-widest ${dark ? "text-neutral-500" : "text-muted"}`
+                    : `mb-1 pl-2 text-[10px] uppercase tracking-widest ${dark ? "text-neutral-500" : "text-muted"}`
+                }
+              >
+                {item.label}
+              </p>
+            )}
             <MobileNavItems
               items={item.children}
               depth={depth + 1}
@@ -223,6 +251,7 @@ export function DesktopNavMenu({
           <DesktopDropdown
             key={link.label}
             label={link.label}
+            href={link.href}
             items={link.children}
             open={openLabel === link.label}
             onToggle={() => setOpenLabel((prev) => (prev === link.label ? null : link.label))}
