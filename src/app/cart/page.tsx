@@ -6,7 +6,12 @@ import { useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
-import { useCart, type CartLine } from "@/context/CartContext";
+import {
+  isPhysicalGoodsCartLine,
+  isTicketCartLine,
+  useCart,
+  type CartLine,
+} from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { formatMinorAmount, convertKrwToMinor } from "@/lib/currency";
 import { calcShippingFee } from "@/lib/shipping";
@@ -19,22 +24,113 @@ function lineOptionLabel(item: CartLine) {
   if (item.kind === "digital_album" || item.kind === "digital_track") {
     return item.kind === "digital_album" ? "디지털 앨범 · 1개" : "디지털 음원 · 1개";
   }
+  if (isTicketCartLine(item)) {
+    const opt =
+      item.size && !item.size.startsWith("pkg:")
+        ? item.size
+        : item.title.includes("·")
+          ? item.title.split("·").slice(1).join("·").trim()
+          : "입장권";
+    return `${opt} · ${item.quantity}매`;
+  }
   const sizePart = item.size ? `사이즈 ${item.size}` : "옵션 없음";
   return `${sizePart} · ${item.quantity}개`;
+}
+
+function CartSection({
+  title,
+  items,
+  removeItem,
+  updateQuantity,
+  currency,
+}: {
+  title: string;
+  items: CartLine[];
+  removeItem: (key: string) => void;
+  updateQuantity: (key: string, quantity: number) => void;
+  currency: ReturnType<typeof useCurrency>["currency"];
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-8">
+      <h2 className="mb-3 text-sm font-semibold tracking-wide text-[#FEE500]">{title}</h2>
+      <ul className={`${mp.card} ${mp.divide} divide-y`}>
+        {items.map((item) => {
+          const digital =
+            item.kind === "digital_album" || item.kind === "digital_track";
+          const canQty = !digital;
+          return (
+            <li key={item.key} className="flex gap-4 px-5 py-5">
+              <div className={`${mp.thumb} h-24 w-[72px]`}>
+                {item.imageUrl ? (
+                  <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
+                ) : null}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{item.title}</p>
+                <p className={`mt-1 text-xs ${mp.muted}`}>{lineOptionLabel(item)}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {canQty && (
+                    <div className="inline-flex items-center overflow-hidden rounded-[6px] border border-[rgba(244,241,234,0.12)]">
+                      <button
+                        type="button"
+                        className="h-7 w-7 text-sm"
+                        onClick={() => updateQuantity(item.key, item.quantity - 1)}
+                      >
+                        −
+                      </button>
+                      <span className="w-6 text-center text-xs">{item.quantity}</span>
+                      <button
+                        type="button"
+                        className="h-7 w-7 text-sm"
+                        onClick={() => updateQuantity(item.key, item.quantity + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
+                  <span className="text-sm">
+                    {formatMinorAmount(item.unitPriceMinor * item.quantity, currency)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.key)}
+                    className={`ml-auto text-xs ${mp.tertiary} hover:text-[#f4f1ea]`}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 }
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotalMinor, itemCount } = useCart();
   const { currency, formatKrw } = useCurrency();
 
-  const physicalSubtotalKrw = useMemo(
-    () =>
-      items
-        .filter((i) => (i.kind ?? "product") === "product")
-        .reduce((sum, i) => sum + i.priceKrw * i.quantity, 0),
+  const goodsItems = useMemo(
+    () => items.filter((i) => isPhysicalGoodsCartLine(i)),
     [items],
   );
-  const hasPhysical = physicalSubtotalKrw > 0;
+  const ticketItems = useMemo(() => items.filter((i) => isTicketCartLine(i)), [items]);
+  const digitalItems = useMemo(
+    () =>
+      items.filter(
+        (i) => i.kind === "digital_album" || i.kind === "digital_track",
+      ),
+    [items],
+  );
+
+  const physicalSubtotalKrw = useMemo(
+    () => goodsItems.reduce((sum, i) => sum + i.priceKrw * i.quantity, 0),
+    [goodsItems],
+  );
+  const hasPhysical = goodsItems.length > 0;
   const shippingKrw = hasPhysical
     ? calcShippingFee(physicalSubtotalKrw, DEFAULT_SHIPPING_FEE_KRW, DEFAULT_FREE_THRESHOLD_KRW)
     : 0;
@@ -59,56 +155,27 @@ export default function CartPage() {
             </div>
           ) : (
             <>
-              <ul className={`${mp.card} mt-8 ${mp.divide} divide-y`}>
-                {items.map((item) => {
-                  const digital =
-                    item.kind === "digital_album" || item.kind === "digital_track";
-                  return (
-                    <li key={item.key} className="flex gap-4 px-5 py-5">
-                      <div className={`${mp.thumb} h-24 w-[72px]`}>
-                        {item.imageUrl ? (
-                          <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
-                        ) : null}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{item.title}</p>
-                        <p className={`mt-1 text-xs ${mp.muted}`}>{lineOptionLabel(item)}</p>
-                        <div className="mt-3 flex flex-wrap items-center gap-3">
-                          {!digital && (
-                            <div className="inline-flex items-center overflow-hidden rounded-[6px] border border-[rgba(244,241,234,0.12)]">
-                              <button
-                                type="button"
-                                className="h-7 w-7 text-sm"
-                                onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                              >
-                                −
-                              </button>
-                              <span className="w-6 text-center text-xs">{item.quantity}</span>
-                              <button
-                                type="button"
-                                className="h-7 w-7 text-sm"
-                                onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                              >
-                                +
-                              </button>
-                            </div>
-                          )}
-                          <span className="text-sm">
-                            {formatMinorAmount(item.unitPriceMinor * item.quantity, currency)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removeItem(item.key)}
-                            className={`ml-auto text-xs ${mp.tertiary} hover:text-[#f4f1ea]`}
-                          >
-                            삭제
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              <CartSection
+                title="일반 상품"
+                items={goodsItems}
+                removeItem={removeItem}
+                updateQuantity={updateQuantity}
+                currency={currency}
+              />
+              <CartSection
+                title="티켓"
+                items={ticketItems}
+                removeItem={removeItem}
+                updateQuantity={updateQuantity}
+                currency={currency}
+              />
+              <CartSection
+                title="디지털"
+                items={digitalItems}
+                removeItem={removeItem}
+                updateQuantity={updateQuantity}
+                currency={currency}
+              />
 
               <div className={`${mp.card} mt-6 p-6`}>
                 {hasPhysical && (
@@ -116,6 +183,11 @@ export default function CartPage() {
                     {shippingKrw === 0
                       ? `무료배송 적용 · 배송 상품 ${formatKrw(physicalSubtotalKrw)}`
                       : `무료배송까지 ${formatKrw(DEFAULT_FREE_THRESHOLD_KRW - physicalSubtotalKrw)} · 배송 상품 ${formatKrw(physicalSubtotalKrw)}`}
+                  </p>
+                )}
+                {ticketItems.length > 0 && (
+                  <p className={`mb-4 text-xs ${mp.muted}`}>
+                    티켓은 실물 배송 없이 주문 정보로 입장 확인 · 배송비 없음
                   </p>
                 )}
                 <div className={`flex justify-between text-sm ${mp.muted}`}>

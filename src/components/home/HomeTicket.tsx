@@ -89,9 +89,13 @@ export function HomeTicket({ ticket }: HomeTicketProps) {
                 eventStartsAt={ticket.event_starts_at}
                 eventEndsAt={ticket.event_ends_at}
                 venue={ticket.venue}
+                venueLat={ticket.venue_lat}
+                venueLng={ticket.venue_lng}
+                venueAddress={ticket.venue_address}
                 minorsAllowed={ticket.minors_allowed}
                 lineup={ticket.lineup}
                 rollingLineup
+                showMap={false}
               />
             </div>
             <div className="mt-8 flex flex-col gap-4 border-t border-neutral-800 pt-6 sm:flex-row sm:items-center sm:justify-between">

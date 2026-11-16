@@ -12,7 +12,16 @@ import {
 import { convertKrwToMinor, getCurrency, type CurrencyCode } from "@/lib/currency";
 import { useCurrency } from "@/context/CurrencyContext";
 
-export type CartItemKind = "product" | "digital_album" | "digital_track";
+export type CartItemKind = "product" | "ticket" | "digital_album" | "digital_track";
+
+export function isTicketCartLine(line: { kind?: CartItemKind; size?: string | null }) {
+  return line.kind === "ticket" || Boolean(line.size?.startsWith("pkg:"));
+}
+
+export function isPhysicalGoodsCartLine(line: { kind?: CartItemKind; size?: string | null }) {
+  const kind = line.kind ?? "product";
+  return kind === "product" && !isTicketCartLine(line);
+}
 
 export interface CartLine {
   key: string;
@@ -115,14 +124,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       trackId?: string | null;
     }) => {
       const kind = input.kind ?? "product";
-      const qty = kind === "product" ? (input.quantity ?? 1) : 1;
+      const qty =
+        kind === "product" || kind === "ticket" ? (input.quantity ?? 1) : 1;
       const key = lineKey(input.productId, input.size, kind);
       const unitPriceMinor = convertKrwToMinor(input.priceKrw, currency);
 
       setItems((prev) => {
         const existing = prev.find((item) => item.key === key);
         if (existing) {
-          if (kind !== "product") return prev;
+          if (kind !== "product" && kind !== "ticket") return prev;
           return prev.map((item) =>
             item.key === key
               ? { ...item, quantity: item.quantity + qty }

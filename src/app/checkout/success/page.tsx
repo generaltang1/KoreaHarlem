@@ -110,7 +110,7 @@ function SuccessClient() {
       <div className={`${mp.card} mb-8 p-8 text-center`}>
         <h1 className="text-2xl font-bold">주문이 완료됐어요</h1>
         <p className={`mt-3 text-sm ${mp.muted}`}>
-          실물 상품은 평일 기준 매일 오후 3시 전후 우체국택배로 출고됩니다.
+          결제가 정상적으로 처리됐어요. 배송 내역은 마이페이지에서 확인 부탁드립니다
         </p>
         {order?.orderNumber ? (
           <p className="mt-4 text-sm">

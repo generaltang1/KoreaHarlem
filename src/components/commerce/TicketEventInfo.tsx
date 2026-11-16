@@ -1,14 +1,20 @@
+"use client";
+
+import { NaverMap } from "@/components/maps/NaverMap";
 import { parseTicketLineup, type TicketLineupItem } from "@/lib/ticketMeta";
 
 type TicketEventInfoProps = {
   eventStartsAt?: string | null;
   eventEndsAt?: string | null;
   venue?: string | null;
+  venueLat?: number | null;
+  venueLng?: number | null;
+  venueAddress?: string | null;
   minorsAllowed?: boolean;
   lineup?: unknown;
   className?: string;
-  /** 메인 등에서 물레방아 롤링 UI 사용 */
   rollingLineup?: boolean;
+  showMap?: boolean;
 };
 
 function formatEventRange(start?: string | null, end?: string | null) {
@@ -29,16 +35,33 @@ function formatEventRange(start?: string | null, end?: string | null) {
 }
 
 function LineupRow({ row }: { row: TicketLineupItem }) {
+  const hasArtist = Boolean(row.artist_name?.trim());
   return (
-    <div className="flex items-center justify-between rounded border border-neutral-800/60 bg-neutral-900/60 px-2.5 py-1 font-mono text-xs transition-colors hover:border-neutral-600">
+    <div className="flex items-center gap-3 rounded border border-neutral-800/60 bg-neutral-900/60 px-2.5 py-2 font-mono text-xs transition-colors hover:border-neutral-600">
+      {hasArtist && row.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={row.image_url}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded object-cover"
+        />
+      ) : hasArtist ? (
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-neutral-800 text-[10px] text-neutral-500">
+          {row.artist_name.slice(0, 1)}
+        </div>
+      ) : (
+        <div className="h-10 w-10 shrink-0" />
+      )}
       <span className="w-28 shrink-0 text-[11px] text-neutral-400">{row.time_label}</span>
-      <div className="flex flex-grow items-center gap-2">
+      <div className="flex min-w-0 flex-grow items-center gap-2">
         {row.role ? (
           <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[9px] font-semibold text-neutral-300">
             {row.role}
           </span>
         ) : null}
-        <span className="font-medium text-neutral-200">{row.artist_name}</span>
+        <span className="truncate font-medium text-neutral-200">
+          {hasArtist ? row.artist_name : row.role || "—"}
+        </span>
       </div>
     </div>
   );
@@ -48,51 +71,81 @@ export function TicketEventInfo({
   eventStartsAt,
   eventEndsAt,
   venue,
+  venueLat,
+  venueLng,
+  venueAddress,
   minorsAllowed,
   lineup,
   className = "",
   rollingLineup = false,
+  showMap = true,
 }: TicketEventInfoProps) {
   const rows: TicketLineupItem[] = parseTicketLineup(lineup);
   const when = formatEventRange(eventStartsAt, eventEndsAt);
-  if (!when && !venue && rows.length === 0) return null;
+  const hasCoords =
+    typeof venueLat === "number" &&
+    typeof venueLng === "number" &&
+    Number.isFinite(venueLat) &&
+    Number.isFinite(venueLng);
+  const showEventMeta = Boolean(when || venue || venueAddress || hasCoords);
+  if (!showEventMeta && rows.length === 0) return null;
 
   return (
     <div className={`space-y-4 text-sm ${className}`}>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {when && (
-          <div className="rounded-sm border border-neutral-800 bg-neutral-900/50 p-3.5">
-            <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-neutral-500">
-              날짜 // Date
-            </span>
-            <p className="font-mono text-sm font-bold leading-snug text-white">{when}</p>
-          </div>
-        )}
-        {venue && (
-          <div className="rounded-sm border border-neutral-800 bg-neutral-900/50 p-3.5">
-            <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-neutral-500">
-              장소 // Venue
-            </span>
-            <p className="text-sm font-bold leading-snug text-white">{venue}</p>
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-start gap-3 rounded-sm border border-neutral-700 bg-neutral-900/80 p-3.5 sm:items-center">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-white font-mono text-xs font-black text-black">
-          {minorsAllowed ? "ALL" : "19+"}
-        </div>
-        <div className="space-y-0.5 font-mono">
-          <p className="text-xs font-bold tracking-wide text-white">
-            {minorsAllowed ? "전 연령 관람 가능" : "19세 이상 관람 가능 (미성년자 출입 금지)"}
-          </p>
-          {!minorsAllowed && (
-            <p className="text-[11px] font-normal text-neutral-400">
-              실물 신분증 필참 · 미지참 시 입장·환불 불가
-            </p>
+      {showEventMeta && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {when && (
+            <div className="rounded-sm border border-neutral-800 bg-neutral-900/50 p-3.5">
+              <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-neutral-500">
+                날짜 // Date
+              </span>
+              <p className="font-mono text-sm font-bold leading-snug text-white">{when}</p>
+            </div>
+          )}
+          {(venue || venueAddress) && (
+            <div className="rounded-sm border border-neutral-800 bg-neutral-900/50 p-3.5">
+              <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-neutral-500">
+                장소 // Venue
+              </span>
+              <p className="text-sm font-bold leading-snug text-white">
+                {venue || venueAddress}
+              </p>
+              {venueAddress && venue && venueAddress !== venue ? (
+                <p className="mt-1 text-[11px] text-neutral-500">{venueAddress}</p>
+              ) : null}
+            </div>
           )}
         </div>
-      </div>
+      )}
+
+      {showEventMeta && (
+        <div className="flex items-start gap-3 rounded-sm border border-neutral-700 bg-neutral-900/80 p-3.5 sm:items-center">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-white font-mono text-xs font-black text-black">
+            {minorsAllowed ? "ALL" : "19+"}
+          </div>
+          <div className="space-y-0.5 font-mono">
+            <p className="text-xs font-bold tracking-wide text-white">
+              {minorsAllowed
+                ? "전 연령 관람 가능"
+                : "19세 이상 관람 가능 (미성년자 출입 금지)"}
+            </p>
+            {!minorsAllowed && (
+              <p className="text-[11px] font-normal text-neutral-400">
+                실물 신분증 필참 · 미지참 시 입장·환불 불가
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showMap && hasCoords ? (
+        <div className="space-y-2">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+            장소 · Map
+          </p>
+          <NaverMap lat={venueLat!} lng={venueLng!} />
+        </div>
+      ) : null}
 
       {rows.length > 0 && (
         <div className="space-y-2.5 rounded-sm border border-neutral-800 bg-neutral-900/50 p-4">

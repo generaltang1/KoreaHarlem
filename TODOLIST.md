@@ -6,7 +6,9 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-10-12 (최신):** **Music 홈 + 디지털 음원 판매** — `/music` Stitch 홈(NEW RELEASES 틱커 · COLLECTION 우측 로컬 재생 · ARTISTS 10명 · CD & VINYL 4장) · COLLECTION 재생 시 하단 플레이어 숨김·DJ SET 정지 · 앨범/트랙 Toss 결제 · My Page → My Music MP3/WAV 다운로드 · `add_music_digital_sales.sql` **실행함**. **코드 완료 · 미커밋·미배포**
+> **2026-11-16 (최신):** **B SHOP** — `/sale` 다크·탭·Scatter·+장바구니·재고점 · B-07 다크·사이즈칩·탭·추천 · B-08 티켓 다크·패키지·라인업사진·네이버지도·환불표(멜론문구 제거) · 장바구니 일반/티켓 분리 · F-03 성공 문구 시안 반영 · `add_ticket_map_packages.sql` **실행함** · `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` **로컬·Vercel 등록함**. **코드 완료 · 미커밋·미배포**
+
+> **2026-10-12:** **Music 홈 + 디지털 음원 판매** — `/music` Stitch 홈(NEW RELEASES 틱커 · COLLECTION 우측 로컬 재생 · ARTISTS 10명 · CD & VINYL 4장) · COLLECTION 재생 시 하단 플레이어 숨김·DJ SET 정지 · 앨범/트랙 Toss 결제 · My Page → My Music MP3/WAV 다운로드 · `add_music_digital_sales.sql` **실행함**. **코드 완료 · 미커밋·미배포**
 
 > **2026-09-15:** **메인 Store·히어로 다듬기** — 하단 Store를 `/sale`과 동일 조건(`searchSaleProductsPaged`: 진열함+품절 숨김·사이즈 재고)으로 통일 · Ticket 탭용 티켓 목록 합침 · 히어로 `Thermal Sensor Active` 배지 제거. **코드 완료 · 미커밋·미배포**
 
@@ -46,14 +48,21 @@
 | `add_product_ticket_meta.sql` | 티켓 메타·featured_on_home | **실행함** |
 | `add_think_comments.sql` | THINK 댓글·comment_count | **실행함** |
 | `add_music_digital_sales.sql` | 디지털 앨범/트랙 가격 · WAV/MP3 URL · `order_items` 디지털 라인 · `music_entitlements` | **실행함** |
+| `add_ticket_map_packages.sql` | 티켓 `venue_lat`/`venue_lng`/`venue_address` · `ticket_packages` jsonb · lineup `image_url` | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
 
 > `is_published` / `is_sale` 컬럼은 `add_products.sql` 초기 스키마에 포함. **별도 SQL 불필요.**
 
 ### C. 환경 변수
-`NEXT_PUBLIC_SUPABASE_*` · `SUPABASE_SERVICE_ROLE_KEY` · `TOSS_*` · `YOUTUBE_API_KEY` · 카카오 OAuth  
-Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY` 등록 후 **Redeploy** 필요 (변경만으로는 반영 안 됨).
+`NEXT_PUBLIC_SUPABASE_*` · `SUPABASE_SERVICE_ROLE_KEY` · `TOSS_*` · `YOUTUBE_API_KEY` · 카카오 OAuth · **`NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`**  
+Vercel Production에 `SUPABASE_SERVICE_ROLE_KEY`·`TOSS_*`·`YOUTUBE_API_KEY`·`NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` 등록 후 **Redeploy** 필요 (변경만으로는 반영 안 됨).
+
+**`NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` (B-08 티켓 네이버 지도)**
+- 로컬: `.env.local` · Vercel: Settings → Environment Variables (**Config** 타입 · `NEXT_PUBLIC_` 이므로 Secret 아님)
+- Ncloud Console: **Maps → Application** → Client ID (`ncpKeyId`) · Dynamic Map 사용
+- **Web 서비스 URL** 예: `http://localhost:3000` · `https://korea-harlem.vercel.app` · `https://koreaharlem.com`
+- **홈페이지 URL(도메인) 변경 시:** Ncloud Maps Application → **인증 정보 / 서비스 환경**의 **Web 서비스 URL에 새 도메인을 추가**해야 지도가 로드됨 (미등록 도메인에서는 인증 실패)
 
 **`YOUTUBE_API_KEY` (THINK 유튜브 검색)**
 - 로컬: `.env.local` · Vercel: Settings → Environment Variables
@@ -295,6 +304,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 - [ ] Redirect URLs에 `https://koreaharlem.com/**` 추가
 - [ ] Vercel에 커스텀 도메인 연결
 - [ ] **Google Cloud** `YOUTUBE_API_KEY` → **애플리케이션 제한(HTTP 리퍼러)** 에 새 도메인 추가 (예: `https://koreaharlem.com/*`)
+- [ ] **Ncloud Maps** Application → **Web 서비스 URL**에 새 도메인 추가 (예: `https://koreaharlem.com`) — 티켓 상세/Admin 지도용 `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`
 - [ ] SMTP 연결 후 비밀번호 찾기 메일 재테스트 (Resend Activity 로그 확인)
 
 **참고:** Resend 무료 ~3,000통/월 · Supabase SMTP 설정 자체는 무료 · 저장 후 Password 칸 비어 보임 = 마스킹(정상)

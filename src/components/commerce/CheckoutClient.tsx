@@ -13,8 +13,10 @@ import {
   type RateMap,
 } from "@/lib/currency";
 import { parseAddonsParam } from "@/lib/productDetail";
+import { parseTicketPackages } from "@/lib/ticketMeta";
 import { calcShippingFee } from "@/lib/shipping";
 import { createClient } from "@/lib/supabase/client";
+import { isPhysicalGoodsCartLine } from "@/context/CartContext";
 import {
   buildUnavailableAlertMessage,
   fetchProductAvailability,
@@ -162,57 +164,81 @@ export function CheckoutClient() {
       const images = [...(main.product_images ?? [])].sort(
         (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order,
       );
+      const isTicket = main.category === "ticket";
+      let unitKrw = main.price_krw as number;
+      let lineTitle = main.title as string;
+      let sizeLabel: string | null = buySize;
+      let kind: CartLine["kind"] = isTicket ? "ticket" : "product";
+
+      if (buySize?.startsWith("pkg:")) {
+        const pkg = parseTicketPackages(main.ticket_packages).find(
+          (p) => p.id === buySize.slice(4),
+        );
+        if (pkg) {
+          unitKrw = pkg.price_krw;
+          lineTitle = `${main.title} · ${pkg.name}`;
+          sizeLabel = pkg.name;
+          kind = "ticket";
+        }
+      }
+
       const built: CartLine[] = [
         {
-          key: `${main.id}::${buySize ?? ""}`,
+          key: `${kind}::${main.id}::${buySize ?? ""}`,
           productId: main.id,
-          title: main.title,
+          title: lineTitle,
           imageUrl: images[0]?.url,
-          size: buySize,
+          size: sizeLabel,
           quantity: buyQty,
-          unitPriceMinor: toMinor(main.price_krw),
-          priceKrw: main.price_krw,
+          unitPriceMinor: toMinor(unitKrw),
+          priceKrw: unitKrw,
           currency: currency.code,
           exchangeRate: currency.rateToKrw,
+          kind,
         },
       ];
 
-      let merchandise = main.price_krw * buyQty;
+      let merchandise = unitKrw * buyQty;
 
-      for (const spec of addonSpecs) {
-        const { data: addon } = await supabase
-          .from("products")
-          .select("*, product_images(*)")
-          .eq("id", spec.productId)
-          .eq("is_published", true)
-          .eq("is_sale", true)
-          .maybeSingle();
-        if (!addon) continue;
-        const addonImages = [...(addon.product_images ?? [])].sort(
-          (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order,
-        );
-        built.push({
-          key: `${addon.id}::${spec.size}`,
-          productId: addon.id,
-          title: addon.title,
-          imageUrl: addonImages[0]?.url,
-          size: spec.size || null,
-          quantity: 1,
-          unitPriceMinor: toMinor(addon.price_krw),
-          priceKrw: addon.price_krw,
-          currency: currency.code,
-          exchangeRate: currency.rateToKrw,
-        });
-        merchandise += addon.price_krw;
+      if (!isTicket) {
+        for (const spec of addonSpecs) {
+          const { data: addon } = await supabase
+            .from("products")
+            .select("*, product_images(*)")
+            .eq("id", spec.productId)
+            .eq("is_published", true)
+            .eq("is_sale", true)
+            .maybeSingle();
+          if (!addon) continue;
+          const addonImages = [...(addon.product_images ?? [])].sort(
+            (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order,
+          );
+          built.push({
+            key: `product::${addon.id}::${spec.size}`,
+            productId: addon.id,
+            title: addon.title,
+            imageUrl: addonImages[0]?.url,
+            size: spec.size || null,
+            quantity: 1,
+            unitPriceMinor: toMinor(addon.price_krw),
+            priceKrw: addon.price_krw,
+            currency: currency.code,
+            exchangeRate: currency.rateToKrw,
+            kind: "product",
+          });
+          merchandise += addon.price_krw;
+        }
       }
 
       setBuyLines(built);
       setShippingKrw(
-        calcShippingFee(
-          merchandise,
-          main.shipping_fee_krw ?? 4000,
-          main.free_shipping_threshold_krw,
-        ),
+        isTicket
+          ? 0
+          : calcShippingFee(
+              merchandise,
+              main.shipping_fee_krw ?? 4000,
+              main.free_shipping_threshold_krw,
+            ),
       );
     })();
   }, [buyId, buySize, buyQty, addonsParam, currency.code, currency.rateToKrw, toMinor]);
@@ -224,7 +250,7 @@ export function CheckoutClient() {
   const hasDigital = lines.some(
     (line) => line.kind === "digital_album" || line.kind === "digital_track",
   );
-  const hasPhysical = lines.some((line) => (line.kind ?? "product") === "product");
+  const hasPhysical = lines.some((line) => isPhysicalGoodsCartLine(line));
   const lineProductIds = useMemo(
     () =>
       lines

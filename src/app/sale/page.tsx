@@ -1,22 +1,27 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { ProductCard } from "@/components/commerce/ProductCard";
-import { Pagination } from "@/components/ui/Pagination";
-import { ListToolbar } from "@/components/ui/ListToolbar";
+import { CommerceAtmosphere } from "@/components/mypage/CommerceAtmosphere";
+import { SaleShopClient } from "@/components/commerce/SaleShopClient";
 import { searchSaleProductsPaged } from "@/lib/productSearch";
 import { parseSaleCategoryFilter, salePageTitle } from "@/lib/productCategories";
 import {
   getRange,
   getTotalPages,
-  listParams,
   parsePage,
   parsePageSize,
 } from "@/lib/pagination";
 import { parseSearchQuery } from "@/lib/search";
 
 interface SalePageProps {
-  searchParams: Promise<{ page?: string; size?: string; q?: string; category?: string; sub?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    size?: string;
+    q?: string;
+    category?: string;
+    sub?: string;
+  }>;
 }
 
 export default async function SalePage({ searchParams }: SalePageProps) {
@@ -42,50 +47,24 @@ export default async function SalePage({ searchParams }: SalePageProps) {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-7xl px-4 py-10 pb-24 md:px-6">
-        <ListToolbar
-          searchPlaceholder="상품명 검색"
-          preserveParams={["size", "category", "sub", "q"]}
-        />
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-muted">In Store</p>
-            <h1 className="mt-1 text-2xl font-medium uppercase tracking-wider">{pageTitle}</h1>
-            <p className="mt-2 text-xs text-muted">
-              {q ? `“${q}” 검색 결과 ${count}건` : `총 ${count}건`}
-            </p>
-          </div>
+      <CommerceAtmosphere className="px-4 py-10 pb-24 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <Suspense fallback={null}>
+            <SaleShopClient
+              products={products}
+              count={count}
+              page={page}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              q={q}
+              categoryParam={categoryParam}
+              subParam={subParam}
+              pageTitle={pageTitle}
+              error={error}
+            />
+          </Suspense>
         </div>
-
-        {error ? (
-          <div className="border border-border px-6 py-16 text-center">
-            <p className="text-sm text-muted">
-              {error.includes("category")
-                ? "Supabase에서 `supabase/add_product_category.sql`을 실행해주세요."
-                : "상품 테이블이 아직 없습니다. Supabase에서 `supabase/add_products.sql`을 실행해주세요."}
-            </p>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="flex min-h-[40vh] items-center justify-center">
-            <p className="text-sm text-muted">
-              {q ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          basePath="/sale"
-          params={listParams({ pageSize, q, category: categoryParam, sub: subParam })}
-        />
-      </main>
+      </CommerceAtmosphere>
       <Footer />
     </>
   );

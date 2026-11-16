@@ -5,11 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { MAX_PRODUCT_IMAGES, uploadProductImage } from "@/lib/productImages";
+import { MAX_PRODUCT_IMAGES, uploadLineupImage, uploadProductImage } from "@/lib/productImages";
 import { fetchSizeStockMap, saveProductSizeStocks, syncSizeStockKeys } from "@/lib/productSizeStock";
 import { parseSizeGuide, type SizeGuideData } from "@/lib/sizeGuide";
 import { SizeGuideEditor } from "@/components/admin/SizeGuideEditor";
 import { ProductAddonSelect } from "@/components/admin/ProductAddonSelect";
+import { NaverMap } from "@/components/maps/NaverMap";
 import {
   MERCH_SUBCATEGORIES,
   PRODUCT_CATEGORIES,
@@ -17,7 +18,17 @@ import {
   type ProductMerchSubcategory,
   type ProductStoreCategory,
 } from "@/lib/productCategories";
-import { parseTicketLineup, type TicketLineupItem } from "@/lib/ticketMeta";
+import {
+  newTicketPackageId,
+  parseTicketLineup,
+  parseTicketPackages,
+  type TicketLineupItem,
+  type TicketPackage,
+} from "@/lib/ticketMeta";
+
+/** 이태원 기본 핀 — Admin 지도 초기 좌표 */
+const DEFAULT_VENUE_LAT = 37.5345;
+const DEFAULT_VENUE_LNG = 126.9946;
 
 interface ExistingImage {
   id: string;
@@ -81,11 +92,16 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [eventStartsAt, setEventStartsAt] = useState("");
   const [eventEndsAt, setEventEndsAt] = useState("");
   const [venue, setVenue] = useState("");
+  const [venueAddress, setVenueAddress] = useState("");
+  const [venueLat, setVenueLat] = useState(DEFAULT_VENUE_LAT);
+  const [venueLng, setVenueLng] = useState(DEFAULT_VENUE_LNG);
   const [minorsAllowed, setMinorsAllowed] = useState(false);
   const [featuredOnHome, setFeaturedOnHome] = useState(false);
   const [lineup, setLineup] = useState<TicketLineupItem[]>([
     { time_label: "", role: "", artist_name: "" },
   ]);
+  const [ticketPackages, setTicketPackages] = useState<TicketPackage[]>([]);
+  const [lineupUploading, setLineupUploading] = useState<number | null>(null);
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -197,12 +213,33 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       setEventStartsAt(data.event_starts_at ? String(data.event_starts_at).slice(0, 16) : "");
       setEventEndsAt(data.event_ends_at ? String(data.event_ends_at).slice(0, 16) : "");
       setVenue(data.venue ?? "");
+      setVenueAddress(data.venue_address ?? "");
+      setVenueLat(
+        typeof data.venue_lat === "number" && Number.isFinite(data.venue_lat)
+          ? data.venue_lat
+          : DEFAULT_VENUE_LAT,
+      );
+      setVenueLng(
+        typeof data.venue_lng === "number" && Number.isFinite(data.venue_lng)
+          ? data.venue_lng
+          : DEFAULT_VENUE_LNG,
+      );
       setMinorsAllowed(Boolean(data.minors_allowed));
       setFeaturedOnHome(Boolean(data.featured_on_home));
       {
         const rows = parseTicketLineup(data.lineup);
-        setLineup(rows.length > 0 ? rows.map((r) => ({ time_label: r.time_label, role: r.role ?? "", artist_name: r.artist_name })) : [{ time_label: "", role: "", artist_name: "" }]);
+        setLineup(
+          rows.length > 0
+            ? rows.map((r) => ({
+                time_label: r.time_label,
+                role: r.role ?? "",
+                artist_name: r.artist_name,
+                ...(r.image_url ? { image_url: r.image_url } : {}),
+              }))
+            : [{ time_label: "", role: "", artist_name: "" }],
+        );
       }
+      setTicketPackages(parseTicketPackages(data.ticket_packages));
       setExistingImages(
         [...(data.product_images ?? [])].sort(
           (a: ExistingImage, b: ExistingImage) => a.sort_order - b.sort_order,
@@ -308,15 +345,31 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         payload.event_starts_at = eventStartsAt ? new Date(eventStartsAt).toISOString() : null;
         payload.event_ends_at = eventEndsAt ? new Date(eventEndsAt).toISOString() : null;
         payload.venue = venue.trim() || null;
+        payload.venue_address = venueAddress.trim();
+        payload.venue_lat = venueLat;
+        payload.venue_lng = venueLng;
         payload.minors_allowed = minorsAllowed;
         payload.featured_on_home = featuredOnHome;
         payload.lineup = lineup
-          .map((row) => ({
-            time_label: row.time_label.trim(),
-            role: (row.role ?? "").trim() || undefined,
-            artist_name: row.artist_name.trim(),
+          .map((row) => {
+            const artist_name = row.artist_name.trim();
+            const image_url = artist_name ? (row.image_url ?? "").trim() : "";
+            return {
+              time_label: row.time_label.trim(),
+              role: (row.role ?? "").trim() || undefined,
+              artist_name,
+              ...(image_url ? { image_url } : {}),
+            };
+          })
+          .filter((row) => row.time_label || row.artist_name || (row.role ?? "").trim());
+        payload.ticket_packages = ticketPackages
+          .map((pkg) => ({
+            id: pkg.id || newTicketPackageId(),
+            name: pkg.name.trim(),
+            price_krw: Math.round(Number(pkg.price_krw)) || 0,
+            ...(pkg.description?.trim() ? { description: pkg.description.trim() } : {}),
           }))
-          .filter((row) => row.time_label || row.artist_name);
+          .filter((pkg) => pkg.name);
       } else {
         payload.featured_on_home = false;
       }
@@ -512,14 +565,40 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             </label>
           </div>
           <label className="block text-xs">
-            장소
+            장소명
             <input
               value={venue}
               onChange={(e) => setVenue(e.target.value)}
               className="mt-1 w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
-              placeholder="예: THE GRAY SEOUL"
+              placeholder="예: 이태원 / THE GRAY SEOUL"
             />
           </label>
+          <label className="block text-xs">
+            상세 주소 (지도 표시용)
+            <input
+              value={venueAddress}
+              onChange={(e) => setVenueAddress(e.target.value)}
+              className="mt-1 w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+              placeholder="서울 용산구 …"
+            />
+          </label>
+          <div>
+            <p className="mb-2 text-[10px] uppercase tracking-widest text-muted">
+              네이버 지도 핀
+            </p>
+            <p className="mb-2 text-[11px] text-muted">
+              lat {venueLat.toFixed(6)} · lng {venueLng.toFixed(6)}
+            </p>
+            <NaverMap
+              lat={venueLat}
+              lng={venueLng}
+              interactive
+              onChange={(pos) => {
+                setVenueLat(pos.lat);
+                setVenueLng(pos.lng);
+              }}
+            />
+          </div>
           <label className="flex items-center gap-2 text-xs">
             <input
               type="checkbox"
@@ -536,40 +615,199 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             />
             메인 홈 티켓 섹션에 노출 (한 개만 권장)
           </label>
+
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[10px] uppercase tracking-widest text-muted">Line-up &amp; Time Table</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted">
+                Ticket packages
+              </p>
               <button
                 type="button"
                 onClick={() =>
-                  setLineup((prev) => [...prev, { time_label: "", role: "", artist_name: "" }])
+                  setTicketPackages((prev) => [
+                    ...prev,
+                    { id: newTicketPackageId(), name: "", price_krw: 0, description: "" },
+                  ])
+                }
+                className="text-[10px] uppercase tracking-widest hover:underline"
+              >
+                + 패키지 추가
+              </button>
+            </div>
+            <p className="mb-2 text-[11px] text-muted">
+              비우면 상품 판매가 단일 가격으로 예매됩니다.
+            </p>
+            <div className="space-y-2">
+              {ticketPackages.map((pkg, i) => (
+                <div key={pkg.id} className="grid gap-2 sm:grid-cols-[1.4fr_1fr_1.4fr_auto]">
+                  <input
+                    value={pkg.name}
+                    onChange={(e) =>
+                      setTicketPackages((prev) =>
+                        prev.map((p, idx) =>
+                          idx === i ? { ...p, name: e.target.value } : p,
+                        ),
+                      )
+                    }
+                    placeholder="패키지명 (예: 루프탑 패키지)"
+                    className="border border-border px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    value={pkg.price_krw || ""}
+                    onChange={(e) =>
+                      setTicketPackages((prev) =>
+                        prev.map((p, idx) =>
+                          idx === i
+                            ? { ...p, price_krw: Number.parseInt(e.target.value, 10) || 0 }
+                            : p,
+                        ),
+                      )
+                    }
+                    placeholder="가격 KRW"
+                    className="border border-border px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={pkg.description ?? ""}
+                    onChange={(e) =>
+                      setTicketPackages((prev) =>
+                        prev.map((p, idx) =>
+                          idx === i ? { ...p, description: e.target.value } : p,
+                        ),
+                      )
+                    }
+                    placeholder="구성 설명 (선택)"
+                    className="border border-border px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTicketPackages((prev) => prev.filter((_, idx) => idx !== i))
+                    }
+                    className="text-xs text-muted hover:text-foreground"
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[10px] uppercase tracking-widest text-muted">
+                Line-up &amp; Time Table
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setLineup((prev) => [
+                    ...prev,
+                    { time_label: "", role: "", artist_name: "" },
+                  ])
                 }
                 className="text-[10px] uppercase tracking-widest hover:underline"
               >
                 + 행 추가
               </button>
             </div>
-            <div className="space-y-2">
+            <p className="mb-2 text-[11px] text-muted">
+              쉬는 시간 등은 시간·역할만 넣고 아티스트명을 비우면 됩니다. 사진은 아티스트명이 있을
+              때만 공개면에 표시됩니다.
+            </p>
+            <div className="space-y-3">
               {lineup.map((row, i) => (
-                <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_1.5fr_auto]">
+                <div
+                  key={i}
+                  className="grid gap-2 border border-border p-3 sm:grid-cols-[72px_1fr_1fr_1.4fr_auto]"
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    {row.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={row.image_url}
+                        alt=""
+                        className="h-14 w-14 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded bg-neutral-100 text-[9px] text-muted">
+                        PHOTO
+                      </div>
+                    )}
+                    <label className="cursor-pointer text-[10px] uppercase tracking-wider text-muted hover:underline">
+                      {lineupUploading === i ? "…" : "업로드"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={lineupUploading !== null}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = "";
+                          if (!file) return;
+                          setLineupUploading(i);
+                          setError("");
+                          try {
+                            const key =
+                              productId ??
+                              `draft-lineup-${Date.now().toString(36)}`;
+                            const url = await uploadLineupImage(supabase, key, file);
+                            setLineup((prev) =>
+                              prev.map((r, idx) =>
+                                idx === i ? { ...r, image_url: url } : r,
+                              ),
+                            );
+                          } catch (err) {
+                            setError(
+                              err instanceof Error
+                                ? err.message
+                                : "라인업 사진 업로드 실패",
+                            );
+                          } finally {
+                            setLineupUploading(null);
+                          }
+                        }}
+                      />
+                    </label>
+                    {row.image_url ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLineup((prev) =>
+                            prev.map((r, idx) =>
+                              idx === i ? { ...r, image_url: undefined } : r,
+                            ),
+                          )
+                        }
+                        className="text-[10px] text-muted hover:text-foreground"
+                      >
+                        사진 삭제
+                      </button>
+                    ) : null}
+                  </div>
                   <input
                     value={row.time_label}
                     onChange={(e) =>
                       setLineup((prev) =>
-                        prev.map((r, idx) => (idx === i ? { ...r, time_label: e.target.value } : r)),
+                        prev.map((r, idx) =>
+                          idx === i ? { ...r, time_label: e.target.value } : r,
+                        ),
                       )
                     }
-                    placeholder="22:00 - 23:30"
+                    placeholder="19:00 - 20:00"
                     className="border border-border px-3 py-2 text-sm"
                   />
                   <input
                     value={row.role ?? ""}
                     onChange={(e) =>
                       setLineup((prev) =>
-                        prev.map((r, idx) => (idx === i ? { ...r, role: e.target.value } : r)),
+                        prev.map((r, idx) =>
+                          idx === i ? { ...r, role: e.target.value } : r,
+                        ),
                       )
                     }
-                    placeholder="역할 (DJ SET 등)"
+                    placeholder="공연 / 쉬는시간"
                     className="border border-border px-3 py-2 text-sm"
                   />
                   <input
@@ -581,7 +819,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                         ),
                       )
                     }
-                    placeholder="아티스트명"
+                    placeholder="아티스트명 (쉬는시간은 비움)"
                     className="border border-border px-3 py-2 text-sm"
                   />
                   <button

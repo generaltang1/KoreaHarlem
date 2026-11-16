@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProductMerchSubcategory, ProductStoreCategory } from "@/lib/productCategories";
 import type { ProductWithImages } from "@/lib/products";
-import { isSoldOut } from "@/lib/products";
 import { fetchSizeStockMaps } from "@/lib/productSizeStock";
 import { toIlikePattern } from "@/lib/search";
 
@@ -73,8 +72,7 @@ export async function searchProductsPaged(
 
 /**
  * Public In Store listing —
- * 진열함(is_published) + 품절 아님.
- * products.stock 과 product_size_stock 이 어긋나도 사이즈 재고를 기준으로 판정.
+ * 진열함(is_published). 품절 상품도 목록에 표시(사이즈 재고 맵 첨부).
  */
 export async function searchSaleProductsPaged(
   supabase: SupabaseClient,
@@ -88,9 +86,10 @@ export async function searchSaleProductsPaged(
 ): Promise<{ data: ProductWithImages[]; count: number; error: string | null }> {
   let query = supabase
     .from("products")
-    .select("*, product_images(*)")
+    .select("*, product_images(*)", { count: "exact" })
     .eq("is_published", true)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(options.from, options.to);
 
   if (options.category) {
     query = query.eq("category", options.category);
@@ -105,9 +104,7 @@ export async function searchSaleProductsPaged(
     query = query.ilike("title", pattern);
   }
 
-  // 페이지네이션 전에 품절을 걸러야 하므로 여유 있게 가져온 뒤 슬라이스
-  const fetchLimit = Math.max(options.to + 1, 200);
-  const { data, error } = await query.limit(fetchLimit);
+  const { data, error, count } = await query;
 
   if (error) {
     return { data: [], count: 0, error: error.message };
@@ -119,20 +116,14 @@ export async function searchSaleProductsPaged(
     rows.map((p) => p.id),
   );
 
-  const available = rows.filter((product) => {
-    const sizeStocks = stockMaps.get(product.id);
-    // size stock 행이 있으면 그 기준, 없으면 products.stock
-    if (sizeStocks && Object.keys(sizeStocks).length > 0) {
-      return !isSoldOut({ ...product, sizeStocks });
-    }
-    return (product.stock ?? 0) > 0;
-  });
-
-  const page = available.slice(options.from, options.to + 1);
+  const page = rows.map((product) => ({
+    ...product,
+    sizeStocks: stockMaps.get(product.id) ?? {},
+  }));
 
   return {
     data: page,
-    count: available.length,
+    count: count ?? page.length,
     error: null,
   };
 }

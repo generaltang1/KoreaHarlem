@@ -3,7 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo } from "react";
-import { useCart, type CartLine } from "@/context/CartContext";
+import {
+  isPhysicalGoodsCartLine,
+  isTicketCartLine,
+  useCart,
+  type CartLine,
+} from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import { formatMinorAmount, convertKrwToMinor } from "@/lib/currency";
 import { isProductPurchasable } from "@/lib/cartAvailability";
@@ -17,12 +22,16 @@ const DEFAULT_FREE_THRESHOLD_KRW = 50000;
 function lineCategoryLabel(item: CartLine) {
   if (item.kind === "digital_album") return "디지털 앨범";
   if (item.kind === "digital_track") return "디지털 음원";
+  if (isTicketCartLine(item)) return "티켓";
   return "상품";
 }
 
 function lineOptionLabel(item: CartLine) {
   if (item.kind === "digital_album" || item.kind === "digital_track") {
     return item.kind === "digital_album" ? "디지털 앨범 · 1개" : "디지털 음원 · 1개";
+  }
+  if (isTicketCartLine(item)) {
+    return `${item.quantity}매`;
   }
   const sizePart = item.size ? `사이즈 ${item.size}` : "옵션 없음";
   return `${sizePart} · ${item.quantity}개`;
@@ -41,7 +50,10 @@ export function CartDrawer() {
   const { currency, formatKrw } = useCurrency();
 
   const productIds = useMemo(
-    () => items.filter((item) => (item.kind ?? "product") === "product").map((item) => item.productId),
+    () =>
+      items
+        .filter((item) => isPhysicalGoodsCartLine(item) || isTicketCartLine(item))
+        .map((item) => item.productId),
     [items],
   );
   const { availability, loading: availabilityLoading } = useCartProductAvailability(productIds, isOpen);
@@ -49,7 +61,7 @@ export function CartDrawer() {
   const physicalSubtotalKrw = useMemo(
     () =>
       items
-        .filter((i) => (i.kind ?? "product") === "product")
+        .filter((i) => isPhysicalGoodsCartLine(i))
         .reduce((sum, i) => sum + i.priceKrw * i.quantity, 0),
     [items],
   );
