@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-11-27 (최신):** MIXTAPE 앨범유형 (`9130342`) **배포됨** · SQL `add_album_type_mixtape.sql` **실행 필요**. 다음: A 홈. (상세는 `디자인작업완료.md`)
+> **2026-11-27 (최신):** MIXTAPE 앨범유형 (`9130342`) **배포·SQL 실행 완료**. 다음: A 홈. (상세는 `디자인작업완료.md`)
 
 > **2026-11-16:** **B SHOP** — `/sale` 다크·탭·Scatter·+장바구니·재고점 · B-07 다크·사이즈칩·탭·추천 · B-08 티켓 다크·패키지·라인업사진·네이버지도·환불표(멜론문구 제거) · 장바구니 일반/티켓 분리 · F-03 성공 문구 시안 반영 · `add_ticket_map_packages.sql` **실행함** · `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` **로컬·Vercel 등록함**. **코드 완료 · 미커밋·미배포**
 
@@ -51,7 +51,7 @@
 | `add_think_comments.sql` | THINK 댓글·comment_count | **실행함** |
 | `add_music_digital_sales.sql` | 디지털 앨범/트랙 가격 · WAV/MP3 URL · `order_items` 디지털 라인 · `music_entitlements` | **실행함** |
 | `add_music_download_flac.sql` | `album_tracks.download_flac_url` | **실행함** |
-| `add_album_type_mixtape.sql` | `albums.album_type`에 `mixtape` | **실행 필요** |
+| `add_album_type_mixtape.sql` | `albums.album_type`에 `mixtape` | **실행함** |
 | `add_ticket_map_packages.sql` | 티켓 `venue_lat`/`venue_lng`/`venue_address` · `ticket_packages` jsonb · lineup `image_url` | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
