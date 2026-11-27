@@ -12,6 +12,7 @@ import {
   type AlbumType,
 } from "@/lib/albumPublish";
 import { writeAdminAudit } from "@/lib/adminAudit";
+import { AdminAlbumEDeepPanels } from "@/components/admin/AdminAlbumEDeepPanels";
 import { createClient } from "@/lib/supabase/client";
 import { loadDurationFromFile, loadDurationFromUrl } from "@/lib/audioDuration";
 import { buildCroppedCover } from "@/lib/image/cropCover";
@@ -652,8 +653,11 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
               {row.download_wav_url && !row.wavFile && (
                 <p className="text-xs text-muted">WAV가 등록되어 있습니다. 교체 시에만 선택하세요.</p>
               )}
+              <label className="block text-[10px] uppercase tracking-widest text-muted">
+                가사 · 곡 설명 (공개 앨범 상세「가사」패널)
+              </label>
               <textarea
-                placeholder="곡 설명 (선택)"
+                placeholder="가사 또는 곡 설명을 입력하세요 (선택)"
                 value={row.description}
                 onChange={(e) => updateTrack(row.key, { description: e.target.value })}
                 rows={8}
@@ -662,6 +666,8 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
             </div>
           ))}
         </div>
+
+        <AdminAlbumEDeepPanels albumId={albumId} />
 
         {error && <p className="text-xs text-rose-500">{error}</p>}
 

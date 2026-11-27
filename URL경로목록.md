@@ -1,9 +1,11 @@
 # KoreaHarlem URL 경로 목록
 
 **기준:** `src/app/**/page.tsx` · `route.ts` (2026-11-27)  
-**정리:** Figma 시안 모듈(A~N)에 맞춰 분류. 시안에 없는 코드 전용·리다이렉트도 포함.
+**정리:** 시안 A~N 라벨로만 **묶음** — 경로는 **코드 실제 라우트** (시안 URL이 아님).
 
-관련 문서: [`전체시안분석.md`](./전체시안분석.md) · [`디자인작업완료.md`](./디자인작업완료.md)
+관련 문서: [`디자인작업완료.md`](./디자인작업완료.md) (핸드오프·잔여) · [`전체시안분석.md`](./전체시안분석.md)
+
+> **2026-11-27:** `/admin/music/supporters` (E-09) 추가. 「포함된 플레이리스트」전용 공개 URL은 없음(기능 제외).
 
 ---
 
@@ -113,6 +115,7 @@
 | `/admin/music` | 음반 목록 |
 | `/admin/music/new` | 음반 등록 |
 | `/admin/music/[id]/edit` | 음반 수정 |
+| `/admin/music/supporters` | Supported by (E-09) |
 | `/admin/dj-set` | DJ SET 설정 |
 | `/admin/products` | 상품 목록 |
 | `/admin/products/new` | 상품 등록 |
@@ -218,6 +221,7 @@
 | 경로 |
 |------|
 | `/api/admin/dj-set/settings` |
+| `/api/admin/music/albums/[id]/supporters` | Supported by (E-09) |
 | `/api/admin/magazine` |
 | `/api/admin/magazine/[id]` |
 | `/api/admin/members` |

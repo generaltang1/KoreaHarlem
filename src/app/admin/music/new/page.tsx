@@ -519,12 +519,13 @@ export default function NewAlbumPage() {
                 onChange={(e) => updateTrack(row.key, { wavFile: e.target.files?.[0] ?? null })}
                 className={admin.input}
               />
+              <label className={admin.label}>가사 · 곡 설명 (공개「가사」패널)</label>
               <textarea
-                placeholder="곡 설명 (선택)"
+                placeholder="가사 또는 곡 설명을 입력하세요 (선택)"
                 value={row.description}
                 onChange={(e) => updateTrack(row.key, { description: e.target.value })}
-                rows={4}
-                className={`${admin.input} min-h-[120px] resize-y`}
+                rows={6}
+                className={`${admin.input} min-h-[160px] resize-y`}
               />
             </div>
           ))}

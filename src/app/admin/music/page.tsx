@@ -119,8 +119,18 @@ export default async function AdminMusicPage({ searchParams }: AdminMusicPagePro
     <div>
       <AdminPageHeader
         title="음악 관리"
-        description="앨범 · 공개 상태 · 재생/다운로드"
-        actions={<AdminPrimaryButton href="/admin/music/new">+ 새 앨범 등록</AdminPrimaryButton>}
+        description="앨범 · 공개 상태 · 재생/다운로드 · Supported by"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/music/supporters"
+              className="border border-border px-3 py-2 text-[10px] uppercase tracking-widest text-muted hover:border-foreground hover:text-foreground"
+            >
+              Supported by
+            </Link>
+            <AdminPrimaryButton href="/admin/music/new">+ 새 앨범 등록</AdminPrimaryButton>
+          </div>
+        }
       />
 
       <AdminKpiRow

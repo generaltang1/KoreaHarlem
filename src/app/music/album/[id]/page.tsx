@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AlbumDetailClient } from "@/components/music/AlbumDetailClient";
 import type { AlbumWithTracks } from "@/lib/albums";
 import { getAlbumArtistName } from "@/lib/albums";
+import { fetchPublicAlbumSupporters } from "@/lib/musicSupporters";
 import { searchSaleProductsPaged } from "@/lib/productSearch";
 
 interface PageProps {
@@ -67,6 +68,8 @@ export default async function AlbumDetailPage({ params }: PageProps) {
     to: 3,
   });
 
+  const supporters = await fetchPublicAlbumSupporters(supabase, id);
+
   return (
     <>
       <Header />
@@ -75,6 +78,7 @@ export default async function AlbumDetailPage({ params }: PageProps) {
           album={albumData}
           relatedAlbums={relatedAlbums}
           relatedMerch={merch.data}
+          supporters={supporters}
         />
       </main>
       <Footer />

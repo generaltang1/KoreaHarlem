@@ -9,6 +9,8 @@ import { useTrackDurations } from "@/hooks/useTrackDurations";
 import type { AlbumWithTracks } from "@/lib/albums";
 import { getAlbumArtistName, isPricedForSale, mapAlbumToPlayerTracks } from "@/lib/albums";
 import { formatKrwPrice } from "@/lib/musicCatalog";
+import type { AlbumSupporterPublic } from "@/lib/musicSupporters";
+import { supporterInitials } from "@/lib/musicSupporters";
 import { music } from "@/lib/musicTheme";
 import type { ProductWithImages } from "@/lib/products";
 import { getProductImages } from "@/lib/products";
@@ -24,6 +26,7 @@ interface AlbumDetailClientProps {
   album: AlbumWithTracks;
   relatedAlbums?: RelatedAlbum[];
   relatedMerch?: ProductWithImages[];
+  supporters?: AlbumSupporterPublic[];
 }
 
 function formatDuration(sec?: number | null) {
@@ -37,13 +40,13 @@ type DigitalFmt = "mp3" | "wav" | "flac";
 
 /**
  * E-04 — Figma `136:470` 앨범 상세.
- * LP/카세트·Supported by·Playlist·코멘트는 시안 레이아웃 유지 · 데이터 없는 항목은 대기 표기.
- * 재생 = 하단 I-06 MusicPlayer.
+ * 재생 = 하단 I-06 MusicPlayer. LP/카세트 SKU는 정책 대기.
  */
 export function AlbumDetailClient({
   album,
   relatedAlbums = [],
   relatedMerch = [],
+  supporters = [],
 }: AlbumDetailClientProps) {
   const { addItem } = useCart();
   const { currentTrack, isPlaying, playQueue, play, pause } = usePlayer();
@@ -423,21 +426,6 @@ export function AlbumDetailClient({
           </p>
         </section>
 
-        {/* Playlist — 모델 대기 */}
-        <section>
-          <div className="mb-4 flex items-end gap-3">
-            <div>
-              <p className="font-mono text-[11px] tracking-[1.4px] text-[#FBC201]">
-                PLAYLIST · 플레이리스트
-              </p>
-              <h2 className="mt-1 text-[22px] font-black tracking-[-0.4px]">포함된 플레이리스트</h2>
-            </div>
-          </div>
-          <p className="rounded-[10px] border border-[#262626] bg-[#151515] px-4 py-6 text-[13px] text-[#6e6b65]">
-            플레이리스트 모델 연동 대기 — 시안 섹션 자리입니다.
-          </p>
-        </section>
-
         {/* Supported by */}
         <section>
           <div className="mb-4">
@@ -445,20 +433,50 @@ export function AlbumDetailClient({
             <h2 className="mt-1 text-[22px] font-black tracking-[-0.4px]">Supported by</h2>
           </div>
           <p className="text-[12px] text-[#a8a49b]">
-            구매할 때 &quot;Supported by에 닉네임 공개&quot;를 체크한 사람만 보여요. (E-09 연동 대기)
+            닉네임 공개에 동의한 서포터만 보여요.
           </p>
-          <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#262626] bg-[#151515] text-[10px] text-[#6e6b65]"
-              >
-                —
+          {supporters.length === 0 ? (
+            <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#262626] bg-[#151515] text-[10px] text-[#6e6b65]"
+                >
+                  —
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+                {supporters.map((s) => (
+                  <div
+                    key={s.id}
+                    title={s.display_name}
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#3d3d3d] bg-[#151515] font-mono text-[11px] font-bold text-[#FBC201]"
+                  >
+                    {supporterInitials(s.display_name)}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+              <ul className="mt-5 space-y-2">
+                {supporters
+                  .filter((s) => s.comment?.trim())
+                  .slice(0, 8)
+                  .map((s) => (
+                    <li
+                      key={`${s.id}-c`}
+                      className="rounded-[8px] border border-[#262626] bg-[#151515] px-3 py-2.5 text-[13px]"
+                    >
+                      <span className="font-medium text-[#FBC201]">{s.display_name}</span>
+                      <span className="mt-1 block text-[#a8a49b]">{s.comment}</span>
+                    </li>
+                  ))}
+              </ul>
+            </>
+          )}
           <p className="mt-6 text-[11px] text-[#6e6b65]">
-            ※ 구매한 사람만 한 줄 코멘트를 남길 수 있어요 (200자) · 코멘트 UI는 Supported by 연동 후
+            ※ 한 줄 코멘트는 200자 · 구매 시 공개 체크 연동은 추후
           </p>
         </section>
 

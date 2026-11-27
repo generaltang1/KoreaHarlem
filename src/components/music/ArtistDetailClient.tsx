@@ -260,7 +260,6 @@ export function ArtistDetailClient({
     return out.slice(0, 4);
   }, [sortedAlbums, artist.name]);
 
-  const playlists = useMemo(() => albums.filter((a) => a.album_type === "playlist"), [albums]);
   const visibleAlbums = useMemo(
     () => sortedAlbums.filter((a) => matchesTab(a.album_type, tab)),
     [sortedAlbums, tab],
@@ -553,51 +552,6 @@ export function ArtistDetailClient({
                 </>
               )}
             </div>
-          </section>
-
-          {/* Playlists */}
-          <section className="flex flex-col gap-4">
-            <SectionHead
-              kickerNode={<p className={kicker}>PLAYLISTS · 이 아티스트가 들어간 플레이리스트</p>}
-              title="포함된 플레이리스트"
-            />
-            {playlists.length === 0 ? (
-              <p className="text-sm text-[#6e6b65]">포함된 플레이리스트가 없습니다.</p>
-            ) : (
-              <div className="grid gap-5 sm:grid-cols-2">
-                {playlists.slice(0, 2).map((pl) => {
-                  const q = albumQueue(pl);
-                  const minutes = Math.round(
-                    pl.album_tracks.reduce((sum, t) => sum + (t.duration ?? 0), 0) / 60,
-                  );
-                  return (
-                    <button
-                      key={pl.id}
-                      type="button"
-                      onClick={() => playAlbum(pl)}
-                      disabled={q.length === 0}
-                      className="flex min-w-0 items-center gap-[14px] rounded-[12px] border border-[#262626] bg-[#151515] p-[14px] text-left transition-colors hover:border-[#3d3d3d] disabled:opacity-60"
-                    >
-                      <span className="relative size-[72px] shrink-0 overflow-hidden rounded-[6px] bg-[#0a0a0a]">
-                        {pl.cover_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={pl.cover_url} alt="" className="h-full w-full object-cover" />
-                        ) : null}
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col gap-1">
-                        <span className={`truncate text-[14px] font-bold text-[#f4f1ea] ${display}`}>{pl.title}</span>
-                        <span className={`${mono} text-[10px] font-medium text-[#6e6b65]`}>
-                          {pl.album_tracks.length} TRACKS · {minutes} MIN
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-[#f4f1ea]">
-                        <PlayIcon />
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </section>
 
           {/* Magazine */}
