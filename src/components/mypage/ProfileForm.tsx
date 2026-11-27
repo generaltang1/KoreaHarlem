@@ -183,7 +183,13 @@ export function ProfileForm({ initial }: { initial: ProfileFormInitial }) {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
+                maxLength={16}
               />
+              <p className={`mt-1.5 text-xs leading-relaxed ${mp.yellow}`}>
+                8~16자의 영문 대소문자, 숫자, 특수문자만 가능합니다.
+                <br />
+                {`(사용 가능한 특수문자 32자: ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \\ ] ^ _ \` { | } ~)`}
+              </p>
             </div>
             <div>
               <label className={mp.label}>새 비밀번호 확인</label>
@@ -193,8 +199,8 @@ export function ProfileForm({ initial }: { initial: ProfileFormInitial }) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
+                maxLength={16}
               />
-              <p className={`mt-1.5 text-xs ${mp.muted}`}>영문·숫자 포함 8자 이상</p>
             </div>
           </div>
         )}

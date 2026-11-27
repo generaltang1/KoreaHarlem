@@ -81,6 +81,13 @@ export function AlbumDetailClient({
   const isAlbumQueueActive =
     currentTrack?.albumId === album.id && playerTracks.some((t) => t.id === currentTrack.id);
 
+  const lyricsTrack = useMemo(() => {
+    if (isAlbumQueueActive && currentTrack) {
+      return sortedTracks.find((t) => t.id === currentTrack.id) ?? null;
+    }
+    return sortedTracks.find((t) => t.is_title_track) ?? sortedTracks[0] ?? null;
+  }, [isAlbumQueueActive, currentTrack, sortedTracks]);
+
   const addDigital = () => {
     if (!priced) return;
     addItem({
@@ -347,7 +354,7 @@ export function AlbumDetailClient({
         {/* Tracklist */}
         <section>
           <div className="flex items-center gap-3 py-1.5">
-            <h2 className="text-[15px] font-bold">디지털 트랙리스트</h2>
+            <h2 className="text-[15px] font-bold">트랙리스트</h2>
             <span className="h-px flex-1 bg-[#3d3d3d]" />
             <span className="text-[11px] font-medium text-[#6e6b65]">
               {sortedTracks.length}곡 · {formatDuration(totalSec)} · 스트리밍 무료
@@ -394,6 +401,26 @@ export function AlbumDetailClient({
               </div>
             );
           })}
+        </section>
+
+        {/* Lyrics — 시안 자리 · track.description 있으면 표시 */}
+        <section className="rounded-[10px] border border-[#262626] bg-[#151515] p-4 sm:p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-[15px] font-bold">가사</h2>
+            {lyricsTrack && isAlbumQueueActive && currentTrack?.id === lyricsTrack.id ? (
+              <span className="rounded-[4px] bg-[#FBC201] px-1.5 py-0.5 font-mono text-[9px] font-bold text-[#0a0a0a]">
+                NOW PLAYING
+              </span>
+            ) : null}
+            {lyricsTrack ? (
+              <span className="text-[12px] text-[#a8a49b]">{lyricsTrack.title}</span>
+            ) : null}
+          </div>
+          <p className="mt-3 whitespace-pre-wrap text-[13px] leading-[22px] text-[#a8a49b]">
+            {lyricsTrack?.description?.trim()
+              ? lyricsTrack.description
+              : "가사가 이곳에 표시됩니다. 재생 중인 곡의 가사를 확인할 수 있습니다."}
+          </p>
         </section>
 
         {/* Playlist — 모델 대기 */}

@@ -117,9 +117,18 @@ export async function PATCH(request: Request) {
       if (!body.currentPassword?.trim()) {
         return NextResponse.json({ message: "현재 비밀번호를 입력해 주세요." }, { status: 400 });
       }
-      if (body.newPassword.length < 8 || !/[A-Za-z]/.test(body.newPassword) || !/\d/.test(body.newPassword)) {
+      const pw = body.newPassword;
+      const allowed =
+        /^[A-Za-z0-9!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]{8,16}$/.test(pw) &&
+        /[A-Za-z]/.test(pw) &&
+        /\d/.test(pw) &&
+        /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/.test(pw);
+      if (!allowed) {
         return NextResponse.json(
-          { message: "새 비밀번호는 영문·숫자를 포함한 8자 이상이어야 합니다." },
+          {
+            message:
+              "새 비밀번호는 8~16자, 영문·숫자·특수문자를 포함해야 합니다.",
+          },
           { status: 400 },
         );
       }

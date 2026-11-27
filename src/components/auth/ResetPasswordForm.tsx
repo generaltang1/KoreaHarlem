@@ -29,6 +29,7 @@ export function ResetPasswordForm() {
       len: password.length >= 8,
       letter: /[a-zA-Z]/.test(password),
       number: /\d/.test(password),
+      special: /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/.test(password),
     }),
     [password],
   );
@@ -69,8 +70,8 @@ export function ResetPasswordForm() {
     e.preventDefault();
     setError("");
 
-    if (!checks.len || !checks.letter || !checks.number) {
-      setError("비밀번호는 8자 이상, 영문·숫자를 포함해야 합니다.");
+    if (!checks.len || !checks.letter || !checks.number || !checks.special) {
+      setError("비밀번호는 8자 이상, 영문·숫자·특수문자를 포함해야 합니다.");
       return;
     }
     if (password !== passwordConfirm) {
@@ -95,10 +96,7 @@ export function ResetPasswordForm() {
   return (
     <AuthDarkShell>
       <AuthCard>
-        <span className="inline-block rounded-full bg-[#FEE500]/15 px-2.5 py-1 text-[10px] font-medium text-[#FEE500]">
-          회원
-        </span>
-        <h1 className="mt-3 text-xl font-bold tracking-tight">새 비밀번호 설정</h1>
+        <h1 className="text-xl font-bold tracking-tight">새 비밀번호 설정</h1>
         <p className="mt-2 text-sm leading-relaxed text-[#a8a49b]">
           메일 링크로 들어오셨어요. 앞으로 사용할 새 비밀번호를 입력해주세요.
         </p>
@@ -135,12 +133,13 @@ export function ResetPasswordForm() {
               />
             </div>
 
-            <ul className="space-y-1 pt-1 text-xs">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-xs">
               {(
                 [
                   ["len", "8자 이상", checks.len],
                   ["letter", "영문 포함", checks.letter],
                   ["number", "숫자 포함", checks.number],
+                  ["special", "특수 문자 포함", checks.special],
                 ] as const
               ).map(([key, label, ok]) => (
                 <li

@@ -11,8 +11,7 @@ export default function GuidePage() {
       <Header />
       <CommerceAtmosphere className="px-4 py-16 sm:px-8">
         <div className="mx-auto max-w-3xl">
-          <p className={`text-[10px] uppercase tracking-widest ${mp.tertiary}`}>Guide</p>
-          <h1 className="mt-1 text-[28px] font-bold tracking-tight text-[#f4f1ea]">이용안내</h1>
+          <h1 className="text-[28px] font-bold tracking-tight text-[#f4f1ea]">이용안내</h1>
           <p className={`mt-3 text-sm ${mp.muted}`}>
             결제, 배송, 교환·반품, 환불에 관한 안내입니다.
           </p>
