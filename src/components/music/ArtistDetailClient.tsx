@@ -74,7 +74,7 @@ function matchesTab(type: string | null | undefined, tab: TabKey) {
   if (tab === "all") return true;
   if (tab === "album") return type === "album";
   if (tab === "ep") return type === "single" || type === "ep";
-  return type === "mix";
+  return type === "mix" || type === "mixtape";
 }
 
 function youtubeVideoId(url?: string | null): string | null {

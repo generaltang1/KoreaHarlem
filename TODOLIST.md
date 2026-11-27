@@ -51,6 +51,7 @@
 | `add_think_comments.sql` | THINK 댓글·comment_count | **실행함** |
 | `add_music_digital_sales.sql` | 디지털 앨범/트랙 가격 · WAV/MP3 URL · `order_items` 디지털 라인 · `music_entitlements` | **실행함** |
 | `add_music_download_flac.sql` | `album_tracks.download_flac_url` | **실행함** |
+| `add_album_type_mixtape.sql` | `albums.album_type`에 `mixtape` | **실행 필요** |
 | `add_ticket_map_packages.sql` | 티켓 `venue_lat`/`venue_lng`/`venue_address` · `ticket_packages` jsonb · lineup `image_url` | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type AlbumType = "single" | "ep" | "album" | "mix" | "playlist";
+export type AlbumType = "single" | "ep" | "album" | "mix" | "mixtape" | "playlist";
 export type AlbumPublishMode = "public" | "scheduled" | "private";
 export type AlbumPublishStatus = "public" | "scheduled" | "private";
 
@@ -9,6 +9,7 @@ export const ALBUM_TYPE_OPTIONS: { value: AlbumType; label: string }[] = [
   { value: "ep", label: "EP" },
   { value: "album", label: "Album" },
   { value: "mix", label: "Mix" },
+  { value: "mixtape", label: "MIXTAPE" },
   { value: "playlist", label: "Playlist" },
 ];
 
