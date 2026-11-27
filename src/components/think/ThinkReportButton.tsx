@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { THINK_REPORT_REASONS } from "@/lib/think";
+import { mp } from "@/lib/mypageTheme";
 
 export function ThinkReportButton({ postId }: { postId: string }) {
   const [open, setOpen] = useState(false);
@@ -36,21 +37,23 @@ export function ThinkReportButton({ postId }: { postId: string }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="text-xs text-muted underline hover:text-foreground"
+        className={`text-xs underline ${mp.muted} hover:text-[#f4f1ea]`}
       >
         신고
       </button>
-      {msg ? <p className="mt-1 text-[11px] text-muted">{msg}</p> : null}
+      {msg ? <p className={`mt-1 text-[11px] ${mp.muted}`}>{msg}</p> : null}
       {open ? (
-        <div className="absolute right-0 z-20 mt-2 w-64 rounded-md border border-border bg-background p-3 shadow-lg">
-          <p className="mb-2 text-xs font-medium">신고 사유</p>
+        <div
+          className={`absolute right-0 z-20 mt-2 w-64 ${mp.card} p-3`}
+        >
+          <p className="mb-2 text-xs font-medium text-[#f4f1ea]">신고 사유</p>
           <select
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="mb-2 w-full border border-border px-2 py-1.5 text-xs"
+            className={`${mp.input} mb-2 py-2 text-xs`}
           >
             {THINK_REPORT_REASONS.map((r) => (
-              <option key={r} value={r}>
+              <option key={r} value={r} className="bg-[#151515]">
                 {r}
               </option>
             ))}
@@ -60,18 +63,22 @@ export function ThinkReportButton({ postId }: { postId: string }) {
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
               placeholder="사유 입력"
-              className="mb-2 w-full border border-border px-2 py-1.5 text-xs"
+              className={`${mp.input} mb-2 py-2 text-xs`}
             />
           ) : null}
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setOpen(false)} className="text-xs text-muted">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className={`text-xs ${mp.muted}`}
+            >
               취소
             </button>
             <button
               type="button"
               disabled={busy}
               onClick={() => void submit()}
-              className="border border-foreground px-3 py-1 text-xs disabled:opacity-50"
+              className={`${mp.ghostBtn} px-3 py-1 text-xs`}
             >
               {busy ? "…" : "신고하기"}
             </button>

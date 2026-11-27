@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
+  THINK_FLAIRS,
   THINK_MAX_GUEST_NICKNAME,
   THINK_MAX_INLINE_IMAGES,
   THINK_MAX_VIDEO_ATTACHMENTS,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/thinkEditor";
 import { ThinkImageUploadModal } from "@/components/think/ThinkImageUploadModal";
 import { YouTubeSearchModal } from "@/components/think/YouTubeSearchModal";
+import { mp } from "@/lib/mypageTheme";
 
 type VideoAttachPreview = {
   id: string;
@@ -31,10 +33,20 @@ function newId() {
     : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+export type ThinkPostEditorInitial = {
+  id: string;
+  title: string;
+  contentHtml: string;
+  flair?: string | null;
+  isNotice?: boolean;
+};
+
 type ThinkPostEditorProps = {
   isAdmin?: boolean;
   isLoggedIn?: boolean;
   memberNickname?: string;
+  mode?: "create" | "edit";
+  initial?: ThinkPostEditorInitial;
   onSuccess?: (postId: string) => void;
 };
 
@@ -42,22 +54,32 @@ export function ThinkPostEditor({
   isAdmin = false,
   isLoggedIn = false,
   memberNickname,
+  mode = "create",
+  initial,
   onSuccess,
 }: ThinkPostEditorProps) {
+  const isEdit = mode === "edit" && Boolean(initial?.id);
   const editorRef = useRef<HTMLDivElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const pasteMapRef = useRef<Map<string, File>>(new Map());
   const savedRangeRef = useRef<Range | null>(null);
 
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initial?.title ?? "");
   const [guestNickname, setGuestNickname] = useState("ㅇㅇ");
-  const [isNotice, setIsNotice] = useState(false);
+  const [flair, setFlair] = useState(initial?.flair ?? "");
+  const [isNotice, setIsNotice] = useState(Boolean(initial?.isNotice));
   const [videoAttachments, setVideoAttachments] = useState<VideoAttachPreview[]>([]);
   const [youtubeVideos, setYoutubeVideos] = useState<ThinkYoutubeInput[]>([]);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (editorRef.current && initial?.contentHtml) {
+      editorRef.current.innerHTML = initial.contentHtml;
+    }
+  }, [initial?.contentHtml]);
 
   useEffect(() => {
     return () => {
@@ -139,22 +161,24 @@ export function ThinkPostEditor({
     });
   };
 
-  const submit = async () => {
-    setError("");
-    const t = title.trim();
-    if (!t) {
-      setError("제목을 입력해주세요.");
-      return;
-    }
-    const editor = editorRef.current;
-    if (!editorHasContent(editor) && videoAttachments.length === 0 && youtubeVideos.length === 0) {
-      setError("내용 또는 첨부를 입력해주세요.");
-      return;
-    }
+  const submitEdit = async (contentHtml: string, t: string) => {
+    if (!initial?.id) return;
+    const res = await fetch(`/api/think/posts/${initial.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: t,
+        contentHtml,
+        flair: flair || null,
+        isNotice: isAdmin ? isNotice : undefined,
+      }),
+    });
+    const json = (await res.json()) as { message?: string; id?: string };
+    if (!res.ok) throw new Error(json.message || "수정에 실패했습니다.");
+    onSuccess?.(initial.id);
+  };
 
-    const contentHtml = editor?.innerHTML ?? "";
-
-    setSubmitting(true);
+  const submitCreate = async (contentHtml: string, t: string) => {
     let postId: string | null = null;
 
     type UploadSlot = {
@@ -179,6 +203,7 @@ export function ThinkPostEditor({
           contentHtml,
           guestNickname: isLoggedIn ? undefined : guestNickname,
           isNotice: isAdmin && isNotice,
+          flair: flair || null,
           attachments: videoAttachments.map((a) => ({
             name: a.file.name,
             mimeType: a.file.type,
@@ -236,92 +261,159 @@ export function ThinkPostEditor({
       }
 
       onSuccess?.(postId!);
-    } catch (err: unknown) {
+    } catch (err) {
       if (postId) {
         await fetch(`/api/think/posts/${postId}/abort`, { method: "POST" }).catch(() => {});
       }
-      setError(err instanceof Error ? err.message : "등록에 실패했습니다.");
+      throw err;
+    }
+  };
+
+  const submit = async () => {
+    setError("");
+    const t = title.trim();
+    if (!t) {
+      setError("제목을 입력해주세요.");
+      return;
+    }
+    const editor = editorRef.current;
+    if (
+      !isEdit &&
+      !editorHasContent(editor) &&
+      videoAttachments.length === 0 &&
+      youtubeVideos.length === 0
+    ) {
+      setError("내용 또는 첨부를 입력해주세요.");
+      return;
+    }
+    if (isEdit && !editorHasContent(editor)) {
+      setError("내용을 입력해주세요.");
+      return;
+    }
+
+    const contentHtml = editor?.innerHTML ?? "";
+    setSubmitting(true);
+    try {
+      if (isEdit) await submitEdit(contentHtml, t);
+      else await submitCreate(contentHtml, t);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : isEdit ? "수정에 실패했습니다." : "등록에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="border border-border bg-background">
-      <div className="border-b border-border bg-neutral-50 px-4 py-3">
-        <h1 className="text-sm font-semibold">글쓰기</h1>
+    <div className={mp.card}>
+      <div className="border-b border-[rgba(244,241,234,0.12)] px-5 py-5 md:px-7">
+        <div
+          className={`inline-flex items-center gap-2 rounded-[4px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.04)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[1.6px] ${mp.muted}`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-[#FBC201]" aria-hidden />
+          THINK
+        </div>
+        <h1 className="mt-3 text-[22px] font-bold tracking-[-0.02em] text-[#f4f1ea] md:text-[26px]">
+          {isEdit ? "글 수정" : "글쓰기"}
+        </h1>
+        <p className={`mt-1.5 text-xs ${mp.muted}`}>
+          {isEdit ? "제목·본문·플레어를 수정합니다." : "게스트도 작성할 수 있습니다. 플레어로 주제를 표시하세요."}
+        </p>
       </div>
 
-      <div className="space-y-4 p-4 md:p-6">
-        {!isLoggedIn && (
+      <div className="space-y-5 p-5 md:p-7">
+        {!isLoggedIn && !isEdit && (
           <div className="flex flex-wrap items-center gap-3">
-            <label className="text-xs text-muted">닉네임</label>
+            <label className={mp.label}>닉네임</label>
             <input
               value={guestNickname}
               onChange={(e) => setGuestNickname(e.target.value.slice(0, THINK_MAX_GUEST_NICKNAME))}
               maxLength={THINK_MAX_GUEST_NICKNAME}
               placeholder="미입력 시 ㅇㅇ"
-              className="w-40 border border-border px-3 py-2 text-sm outline-none focus:border-foreground"
+              className={`${mp.input} w-40`}
             />
-            <span className="text-[10px] text-muted">비회원 · 최대 {THINK_MAX_GUEST_NICKNAME}자 · IP 일부 공개</span>
+            <span className={`text-[10px] ${mp.tertiary}`}>
+              비회원 · 최대 {THINK_MAX_GUEST_NICKNAME}자 · IP 일부 공개
+            </span>
           </div>
         )}
 
         {isLoggedIn && memberNickname && (
-          <p className="text-xs text-muted">
-            작성자: <span className="text-foreground">{memberNickname}</span>
+          <p className={`text-xs ${mp.muted}`}>
+            작성자: <span className="text-[#f4f1ea]">{memberNickname}</span>
           </p>
         )}
 
         {isAdmin && (
-          <label className="flex items-center gap-2 text-xs">
-            <input type="checkbox" checked={isNotice} onChange={(e) => setIsNotice(e.target.checked)} />
+          <label className="flex items-center gap-2 text-xs text-[#f4f1ea]">
+            <input
+              type="checkbox"
+              checked={isNotice}
+              onChange={(e) => setIsNotice(e.target.checked)}
+              className="accent-[#FBC201]"
+            />
             공지로 등록
           </label>
         )}
+
+        <div>
+          <p className={mp.label}>플레어</p>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setFlair("")}
+              className={!flair ? mp.pillActive : mp.pill}
+            >
+              없음
+            </button>
+            {THINK_FLAIRS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFlair(f)}
+                className={flair === f ? mp.pillActive : mp.pill}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={120}
           placeholder="제목을 입력해 주세요"
-          className="w-full border border-border px-4 py-3 text-sm outline-none focus:border-foreground"
+          className={mp.input}
         />
 
-        <div className="flex flex-wrap gap-2 border border-border bg-neutral-50 px-3 py-2">
-          <button
-            type="button"
-            onClick={openImageModal}
-            className="border border-border bg-background px-3 py-1.5 text-xs hover:bg-neutral-100"
-          >
-            이미지
-          </button>
-          <button
-            type="button"
-            onClick={() => videoInputRef.current?.click()}
-            className="border border-border bg-background px-3 py-1.5 text-xs hover:bg-neutral-100"
-          >
-            동영상
-          </button>
-          <button
-            type="button"
-            onClick={() => setYoutubeOpen(true)}
-            className="border border-border bg-background px-3 py-1.5 text-xs hover:bg-neutral-100"
-          >
-            유튜브
-          </button>
-          <input
-            ref={videoInputRef}
-            type="file"
-            accept="video/*"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files) addVideoFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-        </div>
+        {!isEdit && (
+          <div className="flex flex-wrap gap-2 rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.04)] px-3 py-2">
+            <button type="button" onClick={openImageModal} className={mp.pill}>
+              이미지
+            </button>
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              className={mp.pill}
+            >
+              동영상
+            </button>
+            <button type="button" onClick={() => setYoutubeOpen(true)} className={mp.pill}>
+              유튜브
+            </button>
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) addVideoFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </div>
+        )}
 
         <div
           ref={editorRef}
@@ -334,28 +426,35 @@ export function ThinkPostEditor({
           onKeyUp={() => {
             savedRangeRef.current = saveEditorSelection(editorRef.current);
           }}
-          className="min-h-[320px] border border-border px-4 py-3 text-sm leading-relaxed outline-none focus:border-foreground [&:empty]:before:pointer-events-none [&:empty]:before:text-muted [&:empty]:before:content-['본문을_입력하세요._이미지는_글_사이사이에_넣을_수_있습니다.']"
+          className="min-h-[320px] rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.05)] px-4 py-3 text-sm leading-relaxed text-[#f4f1ea] outline-none focus:border-[rgba(244,241,234,0.35)] [&:empty]:before:pointer-events-none [&:empty]:before:text-[#6e6b65] [&:empty]:before:content-['본문을_입력하세요._이미지는_글_사이사이에_넣을_수_있습니다.']"
           style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
           aria-label="본문"
         />
 
-        <p className="text-[10px] text-muted">
-          이미지는 본문에 삽입됩니다 · 외부 캡처/복사 붙여넣기(Ctrl/Cmd+V) · 이미지 20MB · 동영상 100MB
+        <p className={`text-[10px] ${mp.tertiary}`}>
+          {isEdit
+            ? "본문·제목·플레어 수정 · 새 첨부는 글쓰기에서만 가능"
+            : "이미지는 본문에 삽입 · 붙여넣기(Ctrl/Cmd+V) · 이미지 20MB · 동영상 100MB"}
         </p>
 
         {youtubeVideos.length > 0 && (
           <ul className="space-y-2">
             {youtubeVideos.map((v) => (
-              <li key={v.videoId} className="flex items-center gap-3 border border-border p-2 text-xs">
-                {v.thumbnailUrl && (
+              <li
+                key={v.videoId}
+                className="flex items-center gap-3 rounded-[8px] border border-[rgba(244,241,234,0.12)] p-2 text-xs text-[#f4f1ea]"
+              >
+                {v.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={v.thumbnailUrl} alt="" className="h-12 w-20 object-cover" />
-                )}
+                ) : null}
                 <span className="min-w-0 flex-1 truncate">{v.title}</span>
                 <button
                   type="button"
-                  onClick={() => setYoutubeVideos((prev) => prev.filter((x) => x.videoId !== v.videoId))}
-                  className="text-muted underline"
+                  onClick={() =>
+                    setYoutubeVideos((prev) => prev.filter((x) => x.videoId !== v.videoId))
+                  }
+                  className={`${mp.yellow} underline`}
                 >
                   제거
                 </button>
@@ -367,10 +466,19 @@ export function ThinkPostEditor({
         {videoAttachments.length > 0 && (
           <ul className="space-y-2">
             {videoAttachments.map((a) => (
-              <li key={a.id} className="flex items-center gap-3 border border-border px-3 py-2 text-xs">
-                <div className="flex h-12 w-12 items-center justify-center bg-neutral-100 text-[10px]">VIDEO</div>
+              <li
+                key={a.id}
+                className="flex items-center gap-3 rounded-[8px] border border-[rgba(244,241,234,0.12)] px-3 py-2 text-xs text-[#f4f1ea]"
+              >
+                <div className="flex h-12 w-12 items-center justify-center bg-[rgba(244,241,234,0.08)] text-[10px] text-[#6e6b65]">
+                  VIDEO
+                </div>
                 <span className="min-w-0 flex-1 truncate">{a.file.name}</span>
-                <button type="button" onClick={() => removeVideo(a.id)} className="text-muted underline">
+                <button
+                  type="button"
+                  onClick={() => removeVideo(a.id)}
+                  className={`${mp.yellow} underline`}
+                >
                   제거
                 </button>
               </li>
@@ -378,16 +486,16 @@ export function ThinkPostEditor({
           </ul>
         )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
         <div className="flex justify-end gap-2">
           <button
             type="button"
             disabled={submitting}
             onClick={() => void submit()}
-            className="bg-foreground px-8 py-2.5 text-xs uppercase tracking-widest text-background disabled:opacity-50"
+            className={mp.creamBtn}
           >
-            {submitting ? "등록 중…" : "등록"}
+            {submitting ? (isEdit ? "저장 중…" : "등록 중…") : isEdit ? "저장" : "등록"}
           </button>
         </div>
       </div>

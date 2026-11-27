@@ -13,7 +13,7 @@ export function ThinkPostContent({ html, attachments, youtubeVideos }: ThinkPost
     <div className="space-y-6">
       {html && (
         <div
-          className="prose-think text-sm leading-relaxed [&_img]:my-2 [&_img]:max-w-full [&_img]:h-auto"
+          className="prose-think text-sm leading-relaxed text-[#f4f1ea] [&_a]:text-[#FBC201] [&_img]:my-2 [&_img]:h-auto [&_img]:max-w-full"
           dangerouslySetInnerHTML={{ __html: html }}
         />
       )}
@@ -21,7 +21,10 @@ export function ThinkPostContent({ html, attachments, youtubeVideos }: ThinkPost
       {youtubeVideos.length > 0 && (
         <div className="space-y-4">
           {youtubeVideos.map((video) => (
-            <div key={video.id} className="overflow-hidden border border-border bg-black">
+            <div
+              key={video.id}
+              className="overflow-hidden rounded-[8px] border border-[rgba(244,241,234,0.12)] bg-[#0a0a0a]"
+            >
               <div className="aspect-video w-full">
                 <iframe
                   src={`https://www.youtube.com/embed/${video.video_id}`}
@@ -32,7 +35,7 @@ export function ThinkPostContent({ html, attachments, youtubeVideos }: ThinkPost
                 />
               </div>
               {video.title && (
-                <p className="border-t border-border bg-neutral-50 px-3 py-2 text-xs text-muted">
+                <p className="border-t border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.04)] px-3 py-2 text-xs text-[#a8a49b]">
                   {video.title}
                 </p>
               )}

@@ -4,13 +4,17 @@ import { getCurrentUser, isCurrentUserAdmin, isCurrentUserBlocked } from "@/lib/
 import { getClientIp } from "@/lib/requestIp";
 import {
   THINK_CONCEPT_THRESHOLD,
+  THINK_FLAIRS,
   THINK_MAX_CONTENT_LENGTH,
   THINK_MAX_INLINE_IMAGES,
   THINK_MAX_TITLE_LENGTH,
   THINK_MAX_VIDEO_ATTACHMENTS,
   THINK_PAGE_SIZE,
+  THINK_POPULAR_DAYS,
+  THINK_RISING_HOURS,
   ThinkFileMeta,
   ThinkPasteMeta,
+  ThinkSort,
   ThinkTab,
   ThinkYoutubeInput,
   extFromThinkFileName,
@@ -27,6 +31,7 @@ type ThinkCreateBody = {
   contentHtml?: string;
   guestNickname?: string;
   isNotice?: boolean;
+  flair?: string | null;
   attachments?: ThinkFileMeta[];
   pasteImages?: ThinkPasteMeta[];
   youtubeVideos?: ThinkYoutubeInput[];
@@ -37,6 +42,18 @@ function parseTab(value: string | null): ThinkTab {
   return "all";
 }
 
+function parseSort(value: string | null): ThinkSort {
+  if (value === "popular" || value === "rising" || value === "top") return value;
+  return "latest";
+}
+
+function normalizeFlair(input: string | null | undefined): string | null {
+  const v = (input ?? "").trim();
+  if (!v) return null;
+  if ((THINK_FLAIRS as readonly string[]).includes(v)) return v;
+  return null;
+}
+
 export async function GET(request: Request) {
   const admin = createServiceClient();
   if (!admin) {
@@ -45,6 +62,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const tab = parseTab(searchParams.get("tab"));
+  const sort = parseSort(searchParams.get("sort"));
+  const flair = normalizeFlair(searchParams.get("flair"));
+  const mine = searchParams.get("mine") === "1";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
   const perPage = Math.min(50, Math.max(10, Number(searchParams.get("perPage") ?? THINK_PAGE_SIZE) || THINK_PAGE_SIZE));
   const q = (searchParams.get("q") ?? "").trim();
@@ -52,19 +72,32 @@ export async function GET(request: Request) {
   const to = from + perPage - 1;
 
   const isAdmin = await isCurrentUserAdmin();
+  const user = mine ? await getCurrentUser() : null;
+  if (mine && !user) {
+    return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
+  }
+
   let query = admin.from("think_posts").select("*", { count: "exact" });
 
-  // 공개 목록에서는 숨김 글 제외 (관리자는 includeHidden=1 로 포함 가능)
   const includeHidden = searchParams.get("includeHidden") === "1" && isAdmin;
-  if (!includeHidden) {
+  // 내 글 목록은 본인 숨김 글도 표시
+  if (!includeHidden && !mine) {
     query = query.or("is_hidden.is.null,is_hidden.eq.false");
+  }
+
+  if (mine && user) {
+    query = query.eq("user_id", user.id);
+  }
+
+  if (flair) {
+    query = query.eq("flair", flair);
   }
 
   if (tab === "notice") {
     query = query.eq("is_notice", true);
   } else if (tab === "concept") {
     query = query.eq("is_notice", false).gte("recommend_count", THINK_CONCEPT_THRESHOLD);
-  } else {
+  } else if (!mine) {
     query = query.order("is_notice", { ascending: false });
   }
 
@@ -72,10 +105,27 @@ export async function GET(request: Request) {
     query = query.or(`title.ilike.%${q}%,content_html.ilike.%${q}%`);
   }
 
+  // 정렬 (개념/공지 탭은 기존 규칙 유지, all+mine은 sort 적용)
   if (tab === "notice") {
     query = query.order("created_at", { ascending: false });
   } else if (tab === "concept") {
     query = query.order("recommend_count", { ascending: false }).order("created_at", { ascending: false });
+  } else if (sort === "popular") {
+    // 인기: 최근 7일 · 추천순
+    const since = new Date(Date.now() - THINK_POPULAR_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    query = query
+      .gte("created_at", since)
+      .order("recommend_count", { ascending: false })
+      .order("created_at", { ascending: false });
+  } else if (sort === "rising") {
+    // 급상승(확정): 최근 72시간 · 추천순
+    const since = new Date(Date.now() - THINK_RISING_HOURS * 60 * 60 * 1000).toISOString();
+    query = query
+      .gte("created_at", since)
+      .order("recommend_count", { ascending: false })
+      .order("created_at", { ascending: false });
+  } else if (sort === "top") {
+    query = query.order("recommend_count", { ascending: false }).order("view_count", { ascending: false });
   } else {
     query = query.order("created_at", { ascending: false });
   }
@@ -83,7 +133,16 @@ export async function GET(request: Request) {
   const { data, error, count } = await query.range(from, to);
   if (error) {
     console.error("[think posts list]", error.message);
-    return NextResponse.json({ message: "게시글 목록을 불러오지 못했습니다." }, { status: 500 });
+    // flair 컬럼 미적용 DB 호환: flair 필터 없이 재시도하지 않고 안내
+    return NextResponse.json(
+      {
+        message:
+          error.message.includes("flair")
+            ? "플레어 컬럼이 없습니다. supabase/add_think_flair.sql 을 실행해 주세요."
+            : "게시글 목록을 불러오지 못했습니다.",
+      },
+      { status: 500 },
+    );
   }
 
   const posts = (data ?? []).map((post) => ({
@@ -98,6 +157,8 @@ export async function GET(request: Request) {
     posts,
     pagination: { page, perPage, total, totalPages },
     tab,
+    sort,
+    flair,
   });
 }
 
@@ -121,6 +182,7 @@ export async function POST(request: Request) {
   const pasteMetas = Array.isArray(body.pasteImages) ? body.pasteImages : [];
   const youtubeVideos = Array.isArray(body.youtubeVideos) ? body.youtubeVideos : [];
   const wantsNotice = Boolean(body.isNotice);
+  const flair = normalizeFlair(body.flair);
 
   if (!title) return NextResponse.json({ message: "제목을 입력해주세요." }, { status: 400 });
   if (title.length > THINK_MAX_TITLE_LENGTH) {
@@ -178,6 +240,7 @@ export async function POST(request: Request) {
       content_html: contentHtml,
       user_id: user?.id ?? null,
       author_nickname: authorNickname,
+      flair,
       author_ip: clientIp,
       is_notice: wantsNotice,
     })
@@ -186,7 +249,14 @@ export async function POST(request: Request) {
 
   if (insertErr || !post) {
     console.error("[think create]", insertErr?.message);
-    return NextResponse.json({ message: "게시글 등록에 실패했습니다." }, { status: 500 });
+    return NextResponse.json(
+      {
+        message: insertErr?.message?.includes("flair")
+          ? "플레어 컬럼이 없습니다. supabase/add_think_flair.sql 을 실행해 주세요."
+          : "게시글 등록에 실패했습니다.",
+      },
+      { status: 500 },
+    );
   }
 
   const postId = post.id as string;

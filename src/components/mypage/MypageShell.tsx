@@ -15,6 +15,7 @@ const NAV = [
   { href: "/cart", label: "장바구니" },
   { href: "/mypage/wishlist", label: "위시리스트" },
   { href: "/mypage/music", label: "My Music" },
+  { href: "/mypage/think", label: "내 THINK" },
 ] as const;
 
 function isActive(pathname: string, href: string, exact?: boolean) {

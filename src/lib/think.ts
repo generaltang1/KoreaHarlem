@@ -3,6 +3,35 @@ import { maskIpForDisplay } from "@/lib/requestIp";
 
 export type ThinkTab = "all" | "concept" | "notice";
 
+/**
+ * D-01 정렬
+ * - latest: 최신순
+ * - popular: 최근 7일 · 추천순
+ * - rising: 최근 72시간 · 추천순 (확정)
+ * - top: 전체 기간 · 추천·조회순
+ */
+export type ThinkSort = "latest" | "popular" | "rising" | "top";
+
+export const THINK_SORTS: { id: ThinkSort; label: string }[] = [
+  { id: "latest", label: "최신" },
+  { id: "popular", label: "인기" },
+  { id: "rising", label: "급상승" },
+  { id: "top", label: "TOP" },
+];
+
+/** 급상승 창 — 최근 72시간 */
+export const THINK_RISING_HOURS = 72;
+
+/** 인기 창 — 최근 7일 */
+export const THINK_POPULAR_DAYS = 7;
+
+/**
+ * 플레어 목록 (현재 운영값).
+ * 최종 리스트가 오면 `THINK_FLAIRS`만 교체하면 필터·글쓰기·PATCH가 같이 바뀝니다.
+ */
+export const THINK_FLAIRS = ["음악", "패션", "파티", "잡담", "리뷰"] as const;
+export type ThinkFlair = (typeof THINK_FLAIRS)[number];
+
 export type ThinkAttachmentKind = "image" | "video" | "other";
 
 export type ThinkPost = {
@@ -16,6 +45,7 @@ export type ThinkPost = {
   is_hidden?: boolean;
   hidden_at?: string | null;
   hidden_reason?: string | null;
+  flair?: string | null;
   recommend_count: number;
   view_count: number;
   comment_count?: number;
@@ -53,6 +83,8 @@ export type ThinkComment = {
   author_ip: string;
   body: string;
   created_at: string;
+  /** 대댓글이면 부모 댓글 id · null이면 최상위 */
+  parent_id?: string | null;
   author_display?: string;
 };
 

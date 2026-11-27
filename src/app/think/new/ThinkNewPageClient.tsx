@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { ThinkShell } from "@/components/think/ThinkShell";
 import { ThinkPostEditor } from "@/components/think/ThinkPostEditor";
+import { mp } from "@/lib/mypageTheme";
 
 type ThinkNewPageClientProps = {
   isLoggedIn: boolean;
@@ -20,23 +20,19 @@ export function ThinkNewPageClient({
   const router = useRouter();
 
   return (
-    <>
-      <Header />
-      <main className="mx-auto max-w-3xl px-4 py-12 pb-28 md:px-6">
-        <Link
-          href="/think"
-          className="mb-6 inline-flex text-[10px] uppercase tracking-widest text-muted hover:text-foreground"
-        >
-          ← 목록
-        </Link>
-        <ThinkPostEditor
-          isLoggedIn={isLoggedIn}
-          isAdmin={isAdmin}
-          memberNickname={memberNickname}
-          onSuccess={(postId) => router.push(`/think/${postId}`)}
-        />
-      </main>
-      <Footer />
-    </>
+    <ThinkShell maxWidthClass="max-w-3xl">
+      <Link
+        href="/think"
+        className={`mb-6 inline-flex text-[11px] uppercase tracking-widest ${mp.muted} hover:text-[#f4f1ea]`}
+      >
+        ← 목록
+      </Link>
+      <ThinkPostEditor
+        isLoggedIn={isLoggedIn}
+        isAdmin={isAdmin}
+        memberNickname={memberNickname}
+        onSuccess={(postId) => router.push(`/think/${postId}`)}
+      />
+    </ThinkShell>
   );
 }
