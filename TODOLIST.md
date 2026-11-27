@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-11-27 (최신):** **E/Music·THINK 후속** (`3a50da5`) + **아티스트 사진 1장** (`2b8a15b`) **배포됨**. 다음: A 홈. (상세는 `디자인작업완료.md`)
+> **2026-11-27 (최신):** MIXTAPE 앨범유형 (`9130342`) **배포됨** · SQL `add_album_type_mixtape.sql` **실행 필요**. 다음: A 홈. (상세는 `디자인작업완료.md`)
 
 > **2026-11-16:** **B SHOP** — `/sale` 다크·탭·Scatter·+장바구니·재고점 · B-07 다크·사이즈칩·탭·추천 · B-08 티켓 다크·패키지·라인업사진·네이버지도·환불표(멜론문구 제거) · 장바구니 일반/티켓 분리 · F-03 성공 문구 시안 반영 · `add_ticket_map_packages.sql` **실행함** · `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` **로컬·Vercel 등록함**. **코드 완료 · 미커밋·미배포**
 
