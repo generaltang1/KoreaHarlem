@@ -305,22 +305,11 @@ export function ArtistDetailClient({
 
       {/* Hero */}
       <section className="flex flex-col gap-8 lg:flex-row lg:gap-12">
-        <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
-          <div className="relative mx-auto aspect-[4/5] w-full max-w-[400px] overflow-hidden rounded-[6px] border border-[#262626] bg-[#151515] sm:mx-0 sm:h-[500px] sm:w-[400px] sm:max-w-none sm:aspect-auto">
-            {artist.image_url ? (
-              <Image src={artist.image_url} alt={artist.name} fill priority className="object-cover" sizes="400px" />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center gap-0.5 p-2 text-center text-[11px] font-medium text-[#6e6b65]">
-                <span>아티스트 사진 1</span>
-                <span>(대표 · 세로 4:5)</span>
-              </div>
-            )}
+        {artist.image_url ? (
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-[400px] shrink-0 overflow-hidden rounded-[6px] border border-[#262626] bg-[#151515] sm:mx-0 sm:h-[500px] sm:w-[400px] sm:max-w-none sm:aspect-auto">
+            <Image src={artist.image_url} alt={artist.name} fill priority className="object-cover" sizes="400px" />
           </div>
-          <div className="hidden flex-col gap-3 sm:flex">
-            <div className={`${placeholderBox} h-[244px] w-[190px] rounded-[6px]`}>사진 2</div>
-            <div className={`${placeholderBox} h-[244px] w-[190px] rounded-[6px]`}>사진 3</div>
-          </div>
-        </div>
+        ) : null}
 
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <p className={`${mono} text-[11px] font-medium uppercase tracking-[1.4px] text-[#fbc201] whitespace-pre`}>

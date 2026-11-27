@@ -6,7 +6,7 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-11-27 (최신):** **E/Music·THINK 후속** — DJ SET 첫 진입 자동재생 · E-04 LP/카세트·시안네칸 제거 · FLAC 업로드·형식 조건부 칩 · PWYC 추가금(기본0) · 전역 타이포 상향 · THINK Anonymous eyebrow 삭제 · 아티스트 레이블 미등록 시 숨김 · `add_music_download_flac.sql` **실행함** · Storage 전역 1GB 확인. **코드 완료 · 미커밋·미배포** (상세는 `디자인작업완료.md`)
+> **2026-11-27 (최신):** **E/Music·THINK 후속 배포** (`3a50da5`) — DJ 자동재생 · FLAC·형식칩 · PWYC · 타이포 · THINK eyebrow 삭제 · 레이블 미표시 등. **추가 로컬:** 아티스트 상세 사진2·3 시안칸 제거(1장만) · **미커밋**. 작업 마감 시 `디자인작업완료.md` 갱신. (상세는 해당 MD)
 
 > **2026-11-16:** **B SHOP** — `/sale` 다크·탭·Scatter·+장바구니·재고점 · B-07 다크·사이즈칩·탭·추천 · B-08 티켓 다크·패키지·라인업사진·네이버지도·환불표(멜론문구 제거) · 장바구니 일반/티켓 분리 · F-03 성공 문구 시안 반영 · `add_ticket_map_packages.sql` **실행함** · `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` **로컬·Vercel 등록함**. **코드 완료 · 미커밋·미배포**
 
