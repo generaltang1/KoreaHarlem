@@ -270,7 +270,9 @@ export function ArtistDetailClient({
   const igHandle = instagramHandle(artist.instagram_url);
 
   const facts: { label: string; value: string }[] = [
-    { label: "레이블", value: artist.agency?.trim() || "koreaharlem" },
+    ...(artist.agency?.trim()
+      ? [{ label: "레이블", value: artist.agency.trim() }]
+      : []),
     ...(artist.activity_type?.trim()
       ? [{ label: "활동 형태", value: artist.activity_type.trim() }]
       : []),

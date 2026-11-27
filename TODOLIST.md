@@ -6,7 +6,9 @@
 프로덕션: https://korea-harlem.vercel.app  
 스택: Next.js 15 + Supabase + Vercel + Toss Payments
 
-> **2026-11-16 (최신):** **B SHOP** — `/sale` 다크·탭·Scatter·+장바구니·재고점 · B-07 다크·사이즈칩·탭·추천 · B-08 티켓 다크·패키지·라인업사진·네이버지도·환불표(멜론문구 제거) · 장바구니 일반/티켓 분리 · F-03 성공 문구 시안 반영 · `add_ticket_map_packages.sql` **실행함** · `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` **로컬·Vercel 등록함**. **코드 완료 · 미커밋·미배포**
+> **2026-11-27 (최신):** **E/Music·THINK 후속** — DJ SET 첫 진입 자동재생 · E-04 LP/카세트·시안네칸 제거 · FLAC 업로드·형식 조건부 칩 · PWYC 추가금(기본0) · 전역 타이포 상향 · THINK Anonymous eyebrow 삭제 · 아티스트 레이블 미등록 시 숨김 · `add_music_download_flac.sql` **실행함** · Storage 전역 1GB 확인. **코드 완료 · 미커밋·미배포** (상세는 `디자인작업완료.md`)
+
+> **2026-11-16:** **B SHOP** — `/sale` 다크·탭·Scatter·+장바구니·재고점 · B-07 다크·사이즈칩·탭·추천 · B-08 티켓 다크·패키지·라인업사진·네이버지도·환불표(멜론문구 제거) · 장바구니 일반/티켓 분리 · F-03 성공 문구 시안 반영 · `add_ticket_map_packages.sql` **실행함** · `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` **로컬·Vercel 등록함**. **코드 완료 · 미커밋·미배포**
 
 > **2026-10-12:** **Music 홈 + 디지털 음원 판매** — `/music` Stitch 홈(NEW RELEASES 틱커 · COLLECTION 우측 로컬 재생 · ARTISTS 10명 · CD & VINYL 4장) · COLLECTION 재생 시 하단 플레이어 숨김·DJ SET 정지 · 앨범/트랙 Toss 결제 · My Page → My Music MP3/WAV 다운로드 · `add_music_digital_sales.sql` **실행함**. **코드 완료 · 미커밋·미배포**
 
@@ -48,6 +50,7 @@
 | `add_product_ticket_meta.sql` | 티켓 메타·featured_on_home | **실행함** |
 | `add_think_comments.sql` | THINK 댓글·comment_count | **실행함** |
 | `add_music_digital_sales.sql` | 디지털 앨범/트랙 가격 · WAV/MP3 URL · `order_items` 디지털 라인 · `music_entitlements` | **실행함** |
+| `add_music_download_flac.sql` | `album_tracks.download_flac_url` | **실행함** |
 | `add_ticket_map_packages.sql` | 티켓 `venue_lat`/`venue_lng`/`venue_address` · `ticket_packages` jsonb · lineup `image_url` | **실행함** |
 | `add_order_shipping.sql` | 송장·배송 | 실행함 |
 | `alter_restore_stock_preparing.sql` | restore 상태 확장 | 실행함 |
@@ -325,7 +328,7 @@ SQL: `supabase/add_product_show_stock.sql` (**실행함**)
 
 ### 음악 커뮤니티 · 판매
 5. [ ] 앨범 **댓글/평가** (커뮤니티)
-9. [x] **음원/앨범 유료 판매 + mp3/wav 다운로드** (2026-10-12 · 코드 완료 · SQL 실행함 · 미커밋)
+9. [x] **음원/앨범 유료 판매 + mp3/wav/flac 다운로드** (2026-10-12 · FLAC·형식조건부 2026-11-27 · SQL 실행함 · 미커밋)
 
 #### Music 홈 + 디지털 판매 (2026-10-12 · **코드 완료 · SQL 실행함 · 미커밋·미배포**)
 
@@ -338,7 +341,7 @@ Stitch `stitch_music/` 시안. 헤더/푸터 IA 유지. 스트리밍은 무료 �
 - [x] 앨범·트랙 각각 장바구니 (`kind: digital_album` / `digital_track`) · 기존 Toss 체크아웃
 - [x] 디지털만 담으면 배송지 생략 · **로그인 필수**
 - [x] 결제 완료 시 `music_entitlements` 부여 (Toss confirm·webhook)
-- [x] My Page → **My Music** — 한 행: 커버 | 아티스트 · 곡명 | MP3/WAV 다운로드
+- [x] My Page → **My Music** — 한 행: 커버 | 아티스트 · 곡명 | 등록된 형식만 MP3/WAV/FLAC 다운로드
 - [x] `GET /api/music/download` — 구매 권한 확인 후 `Content-Disposition: attachment`
 - [x] **ARTISTS** 랜덤 10명 + More → `/artists` · 아티스트 사진 **네모**
 - [x] **CD & VINYL** 최신 CD 4장 + More → `/sale?category=cd` · nav/카테고리 라벨 변경

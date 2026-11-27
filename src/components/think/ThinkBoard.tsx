@@ -134,13 +134,7 @@ export function ThinkBoard() {
       {/* D-01 히어로 */}
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5 border-b border-[rgba(244,241,234,0.12)] pb-8">
         <div className="max-w-2xl">
-          <div
-            className={`inline-flex items-center gap-2 rounded-[4px] border border-[rgba(244,241,234,0.12)] bg-[rgba(244,241,234,0.04)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[1.6px] ${mp.muted}`}
-          >
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FBC201]" aria-hidden />
-            Anonymous sub-culture bulletin
-          </div>
-          <h1 className="mt-3 text-[36px] font-black tracking-[-0.04em] text-[#f4f1ea] sm:text-[48px]">
+          <h1 className="text-[36px] font-black tracking-[-0.04em] text-[#f4f1ea] sm:text-[48px]">
             THINK
           </h1>
           <p className={`mt-3 text-sm leading-relaxed ${mp.muted} sm:text-[15px]`}>

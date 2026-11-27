@@ -23,6 +23,7 @@ interface TrackFormRow {
   description: string;
   audioFile: File | null;
   wavFile: File | null;
+  flacFile: File | null;
   digitalPrice: string;
   isTitleTrack: boolean;
 }
@@ -34,6 +35,7 @@ function newTrackRow(): TrackFormRow {
     description: "",
     audioFile: null,
     wavFile: null,
+    flacFile: null,
     digitalPrice: "",
     isTitleTrack: false,
   };
@@ -196,6 +198,15 @@ export default function NewAlbumPage() {
           download_wav_url = supabase.storage.from("audio").getPublicUrl(wavPath).data.publicUrl;
         }
 
+        let download_flac_url: string | null = null;
+        if (row.flacFile) {
+          const flacExt = row.flacFile.name.split(".").pop() || "flac";
+          const flacPath = `tracks/${album.id}/${Date.now()}-${i}-flac.${flacExt}`;
+          const { error: flacErr } = await supabase.storage.from("audio").upload(flacPath, row.flacFile);
+          if (flacErr) throw flacErr;
+          download_flac_url = supabase.storage.from("audio").getPublicUrl(flacPath).data.publicUrl;
+        }
+
         const { error: trackErr } = await supabase.from("album_tracks").insert({
           album_id: album.id,
           track_order: i + 1,
@@ -207,6 +218,7 @@ export default function NewAlbumPage() {
           digital_price_krw: parsePrice(row.digitalPrice),
           download_mp3_url: audioUrlData.publicUrl,
           download_wav_url,
+          download_flac_url,
         });
         if (trackErr) throw trackErr;
       }
@@ -215,9 +227,9 @@ export default function NewAlbumPage() {
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "등록 중 오류가 발생했습니다.";
-      if (/digital_price|download_wav|download_mp3/i.test(message)) {
+      if (/digital_price|download_wav|download_mp3|download_flac/i.test(message)) {
         setError(
-          "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 을 실행해주세요.",
+          "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 과 supabase/add_music_download_flac.sql 을 실행해주세요.",
         );
       } else if (/album_type|scheduled_publish|is_published|release_date/i.test(message)) {
         setError(
@@ -517,6 +529,13 @@ export default function NewAlbumPage() {
                 type="file"
                 accept="audio/wav,audio/x-wav,.wav"
                 onChange={(e) => updateTrack(row.key, { wavFile: e.target.files?.[0] ?? null })}
+                className={admin.input}
+              />
+              <label className={admin.label}>FLAC (선택 · My Music ZIP)</label>
+              <input
+                type="file"
+                accept="audio/flac,audio/x-flac,.flac"
+                onChange={(e) => updateTrack(row.key, { flacFile: e.target.files?.[0] ?? null })}
                 className={admin.input}
               />
               <label className={admin.label}>가사 · 곡 설명 (공개「가사」패널)</label>

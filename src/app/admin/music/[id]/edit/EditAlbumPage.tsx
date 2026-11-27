@@ -35,7 +35,9 @@ interface TrackEditRow {
   duration?: number | null;
   audioFile: File | null;
   wavFile: File | null;
+  flacFile: File | null;
   download_wav_url?: string | null;
+  download_flac_url?: string | null;
   digitalPrice: string;
   removed: boolean;
   isTitleTrack: boolean;
@@ -48,6 +50,7 @@ function newTrackRow(): TrackEditRow {
     description: "",
     audioFile: null,
     wavFile: null,
+    flacFile: null,
     digitalPrice: "",
     removed: false,
     isTitleTrack: false,
@@ -161,7 +164,9 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
           duration: track.duration ?? null,
           audioFile: null,
           wavFile: null,
+          flacFile: null,
           download_wav_url: track.download_wav_url ?? null,
+          download_flac_url: track.download_flac_url ?? null,
           digitalPrice: track.digital_price_krw ? String(track.digital_price_krw) : "",
           removed: false,
           isTitleTrack: track.is_title_track ?? false,
@@ -319,10 +324,20 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
           download_wav_url = supabase.storage.from("audio").getPublicUrl(wavPath).data.publicUrl;
         }
 
+        let download_flac_url = row.download_flac_url ?? null;
+        if (row.flacFile) {
+          const flacExt = row.flacFile.name.split(".").pop() || "flac";
+          const flacPath = `tracks/${albumId}/${Date.now()}-${i}-flac.${flacExt}`;
+          const { error: flacErr } = await supabase.storage.from("audio").upload(flacPath, row.flacFile);
+          if (flacErr) throw flacErr;
+          download_flac_url = supabase.storage.from("audio").getPublicUrl(flacPath).data.publicUrl;
+        }
+
         const digitalPayload = {
           digital_price_krw: parsePrice(row.digitalPrice),
           download_mp3_url: audio_url ?? null,
           download_wav_url,
+          download_flac_url,
         };
 
         if (row.id) {
@@ -358,9 +373,9 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "수정 중 오류가 발생했습니다.";
-      if (/digital_price|download_wav|download_mp3/i.test(message)) {
+      if (/digital_price|download_wav|download_mp3|download_flac/i.test(message)) {
         setError(
-          "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 을 실행해주세요.",
+          "디지털 판매 컬럼이 없습니다. Supabase SQL Editor에서 supabase/add_music_digital_sales.sql 과 supabase/add_music_download_flac.sql 을 실행해주세요.",
         );
       } else if (/album_type|scheduled_publish|is_published|release_date/i.test(message)) {
         setError(
@@ -652,6 +667,16 @@ export default function EditAlbumPage({ albumId }: EditAlbumPageProps) {
               />
               {row.download_wav_url && !row.wavFile && (
                 <p className="text-xs text-muted">WAV가 등록되어 있습니다. 교체 시에만 선택하세요.</p>
+              )}
+              <label className="block text-[10px] uppercase tracking-widest text-muted">FLAC 원본 (구매 다운로드용)</label>
+              <input
+                type="file"
+                accept="audio/flac,audio/x-flac,.flac"
+                onChange={(e) => updateTrack(row.key, { flacFile: e.target.files?.[0] ?? null })}
+                className="w-full border border-border px-4 py-3 text-sm"
+              />
+              {row.download_flac_url && !row.flacFile && (
+                <p className="text-xs text-muted">FLAC가 등록되어 있습니다. 교체 시에만 선택하세요.</p>
               )}
               <label className="block text-[10px] uppercase tracking-widest text-muted">
                 가사 · 곡 설명 (공개 앨범 상세「가사」패널)

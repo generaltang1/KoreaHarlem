@@ -36,10 +36,6 @@ export function HomeThinkSticky({ posts, totalCount }: HomeThinkStickyProps) {
       <div className="mx-auto max-w-[1720px]">
         <div className="mb-10 flex flex-col justify-between gap-6 border-b border-neutral-800 pb-8 md:flex-row md:items-end">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 border border-neutral-800 bg-neutral-900 px-2.5 py-1 text-xs font-mono uppercase tracking-widest text-neutral-400">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#d4ff32]" />
-              Anonymous Sub-Culture Bulletin
-            </div>
             <h2 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">Think</h2>
             <p className="max-w-2xl text-sm leading-relaxed text-neutral-400">
               거리의 날것 같은 생각들. 포스트잇처럼 붙인 담론 아카이브.

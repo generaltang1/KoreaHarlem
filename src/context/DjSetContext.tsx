@@ -45,6 +45,7 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const indexRef = useRef(0);
   const tracksRef = useRef<DjSetTrack[]>([]);
+  const didAutoplayRef = useRef(false);
 
   const [tracks, setTracks] = useState<DjSetTrack[]>([]);
   const [index, setIndex] = useState(0);
@@ -136,6 +137,47 @@ export function DjSetProvider({ children }: { children: React.ReactNode }) {
     },
     [pauseMusic],
   );
+
+  /** 사이트 첫 진입 시 첫 공개 트랙 자동 재생. 브라우저가 막으면 첫 제스처에서 한 번 더 시도 */
+  useEffect(() => {
+    if (!ready || didAutoplayRef.current || liveMode) return;
+    if (tracks.length === 0) return;
+    didAutoplayRef.current = true;
+    loadIndex(0, true);
+
+    const unlock = () => {
+      const audio = audioRef.current;
+      if (!audio || !audio.paused || liveMode) return;
+      if (!audio.src && tracksRef.current[0]) {
+        audio.src = tracksRef.current[0].audio_url;
+        audio.load();
+      }
+      notifyDjTakeover();
+      notifyCollectionPause();
+      pauseMusic();
+      setIsPlaying(true);
+      void audio.play().catch(() => setIsPlaying(false));
+    };
+
+    const onInteract = () => {
+      unlock();
+      window.removeEventListener("pointerdown", onInteract, true);
+      window.removeEventListener("keydown", onInteract, true);
+    };
+
+    const timer = window.setTimeout(() => {
+      const audio = audioRef.current;
+      if (audio && !audio.paused) return;
+      window.addEventListener("pointerdown", onInteract, true);
+      window.addEventListener("keydown", onInteract, true);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pointerdown", onInteract, true);
+      window.removeEventListener("keydown", onInteract, true);
+    };
+  }, [ready, tracks, liveMode, loadIndex, pauseMusic]);
 
   useEffect(() => {
     const audio = audioRef.current;

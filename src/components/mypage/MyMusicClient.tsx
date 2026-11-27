@@ -11,7 +11,14 @@ export type OwnedAlbumRow = {
   cover: string | null;
   trackCount: number;
   priceKrw?: number | null;
-  tracks: { id: string; title: string; hasFile: boolean; hasWav?: boolean; duration?: number | null }[];
+  tracks: {
+    id: string;
+    title: string;
+    hasFile: boolean;
+    hasWav?: boolean;
+    hasFlac?: boolean;
+    duration?: number | null;
+  }[];
 };
 
 const display = "[font-family:var(--font-f-display),var(--font-f-sans),sans-serif]";
@@ -52,7 +59,9 @@ export function MyMusicClient({ albums }: { albums: OwnedAlbumRow[] }) {
       <ul className="flex flex-col gap-5">
         {albums.map((album) => {
           const open = openIds.has(album.id);
+          const anyMp3 = album.tracks.some((t) => t.hasFile);
           const anyWav = album.tracks.some((t) => t.hasWav);
+          const anyFlac = album.tracks.some((t) => t.hasFlac);
           return (
             <li
               key={album.id}
@@ -86,12 +95,14 @@ export function MyMusicClient({ albums }: { albums: OwnedAlbumRow[] }) {
                 </div>
 
                 <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-                  <a
-                    href={`/api/music/download-zip?albumId=${album.id}`}
-                    className={`${display} inline-flex rounded-[6px] bg-[#f4f1ea] px-4 py-[9px] text-[12px] font-bold tracking-[0.5px] text-[#0a0a0a] whitespace-pre transition hover:opacity-90`}
-                  >
-                    {"↓  MP3 320kbps (ZIP)"}
-                  </a>
+                  {anyMp3 ? (
+                    <a
+                      href={`/api/music/download-zip?albumId=${album.id}`}
+                      className={`${display} inline-flex rounded-[6px] bg-[#f4f1ea] px-4 py-[9px] text-[12px] font-bold tracking-[0.5px] text-[#0a0a0a] whitespace-pre transition hover:opacity-90`}
+                    >
+                      {"↓  MP3 320kbps (ZIP)"}
+                    </a>
+                  ) : null}
                   {anyWav ? (
                     <a
                       href={`/api/music/download-zip?albumId=${album.id}&format=wav`}
@@ -99,15 +110,15 @@ export function MyMusicClient({ albums }: { albums: OwnedAlbumRow[] }) {
                     >
                       {"↓  WAV 16bit / 44.1kHz (ZIP)"}
                     </a>
-                  ) : (
-                    <span
-                      aria-disabled
-                      title="WAV 파일이 등록되지 않았습니다"
-                      className={`${display} inline-flex cursor-not-allowed rounded-[6px] border border-[#262626] px-4 py-[9px] text-[12px] font-bold tracking-[0.5px] text-[#6e6b65] whitespace-pre`}
+                  ) : null}
+                  {anyFlac ? (
+                    <a
+                      href={`/api/music/download-zip?albumId=${album.id}&format=flac`}
+                      className={`${display} inline-flex rounded-[6px] border border-[#262626] px-4 py-[9px] text-[12px] font-bold tracking-[0.5px] text-[#f4f1ea] whitespace-pre transition hover:border-[#a8a49b]`}
                     >
-                      {"↓  WAV 16bit / 44.1kHz (ZIP)"}
-                    </span>
-                  )}
+                      {"↓  FLAC (ZIP)"}
+                    </a>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => toggle(album.id)}
@@ -135,16 +146,18 @@ export function MyMusicClient({ albums }: { albums: OwnedAlbumRow[] }) {
                       <span className="hidden font-mono text-[11px] font-medium text-[#6e6b65] sm:inline">
                         {clock(track.duration)}
                       </span>
-                      {track.hasFile ? (
+                      {track.hasFile || track.hasWav || track.hasFlac ? (
                         <>
-                          <a
-                            href={`/api/music/download?trackId=${track.id}&format=file`}
-                            download
-                            aria-label={`${track.title} 음원다운로드`}
-                            className="whitespace-nowrap text-[10px] font-medium tracking-[0.5px] text-[#a8a49b] transition hover:text-[#f4f1ea]"
-                          >
-                            MP3 다운로드 ↓
-                          </a>
+                          {track.hasFile ? (
+                            <a
+                              href={`/api/music/download?trackId=${track.id}&format=file`}
+                              download
+                              aria-label={`${track.title} 음원다운로드`}
+                              className="whitespace-nowrap text-[10px] font-medium tracking-[0.5px] text-[#a8a49b] transition hover:text-[#f4f1ea]"
+                            >
+                              MP3 다운로드 ↓
+                            </a>
+                          ) : null}
                           {track.hasWav ? (
                             <a
                               href={`/api/music/download?trackId=${track.id}&format=wav`}
@@ -154,11 +167,17 @@ export function MyMusicClient({ albums }: { albums: OwnedAlbumRow[] }) {
                             >
                               WAV 다운로드 ↓
                             </a>
-                          ) : (
-                            <span className="whitespace-nowrap text-[10px] font-medium tracking-[0.5px] text-[#6e6b65]">
-                              WAV 다운로드 ↓
-                            </span>
-                          )}
+                          ) : null}
+                          {track.hasFlac ? (
+                            <a
+                              href={`/api/music/download?trackId=${track.id}&format=flac`}
+                              download
+                              aria-label={`${track.title} FLAC 다운로드`}
+                              className="whitespace-nowrap text-[10px] font-medium tracking-[0.5px] text-[#a8a49b] transition hover:text-[#f4f1ea]"
+                            >
+                              FLAC 다운로드 ↓
+                            </a>
+                          ) : null}
                         </>
                       ) : (
                         <span className="text-[10px] text-[#6e6b65]">파일 없음</span>

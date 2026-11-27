@@ -11,11 +11,14 @@ function safePart(name: string) {
     .slice(0, 60) || "track";
 }
 
+type ZipFormat = "mp3" | "wav" | "flac";
+
 /** 구매한 디지털 앨범 수록곡을 ZIP으로 묶음 */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const albumId = searchParams.get("albumId");
-  const wantWav = searchParams.get("format") === "wav";
+  const raw = searchParams.get("format");
+  const format: ZipFormat = raw === "wav" ? "wav" : raw === "flac" ? "flac" : "mp3";
   if (!albumId) {
     return NextResponse.json({ message: "albumId가 필요합니다." }, { status: 400 });
   }
@@ -44,7 +47,7 @@ export async function GET(request: Request) {
   const { data: album } = await admin
     .from("albums")
     .select(
-      "id, title, album_tracks(id, title, track_order, audio_url, download_mp3_url, download_wav_url)",
+      "id, title, album_tracks(id, title, track_order, audio_url, download_mp3_url, download_wav_url, download_flac_url)",
     )
     .eq("id", albumId)
     .maybeSingle();
@@ -60,13 +63,23 @@ export async function GET(request: Request) {
   const zip = new JSZip();
   let added = 0;
   for (const track of tracks) {
-    const url = wantWav ? track.download_wav_url : track.download_mp3_url || track.audio_url;
+    const url =
+      format === "wav"
+        ? track.download_wav_url
+        : format === "flac"
+          ? track.download_flac_url
+          : track.download_mp3_url || track.audio_url;
     if (!url) continue;
     try {
       const res = await fetch(url);
       if (!res.ok) continue;
       const buf = await res.arrayBuffer();
-      const ext = wantWav || url.includes(".wav") ? "wav" : "mp3";
+      const ext =
+        format === "wav" || url.includes(".wav")
+          ? "wav"
+          : format === "flac" || url.includes(".flac")
+            ? "flac"
+            : "mp3";
       const name = `${String(track.track_order).padStart(2, "0")} ${safePart(track.title)}.${ext}`;
       zip.file(name, buf);
       added += 1;
@@ -80,7 +93,8 @@ export async function GET(request: Request) {
   }
 
   const out = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
-  const filename = `${safePart(album.title)}${wantWav ? " (WAV)" : ""}.zip`;
+  const suffix = format === "wav" ? " (WAV)" : format === "flac" ? " (FLAC)" : "";
+  const filename = `${safePart(album.title)}${suffix}.zip`;
   return new NextResponse(Buffer.from(out), {
     headers: {
       "Content-Type": "application/zip",

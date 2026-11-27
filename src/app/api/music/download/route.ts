@@ -12,12 +12,20 @@ function safeFilename(name: string, ext: string) {
   return `${base || "track"}.${ext}`;
 }
 
+type DownloadFormat = "mp3" | "wav" | "flac" | "file";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const trackId = searchParams.get("trackId");
   const rawFormat = searchParams.get("format");
-  const format =
-    rawFormat === "wav" ? "wav" : rawFormat === "file" ? "file" : "mp3";
+  const format: DownloadFormat =
+    rawFormat === "wav"
+      ? "wav"
+      : rawFormat === "flac"
+        ? "flac"
+        : rawFormat === "file"
+          ? "file"
+          : "mp3";
 
   if (!trackId) {
     return NextResponse.json({ message: "trackId가 필요합니다." }, { status: 400 });
@@ -34,7 +42,7 @@ export async function GET(request: Request) {
   const admin = createServiceClient() ?? supabase;
   const { data: track } = await admin
     .from("album_tracks")
-    .select("id, album_id, title, audio_url, download_mp3_url, download_wav_url")
+    .select("id, album_id, title, audio_url, download_mp3_url, download_wav_url, download_flac_url")
     .eq("id", trackId)
     .maybeSingle();
 
@@ -60,13 +68,19 @@ export async function GET(request: Request) {
   const url =
     format === "wav"
       ? track.download_wav_url
-      : track.download_mp3_url || track.audio_url;
+      : format === "flac"
+        ? track.download_flac_url
+        : track.download_mp3_url || track.audio_url;
 
   if (!url) {
     return NextResponse.json(
       {
         message:
-          format === "wav" ? "WAV 파일이 등록되지 않았습니다." : "다운로드 파일이 없습니다.",
+          format === "wav"
+            ? "WAV 파일이 등록되지 않았습니다."
+            : format === "flac"
+              ? "FLAC 파일이 등록되지 않았습니다."
+              : "다운로드 파일이 없습니다.",
       },
       { status: 404 },
     );
@@ -84,7 +98,8 @@ export async function GET(request: Request) {
     : url.includes(".flac")
       ? "flac"
       : "mp3";
-  const ext = format === "wav" ? "wav" : format === "file" ? guessedExt : "mp3";
+  const ext =
+    format === "wav" ? "wav" : format === "flac" ? "flac" : format === "file" ? guessedExt : "mp3";
   const filename = safeFilename(track.title, ext);
   const contentType =
     fileRes.headers.get("content-type") ||

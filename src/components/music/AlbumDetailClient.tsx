@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
@@ -40,7 +40,7 @@ type DigitalFmt = "mp3" | "wav" | "flac";
 
 /**
  * E-04 — Figma `136:470` 앨범 상세.
- * 재생 = 하단 I-06 MusicPlayer. LP/카세트 SKU는 정책 대기.
+ * 재생 = 하단 I-06 MusicPlayer. 커버·사진은 등록된 것만 노출 (시안 플레이스홀더 없음).
  */
 export function AlbumDetailClient({
   album,
@@ -51,6 +51,7 @@ export function AlbumDetailClient({
   const { addItem } = useCart();
   const { currentTrack, isPlaying, playQueue, play, pause } = usePlayer();
   const [digitalFmt, setDigitalFmt] = useState<DigitalFmt>("mp3");
+  const [tipKrw, setTipKrw] = useState("0");
   const [shareHint, setShareHint] = useState(false);
 
   const playerTracks = mapAlbumToPlayerTracks(album);
@@ -58,6 +59,22 @@ export function AlbumDetailClient({
     () => [...album.album_tracks].sort((a, b) => a.track_order - b.track_order),
     [album.album_tracks],
   );
+  const availableFormats = useMemo(() => {
+    const hasMp3 = sortedTracks.some((t) => Boolean(t.download_mp3_url || t.audio_url));
+    const hasWav = sortedTracks.some((t) => Boolean(t.download_wav_url));
+    const hasFlac = sortedTracks.some((t) => Boolean(t.download_flac_url));
+    const list: { key: DigitalFmt; label: string }[] = [];
+    if (hasMp3) list.push({ key: "mp3", label: "MP3 320" });
+    if (hasWav) list.push({ key: "wav", label: "WAV" });
+    if (hasFlac) list.push({ key: "flac", label: "FLAC" });
+    return list;
+  }, [sortedTracks]);
+  useEffect(() => {
+    if (availableFormats.length === 0) return;
+    if (!availableFormats.some((f) => f.key === digitalFmt)) {
+      setDigitalFmt(availableFormats[0].key);
+    }
+  }, [availableFormats, digitalFmt]);
   const loadedDurations = useTrackDurations(sortedTracks);
   const artist = getAlbumArtistName(album);
   const priced = isPricedForSale(album.digital_price_krw);
@@ -91,13 +108,23 @@ export function AlbumDetailClient({
     return sortedTracks.find((t) => t.is_title_track) ?? sortedTracks[0] ?? null;
   }, [isAlbumQueueActive, currentTrack, sortedTracks]);
 
+  const basePrice = priced ? (album.digital_price_krw as number) : 0;
+  const tipAmount = (() => {
+    const n = Number(String(tipKrw).replace(/,/g, "").trim());
+    if (!Number.isFinite(n) || n < 0) return 0;
+    return Math.round(n);
+  })();
+  const orderPrice = basePrice + tipAmount;
+
   const addDigital = () => {
     if (!priced) return;
+    const tipLabel = tipAmount > 0 ? ` · +₩${tipAmount.toLocaleString("ko-KR")}` : "";
     addItem({
       productId: album.id,
-      title: `${album.title} (Digital · ${digitalFmt.toUpperCase()})`,
+      title: `${album.title} (Digital · ${digitalFmt.toUpperCase()}${tipLabel})`,
       imageUrl: album.cover_url,
-      priceKrw: album.digital_price_krw as number,
+      priceKrw: orderPrice,
+      size: digitalFmt,
       kind: "digital_album",
       albumId: album.id,
     });
@@ -158,50 +185,35 @@ export function AlbumDetailClient({
         </p>
 
         {/* Release */}
-        <section className="grid gap-10 lg:grid-cols-[minmax(0,540px)_1fr] lg:gap-12">
-          <div className="flex flex-col gap-3">
+        <section
+          className={`grid gap-10 lg:gap-12 ${
+            album.cover_url ? "lg:grid-cols-[minmax(0,540px)_1fr]" : ""
+          }`}
+        >
+          {album.cover_url ? (
             <div className="relative aspect-square w-full overflow-hidden bg-[#151515]">
-              {album.cover_url ? (
-                <Image
-                  src={album.cover_url}
-                  alt={album.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="540px"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-[#6e6b65]">KH</div>
-              )}
+              <Image
+                src={album.cover_url}
+                alt={album.title}
+                fill
+                className="object-cover"
+                priority
+                sizes="540px"
+              />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                '12" LP 실물 사진\n(게이트폴드 펼친 컷)',
-                "카세트 C-46\nJ-카드 사진",
-                "관련 머천\n(연결 대기)",
-                "LP + 카세트 + 머천\n세트 컷",
-              ].map((label) => (
-                <div
-                  key={label}
-                  className="flex aspect-square items-center justify-center border border-[#262626] bg-[#151515] p-2 text-center text-[11px] font-medium leading-snug text-[#6e6b65] whitespace-pre-line"
-                >
-                  {label}
-                </div>
-              ))}
-            </div>
-          </div>
+          ) : null}
 
           <div className="min-w-0">
             <Link
               href={album.artist_id ? `/artists/${album.artist_id}` : "/artists"}
-              className="text-[22px] font-bold text-[#f4f1ea] hover:text-[#FBC201] md:text-[26px]"
+              className="text-[24px] font-bold text-[#f4f1ea] hover:text-[#FBC201] md:text-[28px]"
             >
               {artist}
             </Link>
-            <h1 className="mt-1 text-[20px] font-normal leading-snug text-[#f4f1ea] md:text-[22px]">
+            <h1 className="mt-1 text-[22px] font-normal leading-snug text-[#f4f1ea] md:text-[26px]">
               《{album.title}》
             </h1>
-            <div className="flex flex-wrap items-center gap-3 pb-[18px] pt-2.5 text-[12px]">
+            <div className="flex flex-wrap items-center gap-3 pb-[18px] pt-2.5 text-[14px]">
               <span className="font-medium text-[#FBC201] underline decoration-solid">koreaharlem</span>
               <span className="font-mono text-[#6e6b65]">
                 KOHAR-{album.id.slice(0, 4).toUpperCase()}
@@ -211,104 +223,76 @@ export function AlbumDetailClient({
 
             <div className="h-px w-full bg-[#262626]" />
 
-            {/* LP — 시안 레이아웃 · 실물 SKU 연동 대기 */}
-            <div className="flex flex-col gap-2 py-4 opacity-55">
-              <div className="flex items-center gap-3 text-[14px] font-bold">
-                <p className="flex-1">12&quot; LP · 180g 한정 (Gatefold)</p>
-                <p className="font-mono">₩39,000</p>
-              </div>
-              <p className="text-[12px] text-[#a8a49b]">·  180g 헤비웨이트 블랙 버진 바이닐</p>
-              <p className="text-[12px] text-[#a8a49b]">·  게이트폴드 슬리브</p>
-              <p className="text-[12px] text-[#a8a49b]">·  배송비 ₩3,500 · 5만원 이상 무료배송</p>
-              <div className="flex items-center gap-2 pt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#6e6b65]" />
-                <span className="text-[11px] text-[#a8a49b]">실물 연동 대기</span>
-                <span className="flex-1" />
-                <button
-                  type="button"
-                  disabled
-                  className="cursor-not-allowed rounded-[4px] bg-[#3d3d3d] px-3 py-1.5 text-[12px] font-bold text-[#6e6b65]"
-                >
-                  장바구니 담기
-                </button>
-              </div>
-            </div>
-
-            <div className="h-px w-full bg-[#262626]" />
-
-            <div className="flex flex-col gap-2 py-4 opacity-55">
-              <div className="flex items-center gap-3 text-[14px] font-bold">
-                <p className="flex-1">카세트 C-46 (Chrome Type II)</p>
-                <p className="font-mono">₩18,000</p>
-              </div>
-              <p className="text-[12px] text-[#a8a49b]">·  리소그래프 3도 인쇄 J-카드</p>
-              <p className="text-[12px] text-[#a8a49b]">·  을지로 공방에서 손으로 조립</p>
-              <div className="flex items-center gap-2 pt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#6e6b65]" />
-                <span className="text-[11px] text-[#a8a49b]">실물 연동 대기</span>
-                <span className="flex-1" />
-                <button
-                  type="button"
-                  disabled
-                  className="cursor-not-allowed rounded-[4px] bg-[#3d3d3d] px-3 py-1.5 text-[12px] font-bold text-[#6e6b65]"
-                >
-                  장바구니 담기
-                </button>
-              </div>
-            </div>
-
-            <div className="h-px w-full bg-[#262626]" />
-
             {/* Digital — 동작 */}
-            <div className="flex flex-col gap-2.5 py-4">
-              <div className="flex items-start gap-3 text-[14px] font-bold">
+            <div className="flex flex-col gap-3 py-4">
+              <div className="flex items-start gap-3 text-[17px] font-bold">
                 <p className="flex-1">디지털 다운로드</p>
-                <p className="font-mono">
+                <p className="font-mono text-[20px] md:text-[22px]">
                   {priced ? `${formatKrwPrice(album.digital_price_krw as number)}~` : "STREAM"}
                 </p>
               </div>
-              <p className="text-[12px] text-[#6e6b65]">형식 선택</p>
-              <div className="flex flex-wrap gap-2">
-                {(
-                  [
-                    ["mp3", "MP3 320"],
-                    ["wav", "WAV"],
-                    ["flac", "FLAC"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setDigitalFmt(key)}
-                    className={`rounded-[4px] px-3 py-1.5 font-mono text-[12px] ${
-                      digitalFmt === key
-                        ? "bg-[#f4f1ea] font-medium text-[#0a0a0a]"
-                        : "border border-[#3d3d3d] text-[#f4f1ea]"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              {availableFormats.length > 0 ? (
+                <>
+                  <p className="text-[14px] text-[#6e6b65]">형식 선택</p>
+                  <div className="flex flex-wrap gap-2">
+                    {availableFormats.map(({ key, label }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setDigitalFmt(key)}
+                        className={`rounded-[4px] px-3.5 py-2 font-mono text-[14px] ${
+                          digitalFmt === key
+                            ? "bg-[#f4f1ea] font-medium text-[#0a0a0a]"
+                            : "border border-[#3d3d3d] text-[#f4f1ea]"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : null}
               <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                <div className="flex items-center gap-1.5 rounded-[4px] border border-[#262626] bg-[#151515] px-3 py-1.5">
-                  <span className="font-mono text-[12px] text-[#6e6b65]">₩</span>
-                  <span className="font-mono text-[13px] font-bold">
-                    {priced ? album.digital_price_krw!.toLocaleString("ko-KR") : "—"}
-                  </span>
-                </div>
-                <span className="text-[11px] text-[#6e6b65]">원하는 만큼 더 낼 수 있어요</span>
+                <label className="flex items-center gap-1.5 rounded-[4px] border border-[#262626] bg-[#151515] px-3 py-2">
+                  <span className="font-mono text-[14px] text-[#6e6b65]">₩</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={100}
+                    inputMode="numeric"
+                    disabled={!priced}
+                    value={tipKrw}
+                    onChange={(e) => setTipKrw(e.target.value)}
+                    onBlur={() => {
+                      if (!String(tipKrw).trim() || tipAmount < 0) setTipKrw("0");
+                      else setTipKrw(String(tipAmount));
+                    }}
+                    aria-label="추가 지불 금액"
+                    className="w-[7.5rem] bg-transparent font-mono text-[16px] font-bold text-[#f4f1ea] outline-none disabled:opacity-50"
+                  />
+                </label>
+                <span className="text-[13px] text-[#6e6b65]">원하는 만큼 더 낼 수 있어요 (기본 0)</span>
                 <span className="flex-1" />
-                <button
-                  type="button"
-                  disabled={!priced}
-                  onClick={addDigital}
-                  className="rounded-[4px] bg-[#FBC201] px-3 py-1.5 text-[12px] font-bold text-[#0a0a0a] disabled:cursor-not-allowed disabled:bg-[#3d3d3d] disabled:text-[#6e6b65]"
-                >
-                  구매하기
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {priced ? (
+                    <span className="font-mono text-[15px] font-bold text-[#f4f1ea]">
+                      합계 {formatKrwPrice(orderPrice)}
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={!priced}
+                    onClick={addDigital}
+                    className="rounded-[4px] bg-[#FBC201] px-4 py-2 text-[14px] font-bold text-[#0a0a0a] disabled:cursor-not-allowed disabled:bg-[#3d3d3d] disabled:text-[#6e6b65]"
+                  >
+                    구매하기
+                  </button>
+                </div>
               </div>
-              <p className="text-[11px] text-[#6e6b65]">
+              <p className="text-[13px] text-[#6e6b65]">
+                기본가 {priced ? formatKrwPrice(basePrice) : "—"}
+                {tipAmount > 0 ? ` + 추가 ${formatKrwPrice(tipAmount)}` : ""}
+                {" · "}
                 구매 후 MY MUSIC에서 다운로드 · 스트리밍은 누구나 무료
               </p>
             </div>
@@ -494,16 +478,16 @@ export function AlbumDetailClient({
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {relatedAlbums.map((item) => (
               <Link key={item.id} href={`/music/album/${item.id}`} className="group flex flex-col gap-2">
-                <div className="relative aspect-square overflow-hidden bg-[#151515]">
-                  {item.cover_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                {item.cover_url ? (
+                  <div className="relative aspect-square overflow-hidden bg-[#151515]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.cover_url}
                       alt={item.title}
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
                 <p className="line-clamp-2 text-[13px] font-bold group-hover:text-[#FBC201]">
                   {item.title}
                 </p>
@@ -518,16 +502,16 @@ export function AlbumDetailClient({
                   href={`/sale/${product.id}`}
                   className="group flex flex-col gap-2"
                 >
-                  <div className="relative aspect-square overflow-hidden bg-[#151515]">
-                    {image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                  {image ? (
+                    <div className="relative aspect-square overflow-hidden bg-[#151515]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={image}
                         alt={product.title}
                         className="h-full w-full object-cover transition group-hover:scale-105"
                       />
-                    ) : null}
-                  </div>
+                    </div>
+                  ) : null}
                   <p className="line-clamp-2 text-[13px] font-bold group-hover:text-[#FBC201]">
                     {product.title}
                   </p>

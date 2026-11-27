@@ -23,6 +23,7 @@ export interface DbAlbumTrack {
   digital_price_krw?: number | null;
   download_wav_url?: string | null;
   download_mp3_url?: string | null;
+  download_flac_url?: string | null;
 }
 
 export interface AlbumWithTracks extends DbAlbum {

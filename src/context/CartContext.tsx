@@ -132,6 +132,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((prev) => {
         const existing = prev.find((item) => item.key === key);
         if (existing) {
+          if (kind === "digital_album" || kind === "digital_track") {
+            return prev.map((item) =>
+              item.key === key
+                ? {
+                    ...item,
+                    title: input.title,
+                    imageUrl: input.imageUrl,
+                    unitPriceMinor,
+                    priceKrw: input.priceKrw,
+                    currency: currency.code,
+                    exchangeRate: currency.rateToKrw,
+                  }
+                : item,
+            );
+          }
           if (kind !== "product" && kind !== "ticket") return prev;
           return prev.map((item) =>
             item.key === key

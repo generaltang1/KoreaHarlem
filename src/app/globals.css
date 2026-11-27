@@ -17,11 +17,15 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --text-xs: 0.975rem;
+  --text-xs: 1.05rem;
   --text-xs--line-height: 1.4;
-  --text-sm: 1.1375rem;
+  --text-sm: 1.2rem;
   --text-sm--line-height: 1.45;
-  --text-xl: 1.625rem;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.45;
+  --text-xl: 1.75rem;
   --text-xl--line-height: 1.35;
 }
 
@@ -29,9 +33,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 1.0625rem;
 }
 
 html {
+  font-size: 17px;
   scroll-behavior: smooth;
 }
 
@@ -41,8 +47,23 @@ html {
 }
 
 .text-\[10px\] {
-  font-size: 13px !important;
+  font-size: 14px !important;
   line-height: 1.4;
+}
+
+.text-\[11px\] {
+  font-size: 14px !important;
+  line-height: 1.4;
+}
+
+.text-\[12px\] {
+  font-size: 15px !important;
+  line-height: 1.45;
+}
+
+.text-\[13px\] {
+  font-size: 16px !important;
+  line-height: 1.5;
 }
 
 .has-player {

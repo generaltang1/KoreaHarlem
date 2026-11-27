@@ -35,7 +35,7 @@ export default async function MyMusicPage() {
     const { data: rows } = await admin
       .from("albums")
       .select(
-        "id, title, artist_name, cover_url, digital_price_krw, album_tracks(id, title, track_order, duration, audio_url, download_mp3_url, download_wav_url)",
+        "id, title, artist_name, cover_url, digital_price_krw, album_tracks(id, title, track_order, duration, audio_url, download_mp3_url, download_wav_url, download_flac_url)",
       )
       .in("id", albumIds);
 
@@ -52,12 +52,14 @@ export default async function MyMusicPage() {
           audio_url?: string | null;
           download_mp3_url?: string | null;
           download_wav_url?: string | null;
+          download_flac_url?: string | null;
         }) => ({
           id: t.id,
           title: t.title,
           duration: t.duration ?? null,
-          hasFile: Boolean(t.download_mp3_url || t.audio_url || t.download_wav_url),
+          hasFile: Boolean(t.download_mp3_url || t.audio_url),
           hasWav: Boolean(t.download_wav_url),
+          hasFlac: Boolean(t.download_flac_url),
         }));
 
       albums.push({
